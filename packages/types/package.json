@@ -9,6 +9,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },
+  "dependencies": {
+    "@wire/ui-config": "workspace:*"
+  },
   "devDependencies": {
     "@wire/eslint-config": "workspace:*",
     "@wire/eslint-plugin-wire-api": "workspace:*",

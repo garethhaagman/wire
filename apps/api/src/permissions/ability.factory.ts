@@ -53,5 +53,12 @@ export function defineAbilityFor(role: Role): AppAbility {
   // Webhook-endpoint configuration stays admin-only — a member has no
   // WebhookEndpoint permissions at all.
 
+  // Every member can read the resolved UI config and update their own
+  // personal layer. Only admin can write the org layer / locks — enforced in
+  // UiConfigService, not by CASL, since CASL has no notion of "org layer vs
+  // user layer" within one subject. See internal-docs/ui/config-schema.md.
+  can("read", "UiConfig");
+  can("update", "UiConfig");
+
   return build();
 }

@@ -58,4 +58,4 @@ Queue starts **Postgres-backed** (`SKIP LOCKED` job table) to avoid a second sta
 
 ## What's explicitly not here
 
-UI/frontend architecture is out of scope for this folder — [product/01-vision.md](../product/01-vision.md) scopes rich client UI out of v0.1.
+UI/frontend architecture is out of scope for this folder — see [ui/](../ui/) for the client UI stack and config system; [product/01-vision.md](../product/01-vision.md) still scopes a full per-feature UI spec out of v0.1.

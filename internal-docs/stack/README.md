@@ -8,6 +8,7 @@ Normative-ish engineering direction for implementing the Wire spec. The rest of 
 | [monorepo-layout.md](./monorepo-layout.md) | TypeScript monorepo structure, shared packages, tooling |
 | [infra-pulumi.md](./infra-pulumi.md) | Pulumi (TypeScript) stacks, environments, self-hosted topology |
 | [self-hosting.md](./self-hosting.md) | What "no managed services" means in practice, operator runbook surface |
+| [../ui/stack.md](../ui/stack.md) | Client UI stack (React, Tailwind, shadcn/ui) — kept in `ui/` alongside the config system it supports, not here |
 
 ## Non-negotiables (from product direction)
 

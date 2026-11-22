@@ -20,7 +20,8 @@ export type PermissionSubject =
   | "File"
   | "Search"
   | "WebhookEndpoint"
-  | "AuditEvent";
+  | "AuditEvent"
+  | "UiConfig";
 
 export type AppAbility = MongoAbility<[PermissionAction, PermissionSubject]>;
 

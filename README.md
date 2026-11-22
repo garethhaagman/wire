@@ -19,6 +19,7 @@ Wire is an **API-first**, **AI-native** team messaging platform. Humans, softwar
 | Folder | Contents |
 |--------|----------|
 | [product/](./internal-docs/product/) | Vision, core concepts, agents, feature parity, roadmap |
+| [ui/](./internal-docs/ui/) | Config-driven client UI — stack, `UiConfig` schema, theming/layout, admin policy |
 | [api/](./internal-docs/api/) | **Canonical API contract** (`openapi.yaml`), auth/tenancy, events/webhooks, versioning |
 | [retrieval/](./internal-docs/retrieval/) | Search, embeddings, context packs |
 | [harnesses/](./internal-docs/harnesses/) | Model/provider binding — Claude, OpenAI, Cursor, custom runners |
@@ -39,6 +40,10 @@ Wire is an **API-first**, **AI-native** team messaging platform. Humans, softwar
 | [product/01-vision.md](./internal-docs/product/01-vision.md) | Product vision and non-goals |
 | [product/02-core-concepts.md](./internal-docs/product/02-core-concepts.md) | Workspaces, channels, messages, threads |
 | [product/03-agents.md](./internal-docs/product/03-agents.md) | Agent lifecycle, identity, delegation |
+| [ui/README.md](./internal-docs/ui/README.md) | **Config-driven UI**: why, the base→org→user resolution model |
+| [ui/config-schema.md](./internal-docs/ui/config-schema.md) | `UiConfig` shape, versioning, extensibility (`@wire/ui-config`) |
+| [ui/theming-and-layout.md](./internal-docs/ui/theming-and-layout.md) | Slots, layouts, how config becomes pixels |
+| [ui/admin-policy.md](./internal-docs/ui/admin-policy.md) | Locks, enforcement, RBAC for org-level config |
 | [automations/automations.md](./internal-docs/automations/automations.md) | Rules, workflows, scheduling |
 | [retrieval/retrieval.md](./internal-docs/retrieval/retrieval.md) | Search, embeddings, context packs |
 | [mcp/mcp.md](./internal-docs/mcp/mcp.md) | MCP server design |
@@ -78,4 +83,4 @@ Wire is an **API-first**, **AI-native** team messaging platform. Humans, softwar
 
 ## Status
 
-`internal-docs/` holds the design specifications; `apps/` and `packages/` hold a working implementation of a subset of that spec: health, workspaces, members, channels, messages, threads, reactions, pins, agents, files, search (keyword only), webhook-endpoints, audit-events — every endpoint is RBAC-gated via CASL (`admin`/`member` roles, see [api/permissions.md](./internal-docs/api/permissions.md)). Only `workspaces` is backed by Postgres (via TypeORM) — every other resource is an in-memory mock service, not persisted across restarts, and role resolution only works correctly on routes with a `:workspaceId` param (see the known gap in api/permissions.md). See [product/04-implementation-roadmap.md](./internal-docs/product/04-implementation-roadmap.md) for what's not built yet: agent runs/harnesses, automations, the retrieval/semantic-search pipeline, SSE/realtime event delivery, Slack import, and the MCP server. Version `0.1.0` of the API matches the OpenAPI `info.version` field.
+`internal-docs/` holds the design specifications; `apps/` and `packages/` hold a working implementation of a subset of that spec: health, workspaces, members, channels, messages, threads, reactions, pins, agents, files, search (keyword only), webhook-endpoints, audit-events, ui-config — every endpoint is RBAC-gated via CASL (`admin`/`member` roles, see [api/permissions.md](./internal-docs/api/permissions.md)). Only `workspaces` is backed by Postgres (via TypeORM) — every other resource is an in-memory mock service, not persisted across restarts, and role resolution only works correctly on routes with a `:workspaceId` param (see the known gap in api/permissions.md). `apps/web` has a Tailwind + shadcn-conventioned shell driven entirely by the resolved `UiConfig` (see [ui/](./internal-docs/ui/)) — nav rail, channel list, topbar, and composer slots only; no message history, no settings UI yet. See [product/04-implementation-roadmap.md](./internal-docs/product/04-implementation-roadmap.md) for what's not built yet: agent runs/harnesses, automations, the retrieval/semantic-search pipeline, SSE/realtime event delivery, Slack import, and the MCP server. Version `0.1.0` of the API matches the OpenAPI `info.version` field.

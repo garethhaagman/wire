@@ -19,7 +19,7 @@ Wire is messaging infrastructure where **conversation is the system of record** 
 
 ## Non-goals (v0.1)
 
-- Rich client UI specifications (minimal references only).
+- Bespoke per-feature UI specs beyond the config-driven shell — see [ui/](../ui/) for what *is* in scope: a typed, customizable configuration system and a minimal shell proving it, not a full page-by-page UI spec for channels/threads/messages.
 - End-user email/SMS bridging (may arrive later as connectors).
 - Arbitrary code execution inside Wire workers (automations call HTTP actions and registered agents only).
 - Single-vendor model lock-in (harness abstraction is mandatory).

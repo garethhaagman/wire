@@ -12,3 +12,4 @@ export * from "./file.js";
 export * from "./search.js";
 export * from "./envelope.js";
 export * from "./pagination.js";
+export * from "./ui-config.js";

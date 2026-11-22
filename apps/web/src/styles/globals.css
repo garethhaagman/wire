@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/*
+ * Semantic color/radius tokens are NOT hardcoded here — they're CSS custom
+ * properties written onto :root/.dark at runtime by ConfigProvider, from the
+ * resolved UiConfig (see lib/ui-config/apply-theme.ts). This block only maps
+ * Tailwind's `@theme` color tokens to those variables, so utilities like
+ * `bg-primary` or `text-muted-foreground` always read the live, per-org/user
+ * theme instead of a value baked in at build time. See
+ * internal-docs/ui/theming-and-layout.md.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --radius-sm: calc(var(--radius) - 0.25rem);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 0.25rem);
+  --radius-xl: calc(var(--radius) + 0.5rem);
+}
+
+/*
+ * --font-sans / --font-mono are deliberately not remapped above: aliasing a
+ * variable to itself is a cycle, which invalidates it. Tailwind's default
+ * stacks stay as the fallback and applyTheme() overrides them inline on :root.
+ */
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: var(--ui-base-size, 16px);
+    -webkit-font-smoothing: antialiased;
+  }
+}

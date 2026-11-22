@@ -15,6 +15,7 @@ import { SearchModule } from "./search/search.module.js";
 import { WebhooksModule } from "./webhooks/webhooks.module.js";
 import { AuditModule } from "./audit/audit.module.js";
 import { FilesModule } from "./files/files.module.js";
+import { UiConfigModule } from "./ui-config/ui-config.module.js";
 import { PermissionsModule } from "./permissions/permissions.module.js";
 import { RequestIdMiddleware } from "./common/middleware/request-id.middleware.js";
 import { RateLimitMiddleware } from "./common/middleware/rate-limit.middleware.js";
@@ -37,6 +38,7 @@ import { RateLimitMiddleware } from "./common/middleware/rate-limit.middleware.j
     WebhooksModule,
     AuditModule,
     FilesModule,
+    UiConfigModule,
     PermissionsModule,
   ],
 })
