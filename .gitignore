@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+.turbo/
+*.log
+.env
+.env.local
+.DS_Store
+coverage/
+.pulumi/
+*.tsbuildinfo
+
+# Claude Code local-only state (not shared project config)
+.claude/settings.local.json
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+
+# OS cruft
+Thumbs.db

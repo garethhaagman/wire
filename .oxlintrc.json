@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "react-hooks", "import"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "rules": {
+    "react/react-in-jsx-scope": "off"
+  },
+  "overrides": [
+    {
+      "files": ["apps/api/**"],
+      "rules": {
+        "typescript/no-extraneous-class": "off"
+      }
+    }
+  ],
+  "ignorePatterns": ["**/dist/**", "**/node_modules/**", "**/.turbo/**", "internal-docs/**"]
+}

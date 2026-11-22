@@ -1,0 +1,6 @@
+name: wire
+runtime:
+  name: nodejs
+  options:
+    typescript: true
+description: Wire self-hosted stack — postgres, api, web, docs (compose runtime per internal-docs/stack/infra-pulumi.md)

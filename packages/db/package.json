@@ -1,0 +1,31 @@
+{
+  "name": "@wire/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "migration:generate": "bun run ./node_modules/typeorm/cli.js migration:generate -d src/cli-data-source.ts",
+    "migration:run": "bun run ./node_modules/typeorm/cli.js migration:run -d src/cli-data-source.ts",
+    "migration:revert": "bun run ./node_modules/typeorm/cli.js migration:revert -d src/cli-data-source.ts",
+    "migrate": "bun run migration:run && bun src/migrate-auth.ts"
+  },
+  "dependencies": {
+    "@wire/types": "workspace:*",
+    "pg": "^8.13.1",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.14",
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.10",
+    "@wire/eslint-config": "workspace:*",
+    "@wire/eslint-plugin-wire-api": "workspace:*",
+    "eslint": "^9.17.0",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,1396 @@
+openapi: 3.0.0
+paths:
+  /health:
+    get:
+      operationId: HealthController_get
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponseDto"
+      tags:
+        - Health
+  /v1/workspaces:
+    get:
+      operationId: WorkspacesController_list
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: per_page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: Field to sort by; prefix with - for descending
+          schema:
+            type: string
+        - name: search
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkspaceDto"
+      security: &a1
+        - cookie: []
+      tags: &a2
+        - Workspaces
+    post:
+      operationId: WorkspacesController_create
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          description: Replays the original response if the same key is sent again.
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkspaceRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceDto"
+      security: *a1
+      tags: *a2
+  /v1/workspaces/{id}:
+    get:
+      operationId: WorkspacesController_getById
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceDto"
+      security: *a1
+      tags: *a2
+  /v1/workspaces/{workspaceId}/members:
+    get:
+      operationId: MembersController_list
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: per_page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: Field to sort by; prefix with - for descending
+          schema:
+            type: string
+        - name: search
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MemberDto"
+      security: &a3
+        - cookie: []
+      tags: &a4
+        - Members
+    post:
+      operationId: MembersController_create
+      parameters:
+        - name: workspaceId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMemberRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberDto"
+      security: *a3
+      tags: *a4
+  /v1/workspaces/{workspaceId}/members/{id}:
+    get:
+      operationId: MembersController_getById
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberDto"
+      security: *a3
+      tags: *a4
+  /v1/workspaces/{workspaceId}/channels:
+    get:
+      operationId: ChannelsController_list
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: per_page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: Field to sort by; prefix with - for descending
+          schema:
+            type: string
+        - name: search
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChannelDto"
+      security: &a5
+        - cookie: []
+      tags: &a6
+        - Channels
+    post:
+      operationId: ChannelsController_create
+      parameters:
+        - name: workspaceId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateChannelRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChannelDto"
+      security: *a5
+      tags: *a6
+  /v1/workspaces/{workspaceId}/channels/{id}:
+    get:
+      operationId: ChannelsController_getById
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChannelDto"
+      security: *a5
+      tags: *a6
+  /v1/channels/{channelId}/messages:
+    get:
+      operationId: MessagesController_list
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: per_page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: Field to sort by; prefix with - for descending
+          schema:
+            type: string
+        - name: search
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MessageDto"
+      security: &a7
+        - cookie: []
+      tags: &a8
+        - Messages
+    post:
+      operationId: MessagesController_create
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMessageRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageDto"
+      security: *a7
+      tags: *a8
+  /v1/channels/{channelId}/messages/{id}:
+    get:
+      operationId: MessagesController_getById
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageDto"
+      security: *a7
+      tags: *a8
+  /v1/workspaces/{workspaceId}/agents:
+    get:
+      operationId: AgentsController_list
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: per_page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: Field to sort by; prefix with - for descending
+          schema:
+            type: string
+        - name: search
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgentDto"
+      security: &a9
+        - cookie: []
+      tags: &a10
+        - Agents
+    post:
+      operationId: AgentsController_create
+      parameters:
+        - name: workspaceId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAgentRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentDto"
+      security: *a9
+      tags: *a10
+  /v1/workspaces/{workspaceId}/agents/{id}:
+    get:
+      operationId: AgentsController_getById
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentDto"
+      security: *a9
+      tags: *a10
+  /v1/threads/{threadRootId}/messages:
+    get:
+      operationId: ThreadsController_list
+      parameters:
+        - name: threadRootId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: per_page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: Field to sort by; prefix with - for descending
+          schema:
+            type: string
+        - name: search
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MessageDto"
+      security: &a11
+        - cookie: []
+      tags: &a12
+        - Threads
+    post:
+      operationId: ThreadsController_reply
+      parameters:
+        - name: threadRootId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateThreadReplyRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageDto"
+      security: *a11
+      tags: *a12
+  /v1/messages/{messageId}/reactions:
+    get:
+      operationId: ReactionsController_list
+      parameters:
+        - name: messageId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReactionDto"
+      security: &a13
+        - cookie: []
+      tags: &a14
+        - Reactions
+    post:
+      operationId: ReactionsController_add
+      parameters:
+        - name: messageId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReactionRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReactionDto"
+      security: *a13
+      tags: *a14
+    delete:
+      operationId: ReactionsController_remove
+      parameters:
+        - name: messageId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: emoji
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "null"
+      security: *a13
+      tags: *a14
+  /v1/channels/{channelId}/pins:
+    get:
+      operationId: PinsController_list
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PinDto"
+      security: &a15
+        - cookie: []
+      tags: &a16
+        - Pins
+    post:
+      operationId: PinsController_add
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePinRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PinDto"
+      security: *a15
+      tags: *a16
+  /v1/channels/{channelId}/pins/{id}:
+    delete:
+      operationId: PinsController_remove
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "null"
+      security: *a15
+      tags: *a16
+  /v1/search:
+    get:
+      operationId: SearchController_list
+      parameters:
+        - name: q
+          required: true
+          in: query
+          description: Keyword search query
+          schema:
+            type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: per_page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SearchResultDto"
+      security:
+        - cookie: []
+      tags:
+        - Search
+  /v1/workspaces/{workspaceId}/webhook-endpoints:
+    get:
+      operationId: WebhooksController_list
+      parameters:
+        - name: workspaceId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: per_page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: Field to sort by; prefix with - for descending
+          schema:
+            type: string
+        - name: search
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WebhookEndpointDto"
+      security: &a17
+        - cookie: []
+      tags: &a18
+        - Webhooks
+    post:
+      operationId: WebhooksController_create
+      parameters:
+        - name: workspaceId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWebhookEndpointRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookEndpointCreatedDto"
+      security: *a17
+      tags: *a18
+  /v1/workspaces/{workspaceId}/webhook-endpoints/{id}:
+    get:
+      operationId: WebhooksController_getById
+      parameters:
+        - name: workspaceId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookEndpointDto"
+      security: *a17
+      tags: *a18
+    delete:
+      operationId: WebhooksController_remove
+      parameters:
+        - name: workspaceId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "null"
+      security: *a17
+      tags: *a18
+  /v1/workspaces/{workspaceId}/audit-events:
+    get:
+      operationId: AuditController_list
+      parameters:
+        - name: workspaceId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: per_page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: Field to sort by; prefix with - for descending
+          schema:
+            type: string
+        - name: search
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditEventDto"
+      security:
+        - cookie: []
+      tags:
+        - Audit
+  /v1/files/{id}:
+    get:
+      operationId: FilesController_getById
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileDto"
+      security: &a19
+        - cookie: []
+      tags: &a20
+        - Files
+  /v1/files:
+    post:
+      operationId: FilesController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFileRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileDto"
+      security: *a19
+      tags: *a20
+info:
+  title: Wire API
+  description: Primary HTTP surface for the Wire AI-native team messaging platform. Generated from
+    @nestjs/swagger decorators in apps/api — do not hand-edit. Regenerate with `bun run
+    openapi:export`.
+  version: 0.1.0
+  contact: {}
+tags: []
+servers: []
+components:
+  securitySchemes:
+    cookie:
+      type: apiKey
+      in: cookie
+      name: better-auth.session_token
+  schemas:
+    HealthResponseDto:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        version:
+          type: string
+        timestamp:
+          type: string
+      required:
+        - status
+        - version
+        - timestamp
+    WorkspaceDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: ws_64d9dea525ae84ef6f7bd361
+        orgId:
+          type: string
+        name:
+          type: string
+        dataRegion:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - orgId
+        - name
+        - dataRegion
+        - createdAt
+        - updatedAt
+    CreateWorkspaceRequestDto:
+      type: object
+      properties:
+        name:
+          type: string
+        dataRegion:
+          type: string
+          example: us
+      required:
+        - name
+        - dataRegion
+    MemberDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: mem_64d9dea525ae84ef6f7bd361
+        workspaceId:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+            - owner
+            - admin
+            - member
+            - guest
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - workspaceId
+        - displayName
+        - email
+        - role
+        - createdAt
+        - updatedAt
+    CreateMemberRequestDto:
+      type: object
+      properties:
+        displayName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+            - owner
+            - admin
+            - member
+            - guest
+      required:
+        - displayName
+        - email
+        - role
+    ChannelDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: ch_64d9dea525ae84ef6f7bd361
+        workspaceId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - public
+            - private
+            - dm
+            - group_dm
+        topic:
+          type: string
+          nullable: true
+        purpose:
+          type: string
+          nullable: true
+        archivedAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - workspaceId
+        - name
+        - type
+        - topic
+        - purpose
+        - archivedAt
+        - createdAt
+        - updatedAt
+    CreateChannelRequestDto:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - public
+            - private
+            - dm
+            - group_dm
+        topic:
+          type: string
+        purpose:
+          type: string
+      required:
+        - name
+        - type
+    MessageDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: msg_64d9dea525ae84ef6f7bd361
+        channelId:
+          type: string
+        threadRootId:
+          type: string
+          nullable: true
+        actorId:
+          type: string
+        actorType:
+          type: string
+          enum:
+            - human
+            - agent
+            - system
+        body:
+          type: string
+        revision:
+          type: number
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - channelId
+        - threadRootId
+        - actorId
+        - actorType
+        - body
+        - revision
+        - createdAt
+        - updatedAt
+    CreateMessageRequestDto:
+      type: object
+      properties:
+        body:
+          type: string
+        threadRootId:
+          type: string
+      required:
+        - body
+    AgentDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: agt_64d9dea525ae84ef6f7bd361
+        workspaceId:
+          type: string
+        handle:
+          type: string
+        harnessId:
+          type: string
+        permissionSetId:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+            - active
+            - paused
+            - deleted
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - workspaceId
+        - handle
+        - harnessId
+        - permissionSetId
+        - status
+        - createdAt
+        - updatedAt
+    CreateAgentRequestDto:
+      type: object
+      properties:
+        handle:
+          type: string
+          example: oncall-bot
+        harnessId:
+          type: string
+      required:
+        - handle
+        - harnessId
+    CreateThreadReplyRequestDto:
+      type: object
+      properties:
+        body:
+          type: string
+        broadcastToChannel:
+          type: boolean
+          description: Also post a copy of this reply to the channel
+      required:
+        - body
+    ReactionDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: rxn_64d9dea525ae84ef6f7bd361
+        messageId:
+          type: string
+        actorId:
+          type: string
+        emoji:
+          type: string
+          example: 👍
+        createdAt:
+          type: string
+      required:
+        - id
+        - messageId
+        - actorId
+        - emoji
+        - createdAt
+    CreateReactionRequestDto:
+      type: object
+      properties:
+        emoji:
+          type: string
+          example: 👍
+      required:
+        - emoji
+    PinDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: pin_64d9dea525ae84ef6f7bd361
+        channelId:
+          type: string
+        messageId:
+          type: string
+        pinnedBy:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - channelId
+        - messageId
+        - pinnedBy
+        - createdAt
+    CreatePinRequestDto:
+      type: object
+      properties:
+        messageId:
+          type: string
+      required:
+        - messageId
+    SearchResultDto:
+      type: object
+      properties:
+        messageId:
+          type: string
+        channelId:
+          type: string
+        excerpt:
+          type: string
+        score:
+          type: number
+          description: Relevance score, 0-1. Mock implementation returns a constant.
+      required:
+        - messageId
+        - channelId
+        - excerpt
+        - score
+    WebhookEndpointDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: whe_64d9dea525ae84ef6f7bd361
+        workspaceId:
+          type: string
+        url:
+          type: string
+        enabledEvents:
+          type: array
+          items:
+            type: string
+        channelFilter:
+          nullable: true
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - workspaceId
+        - url
+        - enabledEvents
+        - channelFilter
+        - createdAt
+        - updatedAt
+    CreateWebhookEndpointRequestDto:
+      type: object
+      properties:
+        url:
+          type: string
+        enabledEvents:
+          example:
+            - message.created
+            - agent.run.completed
+          type: array
+          items:
+            type: string
+        channelFilter:
+          type: array
+          items:
+            type: string
+      required:
+        - url
+        - enabledEvents
+    WebhookEndpointCreatedDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: whe_64d9dea525ae84ef6f7bd361
+        workspaceId:
+          type: string
+        url:
+          type: string
+        enabledEvents:
+          type: array
+          items:
+            type: string
+        channelFilter:
+          nullable: true
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        secret:
+          type: string
+          description: Shown once. Store it — it cannot be retrieved again.
+      required:
+        - id
+        - workspaceId
+        - url
+        - enabledEvents
+        - channelFilter
+        - createdAt
+        - updatedAt
+        - secret
+    AuditEventDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: aud_64d9dea525ae84ef6f7bd361
+        workspaceId:
+          type: string
+        actorId:
+          type: string
+        ip:
+          type: string
+          nullable: true
+        resource:
+          type: string
+        action:
+          type: string
+        agentRunId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - workspaceId
+        - actorId
+        - ip
+        - resource
+        - action
+        - agentRunId
+        - createdAt
+    FileDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: file_64d9dea525ae84ef6f7bd361
+        channelId:
+          type: string
+        uploadedBy:
+          type: string
+        name:
+          type: string
+        mime:
+          type: string
+        sizeBytes:
+          type: number
+        virusScanStatus:
+          type: string
+          enum:
+            - pending
+            - clean
+            - infected
+        createdAt:
+          type: string
+      required:
+        - id
+        - channelId
+        - uploadedBy
+        - name
+        - mime
+        - sizeBytes
+        - virusScanStatus
+        - createdAt
+    CreateFileRequestDto:
+      type: object
+      properties:
+        channelId:
+          type: string
+        name:
+          type: string
+        mime:
+          type: string
+          example: image/png
+        sizeBytes:
+          type: number
+      required:
+        - channelId
+        - name
+        - mime
+        - sizeBytes

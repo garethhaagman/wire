@@ -1,0 +1,6 @@
+config:
+  wire:webOrigin: http://localhost:5173
+  wire:apiPort: "3001"
+  wire:webPort: "5173"
+  wire:docsPort: "3000"
+  wire:postgresPort: "5432"

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": [],
+      "project": []
+    },
+    "apps/api": {
+      "entry": ["src/common/**/*.ts", "scripts/*.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+    },
+    "packages/eslint-plugin-wire-api": {
+      "project": ["*.js", "rules/**/*.js"]
+    },
+    "apps/web": {
+      "entry": ["src/routes/**/*.tsx", "src/lib/**/*.ts", "vite-plugin-routes.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "apps/docs": {},
+    "packages/types": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/config": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/db": {
+      "entry": ["src/cli-data-source.ts", "src/migrations/*.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/eslint-config": {
+      "project": ["*.js"]
+    },
+    "infra": {
+      "entry": ["components/**/*.ts"],
+      "project": ["*.ts", "components/**/*.ts"]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@wire/docs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "docsify serve .. -p 3000",
+    "typecheck": "echo 'no typecheck for docs' && exit 0",
+    "lint": "echo 'no lint for docs' && exit 0"
+  },
+  "devDependencies": {
+    "docsify-cli": "^4.4.4"
+  }
+}

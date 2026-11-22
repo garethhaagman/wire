@@ -1,0 +1,75 @@
+name: wire
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wire
+      POSTGRES_PASSWORD: wire_dev_password
+      POSTGRES_DB: wire
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wire -d wire"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: build
+    working_dir: /repo/packages/db
+    command: ["bun", "run", "migrate"]
+    environment:
+      DATABASE_URL: postgres://wire:wire_dev_password@postgres:5432/wire
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: "3001"
+      DATABASE_URL: postgres://wire:wire_dev_password@postgres:5432/wire
+      BETTER_AUTH_SECRET: dev-only-secret-change-me-32chars-min
+      BETTER_AUTH_URL: http://localhost:3001
+      WEB_ORIGIN: http://localhost:5173
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:3001
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
+  docs:
+    build:
+      context: .
+      dockerfile: apps/docs/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:

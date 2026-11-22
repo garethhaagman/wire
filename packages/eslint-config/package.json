@@ -1,0 +1,22 @@
+{
+  "name": "@wire/eslint-config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./base.js",
+  "exports": {
+    ".": "./base.js",
+    "./react": "./react.js"
+  },
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16"
+  },
+  "peerDependencies": {
+    "eslint": "^9.17.0",
+    "typescript": "^5.7.2"
+  }
+}
