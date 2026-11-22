@@ -54,6 +54,8 @@ export type FontSource = z.infer<typeof fontSourceSchema>;
 export const typographySchema = z.object({
   sans: fontSourceSchema,
   mono: fontSourceSchema,
+  /** Headings/marketing type (e.g. the auth screen title). Falls back to a system serif stack when unset. */
+  display: fontSourceSchema.optional(),
   /** Base document font size in px; Tailwind/shadcn scale is derived from this via rem. */
   baseSizePx: z.number().min(10).max(24).default(16),
   scale: z.enum(["compact", "comfortable", "spacious"]).default("comfortable"),

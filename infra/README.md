@@ -1,6 +1,6 @@
 # Wire infra (Pulumi)
 
-Provisions the same four containers as `docker-compose.yml` (postgres, api, web, docs) via Pulumi's `docker` provider, per [internal-docs/stack/infra-pulumi.md](../internal-docs/stack/infra-pulumi.md). Use this instead of `make up` when you want changes tracked as infrastructure-as-code (diffs, history, multi-environment config) rather than ad hoc `docker compose up`.
+Provisions the same four containers as `docker-compose.yml` (postgres, api, web, docs) via Pulumi's `docker` provider, per [internal-docs/stack/infra-pulumi.md](../internal-docs/stack/infra-pulumi.md). Use this instead of `make docker-up` when you want changes tracked as infrastructure-as-code (diffs, history, multi-environment config) rather than ad hoc `docker compose up`.
 
 ## Local use
 
@@ -26,4 +26,4 @@ Per [internal-docs/stack/infra-pulumi.md](../internal-docs/stack/infra-pulumi.md
 
 ## Relationship to docker-compose.yml / Makefile
 
-These are two paths to the same containers, not two different stacks — `make up` is the fast local loop, `pulumi up` here is the IaC-tracked path intended for anything beyond a single laptop (staging, a self-hosted customer's production deployment). Both build from the same `apps/*/Dockerfile`s.
+These are two paths to the same containers, not two different stacks — `make docker-up` is the fast local loop, `pulumi up` here is the IaC-tracked path intended for anything beyond a single laptop (staging, a self-hosted customer's production deployment). Both build from the same `apps/*/Dockerfile`s.

@@ -16,6 +16,10 @@ export function createAuth(env: ApiEnv, pool: Pool) {
     emailAndPassword: {
       enabled: true,
     },
+    socialProviders:
+      env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+        ? { google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET } }
+        : {},
     session: {
       cookieCache: {
         enabled: true,

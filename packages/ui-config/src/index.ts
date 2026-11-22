@@ -6,3 +6,4 @@ export * from "./schema.js";
 export * from "./base-config.js";
 export * from "./resolve.js";
 export * from "./to-css-variables.js";
+export * from "./to-tailwind-theme.js";

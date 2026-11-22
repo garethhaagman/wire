@@ -8,11 +8,13 @@ Defined in `@wire/ui-config` (`packages/ui-config/src/`) as a [zod](https://zod.
 interface UiConfig {
   schemaVersion: 1;
   theme: {
+    mode: "light" | "dark" | "system";  // default "light"; "system" follows prefers-color-scheme
     colors: ColorRoles;        // 16 semantic roles (background, primary, border, ...), each a {light, dark?} pair
     radius: "none" | "sm" | "md" | "lg" | "xl" | "full";
     typography: {
       sans: FontSource;         // {kind: "system"} | {kind: "google", family} | {kind: "custom", family, url}
       mono: FontSource;
+      display?: FontSource;     // headings (e.g. auth screen title); system serif stack when unset
       baseSizePx: number;       // 10-24, default 16
       scale: "compact" | "comfortable" | "spacious";
     };

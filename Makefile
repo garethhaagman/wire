@@ -1,67 +1,95 @@
 .DEFAULT_GOAL := help
 COMPOSE := docker compose
+DOCKER_STACK := $(COMPOSE) --profile docker
+ENV_DIRS := apps/api apps/web packages/db
 
-.PHONY: help up down restart logs ps build rebuild clean \
-	install typecheck lint lint-fix knip format \
-	migrate dev-api dev-web dev-docs
+.PHONY: help setup env dev dev-api dev-web dev-docs \
+	db db-down migrate seed clean \
+	docker-up docker-down docker-logs docker-ps docker-rebuild \
+	install typecheck lint test knip format
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
-up: ## Start the full stack (postgres, api, web, docs) in the background
-	$(COMPOSE) up -d --build
+# --- Local development (apps run natively with Bun, only Postgres in Docker) ---
+
+setup: install env ## One-time: install deps and create .env files from .env.example
+
+env: ## Create any missing .env files from .env.example (never overwrites)
+	@for dir in $(ENV_DIRS); do \
+		if [ ! -f $$dir/.env ]; then cp $$dir/.env.example $$dir/.env && echo "  created $$dir/.env"; fi; \
+	done
+
+dev: env db migrate seed ## Start Postgres, migrate, seed dev data, then run api + web + docs with hot reload
 	@echo ""
-	@echo "  web          http://localhost:5173"
-	@echo "  api          http://localhost:3001"
-	@echo "  api docs     http://localhost:3001/docs"
+	@echo "  web           http://localhost:5173"
+	@echo "  api           http://localhost:3001"
+	@echo "  api docs      http://localhost:3001/docs"
 	@echo "  markdown docs http://localhost:3000"
 	@echo ""
-	@echo "  run 'make logs' to tail service output"
+	bun run dev
 
-down: ## Stop and remove all containers
-	$(COMPOSE) down
+dev-api: env db ## Run only the API (plus Postgres)
+	bun run dev:api
 
-restart: ## Restart all services
-	$(COMPOSE) restart
+dev-web: env ## Run only the web app
+	bun run dev:web
 
-logs: ## Tail logs for all services
-	$(COMPOSE) logs -f
+dev-docs: ## Run only the docs viewer
+	bun run dev:docs
 
-ps: ## Show running services
-	$(COMPOSE) ps
+db: ## Start Postgres in Docker and wait until it's healthy
+	bun run db:up
 
-build: ## Build all service images without starting them
-	$(COMPOSE) build
+db-down: ## Stop Postgres (keeps data)
+	$(COMPOSE) stop postgres
 
-rebuild: ## Force-rebuild all images with no cache
-	$(COMPOSE) build --no-cache
+migrate: ## Run Postgres migrations from your machine
+	bun run db:migrate
 
-clean: ## Stop containers and remove volumes (DESTROYS local Postgres data)
-	$(COMPOSE) down -v
+seed: ## Create the dev user (dev@wire.local) and "Wire Dev" workspace if missing
+	bun run db:seed
 
-migrate: ## Run Postgres migrations against the compose stack
-	$(COMPOSE) run --rm migrate
+clean: ## Stop all containers and remove volumes (DESTROYS local Postgres data)
+	$(DOCKER_STACK) down -v
 
-install: ## Install JS dependencies for local (non-Docker) development
+# --- Full stack in Docker (closer to deployment; no hot reload of host edits) ---
+
+docker-up: ## Build and start postgres, api, web, docs all in Docker
+	$(DOCKER_STACK) up -d --build
+	@echo ""
+	@echo "  web           http://localhost:5173"
+	@echo "  api           http://localhost:3001"
+	@echo "  markdown docs http://localhost:3000"
+
+docker-down: ## Stop and remove all containers
+	$(DOCKER_STACK) down
+
+docker-logs: ## Tail logs for all containers
+	$(DOCKER_STACK) logs -f
+
+docker-ps: ## Show running containers
+	$(DOCKER_STACK) ps
+
+docker-rebuild: ## Force-rebuild all images with no cache
+	$(DOCKER_STACK) build --no-cache
+
+# --- Checks ---
+
+install: ## Install JS dependencies
 	bun install
 
-typecheck: ## Typecheck every package/app
+typecheck: ## Typecheck every package/app (turbo, cached)
 	bun run typecheck
 
-lint: ## Lint every package/app (oxlint fast pass + type-aware eslint)
+lint: ## oxlint + type-aware eslint + generated-file checks (turbo, cached)
 	bun run lint
+
+test: ## Run tests (turbo, cached)
+	bun run test
 
 knip: ## Find unused files, exports, and dependencies
 	bun run knip
 
 format: ## Format the repo with Prettier
 	bun run format
-
-dev-api: ## Run the API locally (outside Docker) with hot reload
-	bun run dev:api
-
-dev-web: ## Run the web app locally (outside Docker) with hot reload
-	bun run dev:web
-
-dev-docs: ## Run the docs viewer locally (outside Docker)
-	bun run dev:docs

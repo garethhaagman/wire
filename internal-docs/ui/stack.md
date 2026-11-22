@@ -10,7 +10,7 @@
 
 ## Why CSS variables are the theming substrate
 
-Tailwind utilities (`bg-primary`, `text-muted-foreground`, …) are mapped in `globals.css` to `var(--primary)`, `var(--muted-foreground)`, etc., not to literal colors. The actual values are written onto `:root` at runtime by `applyTheme()` (`apps/web/src/lib/ui-config/apply-theme.ts`), computed from the session's resolved `UiConfig`. This is what makes a config change take effect with zero rebuild: the Tailwind class names are stable across every theme; only the custom property values move. See [theming-and-layout.md](./theming-and-layout.md) for the full resolution path.
+Tailwind utilities (`bg-primary`, `text-muted-foreground`, …) are mapped in `theme.generated.css` (generated from the schema, imported by `globals.css`) to `var(--primary)`, `var(--muted-foreground)`, etc., not to literal colors. The actual values are written onto `:root` at runtime by `applyTheme()` (`apps/web/src/lib/ui-config/apply-theme.ts`), computed from the session's resolved `UiConfig`. This is what makes a config change take effect with zero rebuild: the Tailwind class names are stable across every theme; only the custom property values move. See [theming-and-layout.md](./theming-and-layout.md) for the full resolution path.
 
 ## Why not a component library (MUI, Chakra, Ant)
 

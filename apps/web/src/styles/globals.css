@@ -3,38 +3,25 @@
 /*
  * Semantic color/radius tokens are NOT hardcoded here — they're CSS custom
  * properties written onto :root/.dark at runtime by ConfigProvider, from the
- * resolved UiConfig (see lib/ui-config/apply-theme.ts). This block only maps
- * Tailwind's `@theme` color tokens to those variables, so utilities like
+ * resolved UiConfig (see lib/ui-config/apply-theme.ts). theme.generated.css
+ * maps Tailwind's `@theme` color tokens to those variables, so utilities like
  * `bg-primary` or `text-muted-foreground` always read the live, per-org/user
- * theme instead of a value baked in at build time. See
+ * theme instead of a value baked in at build time. It's generated from
+ * @wire/ui-config's colorRolesSchema — add color roles there, not here. See
  * internal-docs/ui/theming-and-layout.md.
  */
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-ring: var(--ring);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
+@import "./theme.generated.css";
 
+@theme inline {
   --radius-sm: calc(var(--radius) - 0.25rem);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 0.25rem);
   --radius-xl: calc(var(--radius) + 0.5rem);
+  --font-display: var(--ui-font-display);
 }
 
 /*
- * --font-sans / --font-mono are deliberately not remapped above: aliasing a
+ * --font-sans / --font-mono are deliberately not remapped: aliasing a
  * variable to itself is a cycle, which invalidates it. Tailwind's default
  * stacks stay as the fallback and applyTheme() overrides them inline on :root.
  */
@@ -42,6 +29,7 @@
 @layer base {
   :root {
     --radius: 0.5rem;
+    --ui-font-display: ui-serif, Georgia, Cambria, serif;
   }
 
   * {
@@ -55,5 +43,16 @@
     font-family: var(--font-sans);
     font-size: var(--ui-base-size, 16px);
     -webkit-font-smoothing: antialiased;
+  }
+}
+
+/*
+ * Background behind the auth screen shader (components/auth/auth-shader.tsx): matches
+ * the shader's own background color, so the panel still reads as intended before the
+ * first frame or if WebGL is unavailable. Illustration color, not a UI token.
+ */
+@layer components {
+  .auth-shader {
+    background-color: #3a88fe;
   }
 }

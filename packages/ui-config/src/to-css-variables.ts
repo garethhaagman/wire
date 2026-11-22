@@ -13,7 +13,7 @@ export function toCssVariables(config: UiConfig): { light: Record<string, string
   const dark: Record<string, string> = {};
 
   for (const [role, pair] of Object.entries(config.theme.colors) as [keyof ColorRoles, ColorRoles[keyof ColorRoles]][]) {
-    const varName = `--${camelToKebab(role)}`;
+    const varName = colorRoleVarName(role);
     light[varName] = pair.light;
     dark[varName] = pair.dark ?? pair.light;
   }
@@ -22,6 +22,11 @@ export function toCssVariables(config: UiConfig): { light: Record<string, string
   dark["--radius"] = radiusToRem(config.theme.radius);
 
   return { light, dark };
+}
+
+/** `primaryForeground` -> `--primary-foreground`. Shared with toTailwindThemeCss so both sides name variables identically. */
+export function colorRoleVarName(role: string): string {
+  return `--${camelToKebab(role)}`;
 }
 
 function camelToKebab(value: string): string {

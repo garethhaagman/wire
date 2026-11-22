@@ -4,11 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "dev": "bun --bun vite",
+    "build": "bun --bun vite build",
+    "preview": "bun --bun vite preview",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p scripts",
+    "lint": "eslint .",
+    "gen:theme": "bun scripts/generate-theme-css.ts",
+    "check:theme": "bun scripts/generate-theme-css.ts --check"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.5",
@@ -26,10 +28,12 @@
     "tailwindcss": "^4.3.5"
   },
   "devDependencies": {
+    "@types/bun": "^1.1.14",
     "@types/react": "^18.3.17",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "@wire/eslint-config": "workspace:*",
+    "@wire/eslint-plugin-wire-ui": "workspace:*",
     "eslint": "^9.17.0",
     "fast-glob": "^3.3.2",
     "typescript": "^5.7.2",

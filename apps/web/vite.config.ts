@@ -13,6 +13,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // The API's CORS/auth origin is pinned to :5173 (WEB_ORIGIN), so silently
+    // falling back to :5174 would just break sign-in.
+    strictPort: true,
     host: true,
   },
 });

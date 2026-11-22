@@ -1,5 +1,8 @@
 name: wire
 
+# `docker compose up` starts only Postgres; apps run natively via `make dev`.
+# The app containers are opt-in: `docker compose --profile docker up` (or `make docker-up`).
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -19,6 +22,7 @@ services:
       retries: 10
 
   migrate:
+    profiles: ["docker"]
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -32,6 +36,7 @@ services:
         condition: service_healthy
 
   api:
+    profiles: ["docker"]
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -43,6 +48,8 @@ services:
       BETTER_AUTH_SECRET: dev-only-secret-change-me-32chars-min
       BETTER_AUTH_URL: http://localhost:3001
       WEB_ORIGIN: http://localhost:5173
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     ports:
       - "3001:3001"
     depends_on:
@@ -52,6 +59,7 @@ services:
         condition: service_completed_successfully
 
   web:
+    profiles: ["docker"]
     build:
       context: .
       dockerfile: apps/web/Dockerfile
@@ -64,6 +72,7 @@ services:
       - api
 
   docs:
+    profiles: ["docker"]
     build:
       context: .
       dockerfile: apps/docs/Dockerfile

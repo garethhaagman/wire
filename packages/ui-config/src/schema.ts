@@ -14,6 +14,8 @@ import { extensionsSchema } from "./extensions.js";
 export const UI_CONFIG_SCHEMA_VERSION = 1;
 
 export const themeSchema = z.object({
+  /** Which half of each color pair renders. `system` follows the OS `prefers-color-scheme`. */
+  mode: z.enum(["light", "dark", "system"]).default("light"),
   colors: colorRolesSchema,
   radius: radiusSchema.default("md"),
   typography: typographySchema,

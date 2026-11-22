@@ -14,6 +14,17 @@ Wire is an **API-first**, **AI-native** team messaging platform. Humans, softwar
 | Automations as code | Triggers, filters, and actions are declarative and versioned; agents can author and run them. |
 | MCP as distribution | A standard MCP server exposes Wire tools to any MCP-capable host. |
 
+## Local development
+
+Requires [Bun](https://bun.sh) and Docker (for Postgres only).
+
+```bash
+make setup   # once: bun install + .env files from .env.example
+make dev     # Postgres in Docker, migrations, then api + web + docs via Turborepo
+```
+
+Apps run natively with Bun and hot reload: web on http://localhost:5173, API on http://localhost:3001 (OpenAPI UI at `/docs`), markdown docs on http://localhost:3000. `make help` lists everything; `make docker-up` runs the whole stack in containers instead. Checks (`bun run typecheck`, `bun run lint`, `bun run test`) run through Turborepo and are cached.
+
 ## Repository map
 
 | Folder | Contents |

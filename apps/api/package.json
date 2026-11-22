@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "generate": "nest generate",
-    "openapi:export": "bun scripts/export-openapi.ts"
+    "openapi:export": "bun scripts/export-openapi.ts",
+    "seed": "bun scripts/seed-dev.ts"
   },
   "dependencies": {
     "@casl/ability": "^7.1.3",

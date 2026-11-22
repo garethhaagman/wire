@@ -12,14 +12,18 @@
     "infra"
   ],
   "scripts": {
-    "build": "bun run --filter './apps/*' --filter './packages/*' --filter './infra' build",
-    "dev:api": "bun run --filter @wire/api dev",
-    "dev:web": "bun run --filter @wire/web dev",
-    "dev:docs": "bun run --filter @wire/docs dev",
-    "typecheck": "bun run --filter './apps/*' --filter './packages/*' --filter './infra' typecheck",
-    "lint": "bun run lint:oxlint && bun run lint:eslint",
+    "dev": "turbo run dev --ui=tui --filter=@wire/api --filter=@wire/web --filter=@wire/docs",
+    "dev:api": "turbo run dev --ui=tui --filter=@wire/api",
+    "dev:web": "turbo run dev --ui=tui --filter=@wire/web",
+    "dev:docs": "turbo run dev --ui=tui --filter=@wire/docs",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:migrate": "bun run --cwd packages/db migrate",
+    "db:seed": "bun run --cwd apps/api seed",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "bun run lint:oxlint && turbo run lint check:theme",
     "lint:oxlint": "oxlint",
-    "lint:eslint": "bun run --filter './apps/*' --filter './packages/*' --filter './infra' lint",
+    "test": "turbo run test",
     "knip": "knip",
     "format": "prettier --write \"**/*.{ts,tsx,md,json,yml,yaml}\" --ignore-path .gitignore",
     "format:check": "prettier --check \"**/*.{ts,tsx,md,json,yml,yaml}\" --ignore-path .gitignore",
@@ -29,6 +33,7 @@
     "knip": "^5.39.0",
     "oxlint": "^0.15.1",
     "prettier": "^3.4.2",
+    "turbo": "^2.11.13",
     "typescript": "^5.7.2"
   }
 }
