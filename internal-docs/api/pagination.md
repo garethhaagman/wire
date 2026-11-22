@@ -36,4 +36,25 @@ Pagination metadata is always in the response envelope's `meta.pagination`, neve
 
 `PaginationQueryDto` (`apps/api/src/common/dto/pagination-query.dto.ts`) validates and type-coerces `page`/`per_page`/`sort`/`search` as a `@Query()` parameter; `parseFilterQuery()` reads the dynamic `filter[field]` keys off the raw query object since they can't be bound by fixed DTO properties. `buildPaginationMeta()` (`apps/api/src/common/dto/pagination-meta.ts`) computes `total_pages`; controllers return a `PaginatedResult` wrapping the page of items plus the computed metadata — see [responses.md](./responses.md).
 
-This is page-based pagination, not cursor-based — simpler for the current resource set (workspaces, members, channels, agents). High-volume, high-write resources (messages, agent run steps) should move to cursor-based pagination before their row counts make `OFFSET`-style paging slow; that's a per-resource decision, not a global API change, since `meta.pagination`'s shape would need a cursor variant alongside the page-based one.
+Page-based pagination is used for bounded, low-write collections (workspaces, members, channels, agents, bookmarks, files, webhook endpoints, audit events, search).
+
+## Cursor pagination (messages, thread replies, events)
+
+High-write streams use keyset pagination on a per-channel (or per-workspace, for events) sequence number, so page N costs the same as page 1 and inserts never shift a page:
+
+```
+GET /v1/channels/{id}/messages?per_page=50            newest first
+GET /v1/channels/{id}/messages?cursor=YjoxMjM0        next (older) page
+GET /v1/channels/{id}/messages?after_seq=1234         oldest first from a known position (catch-up)
+```
+
+```json
+{
+  "meta": {
+    "request_id": "req_...",
+    "cursor": { "per_page": 50, "has_more": true, "next_cursor": "YjoxMTg1" }
+  }
+}
+```
+
+Cursors are opaque — clients pass `next_cursor` back unchanged and never construct one. `after_seq` is the exception: every message carries its `seq`, so a client that knows the last `seq` it rendered can catch up with `after_seq` directly. `CursorQueryDto`, `CursorPaginatedResult` and `encodeCursor`/`decodeCursor` live in `apps/api/src/common/dto/cursor-paginated-result.ts`; the response interceptor writes `meta.cursor` instead of `meta.pagination`.

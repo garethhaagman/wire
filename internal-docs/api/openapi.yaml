@@ -1,5 +1,126 @@
 openapi: 3.0.0
 paths:
+  /v1/workspaces/{workspaceId}/events:
+    get:
+      operationId: EventsController_list
+      parameters:
+        - name: cursor
+          required: false
+          in: query
+          description: Opaque cursor from a previous response's meta.cursor.next_cursor
+          schema:
+            type: string
+        - name: after_seq
+          required: false
+          in: query
+          description: Return items with seq greater than this, oldest first (catch-up after reconnect).
+            Ignored when cursor is set.
+          schema:
+            minimum: 0
+            type: number
+        - name: per_page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 50
+            type: number
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WireEventDto"
+      security: &a1
+        - cookie: []
+      tags: &a2
+        - Events
+  /v1/workspaces/{workspaceId}/events/stream:
+    get:
+      operationId: EventsController_getStream
+      parameters:
+        - name: types
+          required: false
+          in: query
+          description: Only deliver these event types (comma-separated or repeated)
+          schema:
+            type: array
+            items:
+              type: string
+        - name: channel_ids
+          required: false
+          in: query
+          description: Only deliver events for these channels
+          schema:
+            type: array
+            items:
+              type: string
+        - name: after_seq
+          required: false
+          in: query
+          description: Replay events after this seq first; the Last-Event-ID header takes precedence
+          schema:
+            type: number
+      responses:
+        "200":
+          description: "text/event-stream of WireEvent frames (event: <type>, id: <seq>)"
+      security: *a1
+      tags: *a2
+  /v1/workspaces/{workspaceId}/presence:
+    post:
+      operationId: EventsController_create
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "null"
+      security: *a1
+      tags: *a2
+    get:
+      operationId: EventsController_listPresence
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PresenceEntryDto"
+      security: *a1
+      tags: *a2
+  /v1/channels/{channelId}/typing:
+    post:
+      operationId: EventsController_createTyping
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TypingRequestDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "null"
+      security: *a1
+      tags: *a2
   /health:
     get:
       operationId: HealthController_get
@@ -52,9 +173,9 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkspaceDto"
-      security: &a1
+      security: &a3
         - cookie: []
-      tags: &a2
+      tags: &a4
         - Workspaces
     post:
       operationId: WorkspacesController_create
@@ -78,8 +199,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkspaceDto"
-      security: *a1
-      tags: *a2
+      security: *a3
+      tags: *a4
   /v1/workspaces/{id}:
     get:
       operationId: WorkspacesController_getById
@@ -96,8 +217,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkspaceDto"
-      security: *a1
-      tags: *a2
+      security: *a3
+      tags: *a4
+    patch:
+      operationId: WorkspacesController_update
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkspaceRequestDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceDto"
+      security: *a3
+      tags: *a4
   /v1/workspaces/{workspaceId}/members:
     get:
       operationId: MembersController_list
@@ -137,16 +281,17 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/MemberDto"
-      security: &a3
+      security: &a5
         - cookie: []
-      tags: &a4
+      tags: &a6
         - Members
     post:
       operationId: MembersController_create
       parameters:
-        - name: workspaceId
-          required: true
-          in: path
+        - name: Idempotency-Key
+          in: header
+          description: Replays the original response if the same key is sent again.
+          required: false
           schema:
             type: string
       requestBody:
@@ -162,8 +307,52 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MemberDto"
-      security: *a3
-      tags: *a4
+      security: *a5
+      tags: *a6
+  /v1/workspaces/{workspaceId}/members/me:
+    get:
+      operationId: MembersController_getMe
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberDto"
+      security: *a5
+      tags: *a6
+  /v1/workspaces/{workspaceId}/members/me/preferences:
+    get:
+      operationId: MembersController_getPreferences
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberPreferencesDto"
+      security: *a5
+      tags: *a6
+    patch:
+      operationId: MembersController_updatePreferences
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMemberPreferencesRequestDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberPreferencesDto"
+      security: *a5
+      tags: *a6
   /v1/workspaces/{workspaceId}/members/{id}:
     get:
       operationId: MembersController_getById
@@ -180,8 +369,48 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MemberDto"
-      security: *a3
-      tags: *a4
+      security: *a5
+      tags: *a6
+    patch:
+      operationId: MembersController_update
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMemberRequestDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberDto"
+      security: *a5
+      tags: *a6
+    delete:
+      operationId: MembersController_remove
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "null"
+      security: *a5
+      tags: *a6
   /v1/workspaces/{workspaceId}/channels:
     get:
       operationId: ChannelsController_list
@@ -212,6 +441,26 @@ paths:
           in: query
           schema:
             type: string
+        - name: filter[archived]
+          required: false
+          in: query
+          description: true = include archived channels
+          schema: {}
+        - name: filter[type]
+          required: false
+          in: query
+          schema:
+            enum:
+              - public
+              - private
+              - dm
+              - group_dm
+            type: string
+        - name: filter[joined]
+          required: false
+          in: query
+          description: true = only channels you belong to
+          schema: {}
       responses:
         "200":
           description: ""
@@ -221,16 +470,17 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ChannelDto"
-      security: &a5
+      security: &a7
         - cookie: []
-      tags: &a6
+      tags: &a8
         - Channels
     post:
       operationId: ChannelsController_create
       parameters:
-        - name: workspaceId
-          required: true
-          in: path
+        - name: Idempotency-Key
+          in: header
+          description: Replays the original response if the same key is sent again.
+          required: false
           schema:
             type: string
       requestBody:
@@ -246,8 +496,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ChannelDto"
-      security: *a5
-      tags: *a6
+      security: *a7
+      tags: *a8
   /v1/workspaces/{workspaceId}/channels/{id}:
     get:
       operationId: ChannelsController_getById
@@ -264,12 +514,76 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ChannelDto"
-      security: *a5
-      tags: *a6
-  /v1/channels/{channelId}/messages:
-    get:
-      operationId: MessagesController_list
+      security: *a7
+      tags: *a8
+    patch:
+      operationId: ChannelsController_update
       parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateChannelRequestDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChannelDto"
+      security: *a7
+      tags: *a8
+  /v1/workspaces/{workspaceId}/channels/{id}/archive:
+    post:
+      operationId: ChannelsController_executeArchive
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChannelDto"
+      security: *a7
+      tags: *a8
+  /v1/workspaces/{workspaceId}/channels/{id}/unarchive:
+    post:
+      operationId: ChannelsController_executeUnarchive
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChannelDto"
+      security: *a7
+      tags: *a8
+  /v1/channels/{channelId}/members:
+    get:
+      operationId: ChannelMembersController_list
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
         - name: page
           required: false
           in: query
@@ -304,10 +618,124 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/MessageDto"
-      security: &a7
+                  $ref: "#/components/schemas/ChannelMemberDto"
+      security: &a9
         - cookie: []
-      tags: &a8
+      tags: &a10
+        - Channel members
+    post:
+      operationId: ChannelMembersController_add
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddChannelMemberRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChannelMemberDto"
+      security: *a9
+      tags: *a10
+  /v1/channels/{channelId}/members/{memberId}:
+    delete:
+      operationId: ChannelMembersController_remove
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: memberId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "null"
+      security: *a9
+      tags: *a10
+  /v1/channels/{channelId}/mark-read:
+    post:
+      operationId: ChannelMembersController_executeMarkRead
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarkReadRequestDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChannelMemberDto"
+      security: *a9
+      tags: *a10
+  /v1/channels/{channelId}/messages:
+    get:
+      operationId: MessagesController_list
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: cursor
+          required: false
+          in: query
+          description: Opaque cursor from a previous response's meta.cursor.next_cursor
+          schema:
+            type: string
+        - name: after_seq
+          required: false
+          in: query
+          description: Return items with seq greater than this, oldest first (catch-up after reconnect).
+            Ignored when cursor is set.
+          schema:
+            minimum: 0
+            type: number
+        - name: per_page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 50
+            type: number
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MessageDto"
+      security: &a11
+        - cookie: []
+      tags: &a12
         - Messages
     post:
       operationId: MessagesController_create
@@ -315,6 +743,12 @@ paths:
         - name: channelId
           required: true
           in: path
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          description: Send a client-generated key so a retried post never creates a duplicate message.
+          required: false
           schema:
             type: string
       requestBody:
@@ -330,12 +764,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MessageDto"
-      security: *a7
-      tags: *a8
+      security: *a11
+      tags: *a12
   /v1/channels/{channelId}/messages/{id}:
     get:
       operationId: MessagesController_getById
       parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
         - name: id
           required: true
           in: path
@@ -348,8 +787,58 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MessageDto"
-      security: *a7
-      tags: *a8
+      security: *a11
+      tags: *a12
+    patch:
+      operationId: MessagesController_update
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMessageRequestDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageDto"
+      security: *a11
+      tags: *a12
+    delete:
+      operationId: MessagesController_remove
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "null"
+      security: *a11
+      tags: *a12
   /v1/workspaces/{workspaceId}/agents:
     get:
       operationId: AgentsController_list
@@ -389,16 +878,17 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/AgentDto"
-      security: &a9
+      security: &a13
         - cookie: []
-      tags: &a10
+      tags: &a14
         - Agents
     post:
       operationId: AgentsController_create
       parameters:
-        - name: workspaceId
-          required: true
-          in: path
+        - name: Idempotency-Key
+          in: header
+          description: Replays the original response if the same key is sent again.
+          required: false
           schema:
             type: string
       requestBody:
@@ -414,8 +904,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AgentDto"
-      security: *a9
-      tags: *a10
+      security: *a13
+      tags: *a14
   /v1/workspaces/{workspaceId}/agents/{id}:
     get:
       operationId: AgentsController_getById
@@ -432,8 +922,48 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AgentDto"
-      security: *a9
-      tags: *a10
+      security: *a13
+      tags: *a14
+    patch:
+      operationId: AgentsController_update
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAgentRequestDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentDto"
+      security: *a13
+      tags: *a14
+    delete:
+      operationId: AgentsController_remove
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "null"
+      security: *a13
+      tags: *a14
   /v1/threads/{threadRootId}/messages:
     get:
       operationId: ThreadsController_list
@@ -443,6 +973,232 @@ paths:
           in: path
           schema:
             type: string
+        - name: cursor
+          required: false
+          in: query
+          description: Opaque cursor from a previous response's meta.cursor.next_cursor
+          schema:
+            type: string
+        - name: after_seq
+          required: false
+          in: query
+          description: Return items with seq greater than this, oldest first (catch-up after reconnect).
+            Ignored when cursor is set.
+          schema:
+            minimum: 0
+            type: number
+        - name: per_page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 50
+            type: number
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MessageDto"
+      security: &a15
+        - cookie: []
+      tags: &a16
+        - Threads
+    post:
+      operationId: ThreadsController_reply
+      parameters:
+        - name: threadRootId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          description: Replays the original response if the same key is sent again.
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateThreadReplyRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageDto"
+      security: *a15
+      tags: *a16
+  /v1/threads/{threadRootId}/mark-read:
+    post:
+      operationId: ThreadsController_executeMarkRead
+      parameters:
+        - name: threadRootId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarkReadRequestDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreadReadStateDto"
+      security: *a15
+      tags: *a16
+  /v1/messages/{messageId}/reactions:
+    get:
+      operationId: ReactionsController_list
+      parameters:
+        - name: messageId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReactionDto"
+      security: &a17
+        - cookie: []
+      tags: &a18
+        - Reactions
+    post:
+      operationId: ReactionsController_add
+      parameters:
+        - name: messageId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReactionRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReactionDto"
+      security: *a17
+      tags: *a18
+    delete:
+      operationId: ReactionsController_remove
+      parameters:
+        - name: messageId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: emoji
+          required: true
+          in: query
+          schema: {}
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "null"
+      security: *a17
+      tags: *a18
+  /v1/channels/{channelId}/pins:
+    get:
+      operationId: PinsController_list
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PinDto"
+      security: &a19
+        - cookie: []
+      tags: &a20
+        - Pins
+    post:
+      operationId: PinsController_add
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePinRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PinDto"
+      security: *a19
+      tags: *a20
+  /v1/channels/{channelId}/pins/{id}:
+    delete:
+      operationId: PinsController_remove
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "null"
+      security: *a19
+      tags: *a20
+  /v1/workspaces/{workspaceId}/bookmarks:
+    get:
+      operationId: BookmarksController_list
+      parameters:
         - name: page
           required: false
           in: query
@@ -477,155 +1233,33 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/MessageDto"
-      security: &a11
+                  $ref: "#/components/schemas/BookmarkDto"
+      security: &a21
         - cookie: []
-      tags: &a12
-        - Threads
+      tags: &a22
+        - Bookmarks
     post:
-      operationId: ThreadsController_reply
-      parameters:
-        - name: threadRootId
-          required: true
-          in: path
-          schema:
-            type: string
+      operationId: BookmarksController_add
+      parameters: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateThreadReplyRequestDto"
+              $ref: "#/components/schemas/CreateBookmarkRequestDto"
       responses:
         "201":
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MessageDto"
-      security: *a11
-      tags: *a12
-  /v1/messages/{messageId}/reactions:
-    get:
-      operationId: ReactionsController_list
-      parameters:
-        - name: messageId
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ReactionDto"
-      security: &a13
-        - cookie: []
-      tags: &a14
-        - Reactions
-    post:
-      operationId: ReactionsController_add
-      parameters:
-        - name: messageId
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateReactionRequestDto"
-      responses:
-        "201":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReactionDto"
-      security: *a13
-      tags: *a14
+                $ref: "#/components/schemas/BookmarkDto"
+      security: *a21
+      tags: *a22
+  /v1/workspaces/{workspaceId}/bookmarks/{id}:
     delete:
-      operationId: ReactionsController_remove
+      operationId: BookmarksController_remove
       parameters:
-        - name: messageId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: emoji
-          required: true
-          in: query
-          schema:
-            type: string
-      responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: "null"
-      security: *a13
-      tags: *a14
-  /v1/channels/{channelId}/pins:
-    get:
-      operationId: PinsController_list
-      parameters:
-        - name: channelId
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/PinDto"
-      security: &a15
-        - cookie: []
-      tags: &a16
-        - Pins
-    post:
-      operationId: PinsController_add
-      parameters:
-        - name: channelId
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreatePinRequestDto"
-      responses:
-        "201":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PinDto"
-      security: *a15
-      tags: *a16
-  /v1/channels/{channelId}/pins/{id}:
-    delete:
-      operationId: PinsController_remove
-      parameters:
-        - name: channelId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
@@ -638,8 +1272,8 @@ paths:
             application/json:
               schema:
                 type: "null"
-      security: *a15
-      tags: *a16
+      security: *a21
+      tags: *a22
   /v1/search:
     get:
       operationId: SearchController_list
@@ -647,7 +1281,24 @@ paths:
         - name: q
           required: true
           in: query
-          description: Keyword search query
+          description: Keyword query. Supports "quoted phrases", OR, and -exclusions.
+          schema:
+            type: string
+        - name: workspace_id
+          required: false
+          in: query
+          description: "Limit to one workspace (default: every workspace you belong to)"
+          schema:
+            type: string
+        - name: channel_id
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: thread_root_id
+          required: false
+          in: query
+          description: Limit to one thread (root and replies)
           schema:
             type: string
         - name: page
@@ -682,11 +1333,6 @@ paths:
     get:
       operationId: WebhooksController_list
       parameters:
-        - name: workspaceId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: page
           required: false
           in: query
@@ -722,18 +1368,13 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WebhookEndpointDto"
-      security: &a17
+      security: &a23
         - cookie: []
-      tags: &a18
+      tags: &a24
         - Webhooks
     post:
       operationId: WebhooksController_create
-      parameters:
-        - name: workspaceId
-          required: true
-          in: path
-          schema:
-            type: string
+      parameters: []
       requestBody:
         required: true
         content:
@@ -747,17 +1388,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WebhookEndpointCreatedDto"
-      security: *a17
-      tags: *a18
+      security: *a23
+      tags: *a24
   /v1/workspaces/{workspaceId}/webhook-endpoints/{id}:
     get:
       operationId: WebhooksController_getById
       parameters:
-        - name: workspaceId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
@@ -770,16 +1406,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WebhookEndpointDto"
-      security: *a17
-      tags: *a18
+      security: *a23
+      tags: *a24
     delete:
       operationId: WebhooksController_remove
       parameters:
-        - name: workspaceId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: id
           required: true
           in: path
@@ -792,17 +1423,12 @@ paths:
             application/json:
               schema:
                 type: "null"
-      security: *a17
-      tags: *a18
+      security: *a23
+      tags: *a24
   /v1/workspaces/{workspaceId}/audit-events:
     get:
       operationId: AuditController_list
       parameters:
-        - name: workspaceId
-          required: true
-          in: path
-          schema:
-            type: string
         - name: page
           required: false
           in: query
@@ -858,9 +1484,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FileDto"
-      security: &a19
+      security: &a25
         - cookie: []
-      tags: &a20
+      tags: &a26
         - Files
   /v1/files:
     post:
@@ -879,8 +1505,107 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FileDto"
-      security: *a19
-      tags: *a20
+      security: *a25
+      tags: *a26
+  /v1/channels/{channelId}/files:
+    get:
+      operationId: FilesController_list
+      parameters:
+        - name: channelId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: per_page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: Field to sort by; prefix with - for descending
+          schema:
+            type: string
+        - name: search
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FileDto"
+      security: *a25
+      tags: *a26
+  /v1/workspaces/{workspaceId}/ui-config:
+    get:
+      operationId: UiConfigController_get
+      parameters: []
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UiConfigResourceDto"
+      security: &a27
+        - cookie: []
+      tags: &a28
+        - UiConfig
+  /v1/workspaces/{workspaceId}/ui-config/org:
+    patch:
+      operationId: UiConfigController_updateOrgLayer
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrgUiConfigRequestDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UiConfigResourceDto"
+      security: *a27
+      tags: *a28
+  /v1/workspaces/{workspaceId}/ui-config/me:
+    patch:
+      operationId: UiConfigController_updateUserLayer
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserUiConfigRequestDto"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UiConfigResourceDto"
+      security: *a27
+      tags: *a28
 info:
   title: Wire API
   description: Primary HTTP surface for the Wire AI-native team messaging platform. Generated from
@@ -897,6 +1622,56 @@ components:
       in: cookie
       name: better-auth.session_token
   schemas:
+    WireEventDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: evt_01jd5x0k8f3v8q2m7n4r6t9w1y
+        seq:
+          type: number
+          description: Workspace-wide replay cursor (SSE id / Last-Event-ID)
+        type:
+          type: object
+          example: message.created
+        workspaceId:
+          type: string
+        channelId:
+          type: string
+          nullable: true
+        data:
+          type: object
+        createdAt:
+          type: string
+      required:
+        - id
+        - seq
+        - type
+        - workspaceId
+        - channelId
+        - data
+        - createdAt
+    PresenceEntryDto:
+      type: object
+      properties:
+        memberId:
+          type: string
+        status:
+          type: string
+          enum:
+            - active
+        lastSeenAt:
+          type: string
+      required:
+        - memberId
+        - status
+        - lastSeenAt
+    TypingRequestDto:
+      type: object
+      properties:
+        threadRootId:
+          type: string
+          description: Set when typing a thread reply
     HealthResponseDto:
       type: object
       properties:
@@ -946,21 +1721,30 @@ components:
       required:
         - name
         - dataRegion
+    UpdateWorkspaceRequestDto:
+      type: object
+      properties:
+        name:
+          type: string
     MemberDto:
       type: object
       properties:
         id:
           type: object
-          example: mem_64d9dea525ae84ef6f7bd361
+          example: mem_01jd5x0k8f3v8q2m7n4r6t9w1y
         workspaceId:
           type: string
+        userId:
+          type: string
+          nullable: true
+          description: Null until the invite is claimed
         displayName:
           type: string
         email:
           type: string
         role:
           type: string
-          enum:
+          enum: &a29
             - owner
             - admin
             - member
@@ -972,11 +1756,37 @@ components:
       required:
         - id
         - workspaceId
+        - userId
         - displayName
         - email
         - role
         - createdAt
         - updatedAt
+    MemberPreferencesDto:
+      type: object
+      properties:
+        starredChannelIds:
+          type: array
+          items:
+            type: string
+        mutedChannelIds:
+          type: array
+          items:
+            type: string
+      required:
+        - starredChannelIds
+        - mutedChannelIds
+    UpdateMemberPreferencesRequestDto:
+      type: object
+      properties:
+        starredChannelIds:
+          type: array
+          items:
+            type: string
+        mutedChannelIds:
+          type: array
+          items:
+            type: string
     CreateMemberRequestDto:
       type: object
       properties:
@@ -986,28 +1796,33 @@ components:
           type: string
         role:
           type: string
-          enum:
-            - owner
-            - admin
-            - member
-            - guest
+          enum: *a29
       required:
         - displayName
         - email
         - role
+    UpdateMemberRequestDto:
+      type: object
+      properties:
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: *a29
+          description: Admin-only
     ChannelDto:
       type: object
       properties:
         id:
           type: object
-          example: ch_64d9dea525ae84ef6f7bd361
+          example: ch_01jd5x0k8f3v8q2m7n4r6t9w1y
         workspaceId:
           type: string
         name:
           type: string
         type:
           type: string
-          enum:
+          enum: &a30
             - public
             - private
             - dm
@@ -1016,6 +1831,17 @@ components:
           type: string
           nullable: true
         purpose:
+          type: string
+          nullable: true
+        createdBy:
+          type: string
+          nullable: true
+        memberCount:
+          type: number
+        lastMessageSeq:
+          type: number
+          description: Highest message seq in the channel
+        lastMessageAt:
           type: string
           nullable: true
         archivedAt:
@@ -1025,6 +1851,16 @@ components:
           type: string
         updatedAt:
           type: string
+        isMember:
+          type: boolean
+          description: Whether the requesting member belongs to the channel
+        lastReadSeq:
+          type: number
+          nullable: true
+        unreadCount:
+          type: number
+          nullable: true
+          description: Unread top-level messages, capped at 100
       required:
         - id
         - workspaceId
@@ -1032,39 +1868,96 @@ components:
         - type
         - topic
         - purpose
+        - createdBy
+        - memberCount
+        - lastMessageSeq
+        - lastMessageAt
         - archivedAt
         - createdAt
         - updatedAt
+        - isMember
+        - lastReadSeq
+        - unreadCount
     CreateChannelRequestDto:
       type: object
       properties:
         name:
           type: string
+          description: Required for public/private channels; ignored for dm/group_dm
         type:
           type: string
-          enum:
-            - public
-            - private
-            - dm
-            - group_dm
+          enum: *a30
         topic:
           type: string
         purpose:
           type: string
+        memberIds:
+          description: Initial members besides you; required for dm (1) and group_dm (2-7)
+          type: array
+          items:
+            type: string
       required:
-        - name
         - type
+    UpdateChannelRequestDto:
+      type: object
+      properties:
+        name:
+          type: string
+        topic:
+          type: string
+          nullable: true
+        purpose:
+          type: string
+          nullable: true
+    ChannelMemberDto:
+      type: object
+      properties:
+        channelId:
+          type: string
+        memberId:
+          type: string
+        lastReadSeq:
+          type: number
+        joinedAt:
+          type: string
+      required:
+        - channelId
+        - memberId
+        - lastReadSeq
+        - joinedAt
+    AddChannelMemberRequestDto:
+      type: object
+      properties:
+        memberId:
+          type: string
+          description: Your own member id to join, or another member's to add them
+      required:
+        - memberId
+    MarkReadRequestDto:
+      type: object
+      properties:
+        seq:
+          type: number
+          description: Mark read up to this seq; omit to mark everything read
     MessageDto:
       type: object
       properties:
         id:
           type: object
-          example: msg_64d9dea525ae84ef6f7bd361
+          example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
+        workspaceId:
+          type: string
         channelId:
           type: string
+        seq:
+          type: number
+          description: Per-channel monotonically increasing sequence
         threadRootId:
           type: string
           nullable: true
+        broadcast:
+          type: boolean
+          description: Thread reply also shown in the channel
         actorId:
           type: string
         actorType:
@@ -1077,18 +1970,43 @@ components:
           type: string
         revision:
           type: number
+        replyCount:
+          type: number
+        lastReplyAt:
+          type: string
+          nullable: true
+        reactionCounts:
+          type: object
+          additionalProperties:
+            type: integer
+          example:
+            👍: 3
+        editedAt:
+          type: string
+          nullable: true
+        deletedAt:
+          type: string
+          nullable: true
         createdAt:
           type: string
         updatedAt:
           type: string
       required:
         - id
+        - workspaceId
         - channelId
+        - seq
         - threadRootId
+        - broadcast
         - actorId
         - actorType
         - body
         - revision
+        - replyCount
+        - lastReplyAt
+        - reactionCounts
+        - editedAt
+        - deletedAt
         - createdAt
         - updatedAt
     CreateMessageRequestDto:
@@ -1098,6 +2016,16 @@ components:
           type: string
         threadRootId:
           type: string
+      required:
+        - body
+    UpdateMessageRequestDto:
+      type: object
+      properties:
+        body:
+          type: string
+        revision:
+          type: number
+          description: Expected current revision; 409 if the message has changed since
       required:
         - body
     AgentDto:
@@ -1145,6 +2073,16 @@ components:
       required:
         - handle
         - harnessId
+    UpdateAgentRequestDto:
+      type: object
+      properties:
+        harnessId:
+          type: string
+        status:
+          type: string
+          enum:
+            - active
+            - paused
     CreateThreadReplyRequestDto:
       type: object
       properties:
@@ -1155,6 +2093,13 @@ components:
           description: Also post a copy of this reply to the channel
       required:
         - body
+    ThreadReadStateDto:
+      type: object
+      properties:
+        lastReadSeq:
+          type: number
+      required:
+        - lastReadSeq
     ReactionDto:
       type: object
       properties:
@@ -1211,23 +2156,64 @@ components:
           type: string
       required:
         - messageId
+    BookmarkDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: bkm_01jd5x0k8f3v8q2m7n4r6t9w1y
+        workspaceId:
+          type: string
+        memberId:
+          type: string
+        messageId:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - workspaceId
+        - memberId
+        - messageId
+        - createdAt
+    CreateBookmarkRequestDto:
+      type: object
+      properties:
+        messageId:
+          type: string
+      required:
+        - messageId
     SearchResultDto:
       type: object
       properties:
         messageId:
           type: string
+        workspaceId:
+          type: string
         channelId:
+          type: string
+        threadRootId:
+          type: string
+          nullable: true
+        actorId:
           type: string
         excerpt:
           type: string
+          description: Matching snippet; hits wrapped in <mark></mark>
         score:
           type: number
-          description: Relevance score, 0-1. Mock implementation returns a constant.
+          description: Relevance (ts_rank_cd); only comparable within one response
+        createdAt:
+          type: string
       required:
         - messageId
+        - workspaceId
         - channelId
+        - threadRootId
+        - actorId
         - excerpt
         - score
+        - createdAt
     WebhookEndpointDto:
       type: object
       properties:
@@ -1267,11 +2253,13 @@ components:
         enabledEvents:
           example:
             - message.created
-            - agent.run.completed
+            - thread.reply
+          description: Event types, or "*" for all
           type: array
           items:
             type: string
         channelFilter:
+          description: Only deliver channel events from these channels
           type: array
           items:
             type: string
@@ -1328,9 +2316,17 @@ components:
           nullable: true
         resource:
           type: string
+          example: Message
+        resourceId:
+          type: string
+          nullable: true
         action:
           type: string
+          example: create:create
         agentRunId:
+          type: string
+          nullable: true
+        requestId:
           type: string
           nullable: true
         createdAt:
@@ -1341,15 +2337,19 @@ components:
         - actorId
         - ip
         - resource
+        - resourceId
         - action
         - agentRunId
+        - requestId
         - createdAt
     FileDto:
       type: object
       properties:
         id:
           type: object
-          example: file_64d9dea525ae84ef6f7bd361
+          example: file_01jd5x0k8f3v8q2m7n4r6t9w1y
+        workspaceId:
+          type: string
         channelId:
           type: string
         uploadedBy:
@@ -1370,6 +2370,7 @@ components:
           type: string
       required:
         - id
+        - workspaceId
         - channelId
         - uploadedBy
         - name
@@ -1389,8 +2390,63 @@ components:
           example: image/png
         sizeBytes:
           type: number
+          maximum: 5368709120
       required:
         - channelId
         - name
         - mime
         - sizeBytes
+    UiConfigResourceDto:
+      type: object
+      properties:
+        workspaceId:
+          type: string
+        resolved:
+          type: object
+          description: Fully resolved UiConfig (base + org + user merged, locks applied).
+        warnings:
+          type: array
+          items:
+            type: string
+      required:
+        - workspaceId
+        - resolved
+        - warnings
+    LockDto:
+      type: object
+      properties:
+        path:
+          type: string
+          example: theme.colors.primary
+        lockedBy:
+          type: string
+          enum:
+            - org
+        reason:
+          type: string
+      required:
+        - path
+        - lockedBy
+    UpdateOrgUiConfigRequestDto:
+      type: object
+      properties:
+        override:
+          type: object
+          description: Deep-partial UiConfig override, validated against @wire/ui-config's
+            uiConfigOverrideSchema.
+        locks:
+          type: array
+          items:
+            $ref: "#/components/schemas/LockDto"
+      required:
+        - override
+        - locks
+    UpdateUserUiConfigRequestDto:
+      type: object
+      properties:
+        override:
+          type: object
+          description: Deep-partial UiConfig override, validated against @wire/ui-config's
+            uiConfigOverrideSchema.
+      required:
+        - override

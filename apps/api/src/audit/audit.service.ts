@@ -1,36 +1,62 @@
-import { randomBytes } from "node:crypto";
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable, Logger, type OnApplicationShutdown, type OnModuleInit } from "@nestjs/common";
+import { Database, insertAuditEvents, listAuditEvents, type NewAuditEvent } from "@wire/db";
 import type { AuditEvent } from "@wire/types";
-import { InMemoryStore } from "../common/mock/in-memory-store.js";
+
+const FLUSH_INTERVAL_MS = 500;
+const FLUSH_AT = 200;
+/** Back-pressure bound: if Postgres is unreachable, drop rather than grow without limit. */
+const MAX_BUFFERED = 50_000;
 
 /**
- * Dummy/mock service — in-memory only, no persistence, not wired to other
- * modules' mutations yet. Real implementation records every mutating request
- * automatically (interceptor-level, not per-call) per
- * internal-docs/api/auth-tenancy.md § Audit log.
+ * Audit trail for every mutating request (see AuditInterceptor). Writes are
+ * buffered and flushed as one multi-row insert, so audit costs one round trip per
+ * ~500ms per replica instead of one per request. The trade-off: a hard crash loses
+ * at most one flush window; graceful shutdown flushes.
  */
 @Injectable()
-export class AuditService {
-  private readonly store = new InMemoryStore<AuditEvent>();
+export class AuditService implements OnModuleInit, OnApplicationShutdown {
+  private readonly logger = new Logger(AuditService.name);
+  private buffer: NewAuditEvent[] = [];
+  private timer: NodeJS.Timeout | null = null;
+  private flushing: Promise<void> | null = null;
 
-  list(workspaceId: string, page: number, perPage: number): { items: AuditEvent[]; total: number } {
-    const all = this.store
-      .findAll((e) => e.workspaceId === workspaceId)
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    const start = (page - 1) * perPage;
-    return { items: all.slice(start, start + perPage), total: all.length };
+  constructor(@Inject(Database) private readonly db: Database) {}
+
+  onModuleInit(): void {
+    this.timer = setInterval(() => void this.flush(), FLUSH_INTERVAL_MS);
   }
 
-  record(workspaceId: string, actorId: string, resource: string, action: string, agentRunId: string | null = null): AuditEvent {
-    return this.store.insert({
-      id: `aud_${randomBytes(12).toString("hex")}`,
-      workspaceId,
-      actorId,
-      ip: null,
-      resource,
-      action,
-      agentRunId,
-      createdAt: new Date().toISOString(),
-    });
+  async onApplicationShutdown(): Promise<void> {
+    if (this.timer) clearInterval(this.timer);
+    await this.flushing;
+    await this.flush();
+  }
+
+  list(workspaceId: string, page: number, perPage: number): Promise<{ items: AuditEvent[]; total: number }> {
+    return listAuditEvents(this.db, workspaceId, page, perPage);
+  }
+
+  record(event: Omit<NewAuditEvent, "createdAt">): void {
+    if (this.buffer.length >= MAX_BUFFERED) {
+      this.logger.error("audit buffer full — dropping event");
+      return;
+    }
+    this.buffer.push({ ...event, createdAt: new Date() });
+    if (this.buffer.length >= FLUSH_AT) void this.flush();
+  }
+
+  private flush(): Promise<void> {
+    if (this.flushing || this.buffer.length === 0) return this.flushing ?? Promise.resolve();
+    const batch = this.buffer;
+    this.buffer = [];
+    this.flushing = insertAuditEvents(this.db, batch)
+      .catch((err: unknown) => {
+        this.logger.error(`audit flush failed, requeueing ${batch.length}: ${(err as Error).message}`);
+        this.buffer = batch.concat(this.buffer).slice(0, MAX_BUFFERED);
+      })
+      .finally(() => {
+        this.flushing = null;
+      });
+    return this.flushing;
   }
 }

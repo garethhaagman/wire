@@ -8,6 +8,27 @@ export const apiEnvSchema = z
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     PORT: z.coerce.number().int().positive().default(3001),
     DATABASE_URL: z.string().url(),
+    /** Optional streaming replica for history/search/list reads. */
+    DATABASE_READ_URL: optionalString.pipe(z.string().url().optional()),
+    /** Connections per pool per process — size against PgBouncer/max_connections across all replicas. */
+    DATABASE_POOL_MAX: z.coerce.number().int().positive().default(20),
+    REDIS_URL: z.string().url().default("redis://localhost:6379"),
+    /**
+     * Run the outbox relay, webhook delivery worker, and retention jobs in this
+     * process. Set false on pure API/realtime replicas once a dedicated worker
+     * deployment exists; any number of processes may run them concurrently.
+     */
+    RUN_WORKERS: z
+      .enum(["true", "false"])
+      .default("true")
+      .transform((value) => value === "true"),
+    RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(1000),
+    /**
+     * Pending invites are claimed by email on first sign-in. Requiring a verified
+     * email stops someone signing up with an invitee's address to take their seat.
+     * Defaults to true in production.
+     */
+    MEMBER_CLAIM_REQUIRE_VERIFIED_EMAIL: z.enum(["true", "false"]).optional(),
     BETTER_AUTH_SECRET: z.string().min(32),
     BETTER_AUTH_URL: z.string().url(),
     WEB_ORIGIN: z.string().url(),
@@ -21,6 +42,12 @@ export const apiEnvSchema = z
   });
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>;
+
+export function claimRequiresVerifiedEmail(env: ApiEnv): boolean {
+  return env.MEMBER_CLAIM_REQUIRE_VERIFIED_EMAIL
+    ? env.MEMBER_CLAIM_REQUIRE_VERIFIED_EMAIL === "true"
+    : env.NODE_ENV === "production";
+}
 
 export function parseApiEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
   const result = apiEnvSchema.safeParse(source);

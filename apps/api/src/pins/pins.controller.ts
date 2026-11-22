@@ -1,13 +1,15 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Req } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post } from "@nestjs/common";
 import { ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import type { Pin } from "@wire/types";
-import type { AuthedRequest } from "../auth/session.guard.js";
+import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
+import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
 import { PinsService } from "./pins.service.js";
 import { CreatePinRequestDto, PinDto } from "./dto/pin.dto.js";
 
 @ApiTags("Pins")
 @ApiCookieAuth()
+@WorkspaceScope({ from: "channel", param: "channelId" })
 @Controller("v1/channels/:channelId/pins")
 export class PinsController {
   constructor(private readonly pins: PinsService) {}
@@ -15,28 +17,31 @@ export class PinsController {
   @Get()
   @RequirePermission("read", "Pin")
   @ApiOkResponse({ type: PinDto, isArray: true })
-  list(@Param("channelId") channelId: string): Pin[] {
-    return this.pins.list(channelId);
+  list(@CurrentActor() actor: WorkspaceActor, @Param("channelId") channelId: string): Promise<Pin[]> {
+    return this.pins.list(actor, channelId);
   }
 
   @Post()
   @RequirePermission("create", "Pin")
   @ApiCreatedResponse({ type: PinDto })
   add(
-    @Req() req: AuthedRequest,
+    @CurrentActor() actor: WorkspaceActor,
     @Param("channelId") channelId: string,
     @Body() body: CreatePinRequestDto,
-  ): Pin {
-    const pinnedBy = req.session!.user.id;
-    return this.pins.add(channelId, body.messageId, pinnedBy);
+  ): Promise<Pin> {
+    return this.pins.add(actor, channelId, body.messageId);
   }
 
   @Delete(":id")
   @RequirePermission("delete", "Pin")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })
-  remove(@Param("channelId") channelId: string, @Param("id") id: string): null {
-    this.pins.remove(channelId, id);
+  async remove(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("channelId") channelId: string,
+    @Param("id") id: string,
+  ): Promise<null> {
+    await this.pins.remove(actor, channelId, id);
     return null;
   }
 }

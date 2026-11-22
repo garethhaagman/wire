@@ -1,19 +1,25 @@
-import { CanActivate, ExecutionContext, HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { CanActivate, ExecutionContext, HttpStatus, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import type { AuthedRequest } from "../auth/session.guard.js";
 import { Public } from "../auth/public.decorator.js";
 import { ApiException } from "../common/errors/api-exception.js";
 import { defineAbilityFor } from "./ability.factory.js";
 import { PermissionMetadata } from "./require-permission.decorator.js";
-import { RoleResolverService } from "./role-resolver.service.js";
+import { MemberResolverService } from "./member-resolver.service.js";
+import { ScopeResolverService } from "./scope-resolver.service.js";
+import { WorkspaceScope, type WorkspaceScopeSource } from "./workspace-scope.decorator.js";
+import type { Role } from "./permission.types.js";
 
 /**
  * Registered globally (app.module.ts), after SessionGuard, so req.session is
- * already populated. Reads the route's @RequirePermission metadata, resolves the
- * caller's role for this request, builds a CASL ability for that role, and checks
- * it. A route with no @RequirePermission (and not @Public()) is a configuration
- * bug, not an open route — see internal-docs/api/permissions.md; the lint rule is
- * the real enforcement, this guard fails closed as defense in depth.
+ * already populated. For workspace-scoped routes it resolves the workspace (from
+ * `:workspaceId` or the route's @WorkspaceScope), requires an active membership,
+ * and derives the CASL role from the member's role; then checks the route's
+ * @RequirePermission. A route with no @RequirePermission (and not @Public()) is a
+ * configuration bug, not an open route — see internal-docs/api/permissions.md; the
+ * lint rule is the real enforcement, this guard fails closed as defense in depth.
+ *
+ * Non-members get 404, not 403, so workspace and channel ids can't be probed.
  */
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -21,10 +27,11 @@ export class PermissionsGuard implements CanActivate {
 
   constructor(
     private readonly reflector: Reflector,
-    private readonly roleResolver: RoleResolverService,
+    private readonly scopes: ScopeResolverService,
+    private readonly members: MemberResolverService,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     if (this.reflector.get(Public, context.getHandler())) {
       return true;
     }
@@ -43,10 +50,39 @@ export class PermissionsGuard implements CanActivate {
     }
 
     const req = context.switchToHttp().getRequest<AuthedRequest>();
-    const email = req.session!.user.email;
-    const role = this.roleResolver.resolve(req, email);
-    const ability = defineAbilityFor(role);
+    const user = req.session!.user;
+    const source = this.scopeSource(context, req);
+    const workspaceId = source ? await this.scopes.resolve(source, req) : undefined;
 
+    if (workspaceId === null) {
+      throw new NotFoundException("The requested resource does not exist.");
+    }
+
+    let role: Role = "member";
+    let member = null;
+    if (workspaceId) {
+      member = await this.members.resolve(workspaceId, {
+        id: user.id,
+        email: user.email,
+        emailVerified: user.emailVerified,
+      });
+      if (!member) {
+        throw new NotFoundException("The requested resource does not exist.");
+      }
+      role = member.role === "owner" || member.role === "admin" ? "admin" : "member";
+    }
+
+    req.actor = {
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      emailVerified: user.emailVerified,
+      workspaceId: workspaceId ?? null,
+      member,
+      role,
+    };
+
+    const ability = defineAbilityFor(role);
     if (!ability.can(required.action, required.subject)) {
       throw new ApiException(
         "PERMISSION_DENIED",
@@ -56,5 +92,11 @@ export class PermissionsGuard implements CanActivate {
     }
 
     return true;
+  }
+
+  private scopeSource(context: ExecutionContext, req: AuthedRequest): WorkspaceScopeSource | null {
+    const declared = this.reflector.getAllAndOverride(WorkspaceScope, [context.getHandler(), context.getClass()]);
+    if (declared) return declared;
+    return req.params["workspaceId"] ? { from: "workspace", param: "workspaceId" } : null;
   }
 }

@@ -1,6 +1,7 @@
 /** Mirrors internal-docs/product/02-core-concepts.md § File */
 export interface WireFile {
   id: `file_${string}`;
+  workspaceId: string;
   channelId: string;
   uploadedBy: string;
   name: string;

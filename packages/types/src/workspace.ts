@@ -16,3 +16,7 @@ export interface CreateWorkspaceRequest {
   name: string;
   dataRegion: string;
 }
+
+export interface UpdateWorkspaceRequest {
+  name?: string;
+}

@@ -14,14 +14,20 @@ export class AuditEventDto implements AuditEvent {
   @ApiProperty({ nullable: true, type: String })
   ip!: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ example: "Message" })
   resource!: string;
 
-  @ApiProperty()
+  @ApiProperty({ nullable: true, type: String })
+  resourceId!: string | null;
+
+  @ApiProperty({ example: "create:create" })
   action!: string;
 
   @ApiProperty({ nullable: true, type: String })
   agentRunId!: string | null;
+
+  @ApiProperty({ nullable: true, type: String })
+  requestId!: string | null;
 
   @ApiProperty()
   createdAt!: string;

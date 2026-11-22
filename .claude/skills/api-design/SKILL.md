@@ -1,7 +1,7 @@
 ---
 name: api-design
 description: Use when adding, changing, or reviewing any endpoint in apps/api — a new resource controller, a new DTO, a new error case, or anything touching the HTTP surface. Also use when asked about Wire's API conventions, response envelope, error codes, pagination, headers, or OpenAPI spec generation.
-version: "1.2.0"
+version: "1.3.0"
 ---
 
 # Wire API design
@@ -81,6 +81,16 @@ Full detail, the complete admin/member permission matrix, and a known gap in rol
 - Prefer Nest's built-in exceptions (`NotFoundException`, `ForbiddenException`, ...) when the default HTTP-status → code mapping is already correct (`apps/api/src/common/errors/http-status-error-code.map.ts`).
 - Use `ApiException` subclasses (`apps/api/src/common/errors/api-exception.ts`) — e.g. `ValidationException`, `ResourceConflictException` — when you need an explicit code or field-level `details`.
 - **Never** `throw new Error(...)` in `apps/api` — it always maps to a generic 500 `INTERNAL_ERROR`. `wire-api/no-bare-error-throw` lints for this.
+
+### Never return raw error messages
+
+`error.message` is written by us, for the API consumer. It must never contain text that came from somewhere else — a caught exception's `message`/`stack`, a Postgres or Redis error, a third-party API response body, a file path, SQL, or any internal identifier the caller couldn't already see.
+
+- **Don't** pass a caught error through: `throw new BadRequestException(err.message)`, `new ApiException(code, \`failed: ${err}\`, ...)`, or `details: [{ message: e.message }]` are all violations.
+- **Do** catch, log the raw error server-side (`this.logger.error(...)` — it's correlated by `X-Request-ID`), and throw an authored message: `throw new ResourceConflictException("An agent with handle @x already exists.")`.
+- Map expected database errors to a specific exception at the source — e.g. `isUniqueViolation(err, "UQ_…")` → `ResourceConflictException` — and rethrow everything else unchanged so the filter turns it into a generic `INTERNAL_ERROR`.
+- Every 5xx reaches the client as `"An unexpected error occurred."` — `ApiExceptionFilter` enforces this for anything that isn't an `ApiException` (including Nest/library `HttpException`s with a 5xx status). Don't try to be helpful in a 5xx message; the `request_id` in `meta` is what support uses to find the logged cause.
+- The same applies to stored errors surfaced later (e.g. a webhook delivery's `last_error`): return a code or a summary we wrote, never the raw upstream text.
 
 Full detail: `internal-docs/api/errors.md`.
 

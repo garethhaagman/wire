@@ -5,7 +5,9 @@ export interface AuditEvent {
   actorId: string;
   ip: string | null;
   resource: string;
+  resourceId: string | null;
   action: string;
   agentRunId: string | null;
+  requestId: string | null;
   createdAt: string;
 }

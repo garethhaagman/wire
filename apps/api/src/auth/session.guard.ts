@@ -4,9 +4,12 @@ import type { Request } from "express";
 import { AUTH_INSTANCE } from "./auth.module.js";
 import type { Auth } from "./auth.config.js";
 import { Public } from "./public.decorator.js";
+import type { RequestActor } from "../permissions/actor.js";
 
 export interface AuthedRequest extends Request {
   session?: Awaited<ReturnType<Auth["api"]["getSession"]>>;
+  /** Populated by PermissionsGuard — prefer the @CurrentActor()/@CurrentUser() param decorators. */
+  actor?: RequestActor;
 }
 
 /**

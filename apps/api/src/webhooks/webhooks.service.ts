@@ -1,59 +1,82 @@
 import { randomBytes } from "node:crypto";
-import { Injectable, NotFoundException } from "@nestjs/common";
-import type { CreateWebhookEndpointRequest, WebhookEndpoint } from "@wire/types";
-import { InMemoryStore } from "../common/mock/in-memory-store.js";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import type { ApiEnv } from "@wire/config";
+import {
+  Database,
+  deleteWebhookEndpoint,
+  filterWorkspaceChannelIds,
+  findWebhookEndpoint,
+  insertWebhookEndpoint,
+  listWebhookEndpoints,
+} from "@wire/db";
+import { WIRE_EVENT_TYPES, type CreateWebhookEndpointRequest, type WebhookEndpoint } from "@wire/types";
+import { ValidationException } from "../common/errors/api-exception.js";
+import { API_ENV } from "../config/env.provider.js";
+import type { WorkspaceActor } from "../permissions/actor.js";
+import { WebhookSecretBox } from "./webhook-secret-box.js";
 
-interface WebhookEndpointRecord extends WebhookEndpoint {
-  secret: string;
-}
-
-function toPublic(record: WebhookEndpointRecord): WebhookEndpoint {
-  const { secret: _secret, ...rest } = record;
-  return rest;
-}
+const SUBSCRIBABLE = new Set<string>([...WIRE_EVENT_TYPES, "*"]);
 
 /**
- * Dummy/mock service — in-memory only, no persistence, no actual delivery.
- * Real implementation (signing, retries, delivery worker) per
- * internal-docs/api/events-webhooks.md and internal-docs/product/04-implementation-roadmap.md Phase 4.
+ * Endpoint registry. Delivery (signing, retries, backoff) is WebhookDeliveryWorker;
+ * jobs are enqueued by the outbox relay. See internal-docs/api/events-webhooks.md.
  */
 @Injectable()
 export class WebhooksService {
-  private readonly store = new InMemoryStore<WebhookEndpointRecord>();
+  constructor(
+    @Inject(Database) private readonly db: Database,
+    @Inject(API_ENV) private readonly env: ApiEnv,
+    private readonly secrets: WebhookSecretBox,
+  ) {}
 
-  list(workspaceId: string, page: number, perPage: number): { items: WebhookEndpoint[]; total: number } {
-    const all = this.store.findAll((w) => w.workspaceId === workspaceId);
-    const start = (page - 1) * perPage;
-    return { items: all.slice(start, start + perPage).map(toPublic), total: all.length };
+  list(actor: WorkspaceActor, page: number, perPage: number): Promise<{ items: WebhookEndpoint[]; total: number }> {
+    return listWebhookEndpoints(this.db, actor.workspaceId, page, perPage);
   }
 
-  getById(workspaceId: string, id: string): WebhookEndpoint {
-    const record = this.store.findOne((w) => w.workspaceId === workspaceId && w.id === id);
-    if (!record) {
+  async getById(actor: WorkspaceActor, id: string): Promise<WebhookEndpoint> {
+    const endpoint = await findWebhookEndpoint(this.db, actor.workspaceId, id);
+    if (!endpoint) {
       throw new NotFoundException(`No webhook endpoint with id ${id}`);
     }
-    return toPublic(record);
+    return endpoint;
   }
 
-  /** Returns the record including `secret` — the one time it's ever visible. */
-  create(workspaceId: string, input: CreateWebhookEndpointRequest): WebhookEndpointRecord {
-    const now = new Date().toISOString();
-    return this.store.insert({
-      id: `whe_${randomBytes(12).toString("hex")}`,
-      workspaceId,
+  /** Returns the endpoint plus its signing secret — the one time the secret is ever visible. */
+  async create(actor: WorkspaceActor, input: CreateWebhookEndpointRequest): Promise<WebhookEndpoint & { secret: string }> {
+    await this.validate(actor, input);
+    const secret = `whsec_${randomBytes(32).toString("base64url")}`;
+    const endpoint = await insertWebhookEndpoint(this.db, {
+      workspaceId: actor.workspaceId,
       url: input.url,
-      enabledEvents: input.enabledEvents,
-      channelFilter: input.channelFilter ?? null,
-      secret: `whsec_${randomBytes(24).toString("hex")}`,
-      createdAt: now,
-      updatedAt: now,
+      enabledEvents: [...new Set(input.enabledEvents)],
+      channelFilter: input.channelFilter?.length ? [...new Set(input.channelFilter)] : null,
+      secretCiphertext: this.secrets.seal(secret),
     });
+    return { ...endpoint, secret };
   }
 
-  remove(workspaceId: string, id: string): void {
-    const removed = this.store.remove((w) => w.workspaceId === workspaceId && w.id === id);
-    if (!removed) {
+  async remove(actor: WorkspaceActor, id: string): Promise<void> {
+    if (!(await deleteWebhookEndpoint(this.db, actor.workspaceId, id))) {
       throw new NotFoundException(`No webhook endpoint with id ${id}`);
     }
+  }
+
+  private async validate(actor: WorkspaceActor, input: CreateWebhookEndpointRequest): Promise<void> {
+    const details = [];
+    if (this.env.NODE_ENV === "production" && new URL(input.url).protocol !== "https:") {
+      details.push({ field: "url", code: "INSECURE_URL", message: "Webhook URLs must use https" });
+    }
+    const unknown = input.enabledEvents.filter((e) => !SUBSCRIBABLE.has(e));
+    if (unknown.length) {
+      details.push({ field: "enabledEvents", code: "UNKNOWN_EVENT_TYPE", message: `Unknown event types: ${unknown.join(", ")}` });
+    }
+    if (input.channelFilter?.length) {
+      const found = new Set(await filterWorkspaceChannelIds(this.db, actor.workspaceId, input.channelFilter));
+      const missing = input.channelFilter.filter((id) => !found.has(id));
+      if (missing.length) {
+        details.push({ field: "channelFilter", code: "UNKNOWN_CHANNEL", message: `No such channels: ${missing.join(", ")}` });
+      }
+    }
+    if (details.length) throw new ValidationException(details);
   }
 }

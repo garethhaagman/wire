@@ -9,7 +9,7 @@ import {
 
 /**
  * Mirrors internal-docs/data-model/data-model.md `workspaces` table.
- * id uses the ws_ prefix convention generated at insert time (see WorkspacesRepository).
+ * Used by the TypeORM migration CLI only — runtime queries go through repositories/workspaces.ts.
  */
 @Entity({ name: "workspaces" })
 export class WorkspaceEntity {

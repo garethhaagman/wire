@@ -21,4 +21,4 @@ Wire's buyers skew toward orgs that white-label internal tools or run Wire along
 
 ## Status
 
-Implemented: `@wire/ui-config` (schema, base config, resolver, CSS variable projection), the `GET/PATCH /v1/workspaces/:workspaceId/ui-config` endpoints (mock/in-memory, same caveat as every other non-Postgres-backed resource per the root README), and a minimal config-driven shell in `apps/web` (nav rail, channel list, topbar, composer slots) proving the pattern. Not yet built: the admin settings UI for editing org config/locks, the user-facing theme/layout picker, additional layouts beyond `default`, and persistence of the org/user layers to Postgres (currently in-memory, per [config-schema.md](./config-schema.md) "Storage").
+Implemented: `@wire/ui-config` (schema, base config, resolver, CSS variable projection), the `GET/PATCH /v1/workspaces/:workspaceId/ui-config` endpoints (Postgres-backed), and a minimal config-driven shell in `apps/web` (nav rail, channel list, topbar, composer slots) proving the pattern. Not yet built: the admin settings UI for editing org config/locks, the user-facing theme/layout picker, and additional layouts beyond `default`.

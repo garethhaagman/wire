@@ -1,43 +1,66 @@
-import { randomBytes } from "node:crypto";
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
+import { appendEvents, Database, deleteReaction, insertReaction, listReactions } from "@wire/db";
 import type { Reaction } from "@wire/types";
-import { InMemoryStore } from "../common/mock/in-memory-store.js";
+import { ChannelAccessService } from "../channels/channel-access.service.js";
 import { ResourceConflictException } from "../common/errors/api-exception.js";
+import { OutboxRelayService } from "../events/outbox-relay.service.js";
+import type { WorkspaceActor } from "../permissions/actor.js";
 
-/**
- * Dummy/mock service — in-memory only, no persistence. Real implementation per
- * internal-docs/product/04-implementation-roadmap.md Phase 1.
- */
 @Injectable()
 export class ReactionsService {
-  private readonly store = new InMemoryStore<Reaction>();
+  constructor(
+    @Inject(Database) private readonly db: Database,
+    private readonly access: ChannelAccessService,
+    private readonly relay: OutboxRelayService,
+  ) {}
 
-  list(messageId: string): Reaction[] {
-    return this.store.findAll((r) => r.messageId === messageId);
+  async list(actor: WorkspaceActor, messageId: string): Promise<Reaction[]> {
+    await this.access.readableMessage(actor, messageId);
+    return listReactions(this.db, messageId);
   }
 
-  add(messageId: string, actorId: string, emoji: string): Reaction {
-    const existing = this.store.findOne(
-      (r) => r.messageId === messageId && r.actorId === actorId && r.emoji === emoji,
-    );
-    if (existing) {
-      throw new ResourceConflictException(
-        `Actor ${actorId} already reacted to message ${messageId} with ${emoji}`,
-      );
-    }
+  async add(actor: WorkspaceActor, messageId: string, emoji: string): Promise<Reaction> {
+    const { message } = await this.access.readableMessage(actor, messageId);
+    await this.access.writable(actor, message.channelId);
 
-    return this.store.insert({
-      id: `rxn_${randomBytes(12).toString("hex")}`,
-      messageId,
-      actorId,
-      emoji,
-      createdAt: new Date().toISOString(),
+    const reaction = await this.db.tx(async (tx) => {
+      const inserted = await insertReaction(tx, {
+        workspaceId: actor.workspaceId,
+        messageId,
+        actorId: actor.member.id,
+        emoji,
+      });
+      if (inserted) {
+        await appendEvents(tx, [
+          { workspaceId: actor.workspaceId, type: "reaction.added", channelId: message.channelId, data: { reaction: inserted } },
+        ]);
+      }
+      return inserted;
     });
+    if (!reaction) {
+      throw new ResourceConflictException(`You already reacted to message ${messageId} with ${emoji}`);
+    }
+    this.relay.kick();
+    return reaction;
   }
 
-  remove(messageId: string, actorId: string, emoji: string): boolean {
-    return this.store.remove(
-      (r) => r.messageId === messageId && r.actorId === actorId && r.emoji === emoji,
-    );
+  /** Idempotent: removing a reaction that isn't there succeeds without emitting an event. */
+  async remove(actor: WorkspaceActor, messageId: string, emoji: string): Promise<void> {
+    const { message } = await this.access.readableMessage(actor, messageId);
+    const removed = await this.db.tx(async (tx) => {
+      const didRemove = await deleteReaction(tx, { messageId, actorId: actor.member.id, emoji });
+      if (didRemove) {
+        await appendEvents(tx, [
+          {
+            workspaceId: actor.workspaceId,
+            type: "reaction.removed",
+            channelId: message.channelId,
+            data: { messageId, actorId: actor.member.id, emoji },
+          },
+        ]);
+      }
+      return didRemove;
+    });
+    if (removed) this.relay.kick();
   }
 }

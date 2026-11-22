@@ -25,3 +25,9 @@ export class CreateReactionRequestDto implements CreateReactionRequest {
   @Length(1, 32)
   emoji!: string;
 }
+
+export class RemoveReactionQueryDto {
+  @IsString()
+  @Length(1, 32)
+  emoji!: string;
+}

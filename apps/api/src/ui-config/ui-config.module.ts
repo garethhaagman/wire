@@ -5,6 +5,5 @@ import { UiConfigService } from "./ui-config.service.js";
 @Module({
   controllers: [UiConfigController],
   providers: [UiConfigService],
-  exports: [UiConfigService],
 })
 export class UiConfigModule {}

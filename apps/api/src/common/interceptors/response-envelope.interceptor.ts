@@ -10,11 +10,14 @@ import type { Response } from "express";
 import { map, type Observable } from "rxjs";
 import type { RequestWithId } from "../middleware/request-id.middleware.js";
 import { PaginatedResult } from "../dto/paginated-result.js";
+import { CursorPaginatedResult } from "../dto/cursor-paginated-result.js";
 
 /**
  * Wraps every successful controller return value in the universal envelope
  * ({success, data, error, meta}) — see internal-docs/api/responses.md. Controllers
- * never build this themselves; they return plain data or a PaginatedResult.
+ * never build this themselves; they return plain data, a PaginatedResult, or a
+ * CursorPaginatedResult. Streaming handlers (SSE) write their own response, so
+ * headers may already be sent by the time this runs.
  */
 @Injectable()
 export class ResponseEnvelopeInterceptor<T> implements NestInterceptor<T, ApiResponse<T>> {
@@ -25,7 +28,7 @@ export class ResponseEnvelopeInterceptor<T> implements NestInterceptor<T, ApiRes
 
     return next.handle().pipe(
       map((payload): ApiResponse<T> => {
-        res.setHeader("X-API-Version", API_VERSION);
+        if (!res.headersSent) res.setHeader("X-API-Version", API_VERSION);
 
         if (payload instanceof PaginatedResult) {
           return {
@@ -36,6 +39,19 @@ export class ResponseEnvelopeInterceptor<T> implements NestInterceptor<T, ApiRes
               request_id: req.requestId,
               api_version: API_VERSION,
               pagination: payload.pagination,
+            },
+          };
+        }
+
+        if (payload instanceof CursorPaginatedResult) {
+          return {
+            success: true,
+            data: payload.items as unknown as T,
+            error: null,
+            meta: {
+              request_id: req.requestId,
+              api_version: API_VERSION,
+              cursor: payload.cursor,
             },
           };
         }

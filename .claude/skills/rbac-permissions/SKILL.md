@@ -94,6 +94,8 @@ curl -b cookies.txt -X POST http://localhost:3001/v1/workspaces/{id}/whatever ..
 
 A `403` response looks like: `{"success":false,"error":{"code":"PERMISSION_DENIED","message":"Role 'member' cannot create Foo."}}` — if you see `INTERNAL_ERROR` instead, the route is missing its `@RequirePermission` entirely (the guard fails closed, see `permissions.guard.ts`) — that's a different bug than a permission being wrong, fix it per Scenario 1.
 
-## Known gap — don't build on top of this assuming it's fixed
+## Workspace scope — required on routes without `:workspaceId`
 
-`RoleResolverService` resolves role from `req.params.workspaceId`. Routes with no `:workspaceId` in their path (`messages`, `channels`, `reactions`, `pins`, `threads`, `search`, `files`) **always resolve to `member`**, regardless of the caller's real role, because there's no join back to a workspace yet. If you're testing a permission change on one of these routes and admin-only behavior isn't kicking in, this is almost certainly why — not a bug in your change. See `internal-docs/api/permissions.md` for the full explanation.
+Role comes from the caller's membership in the route's workspace. Routes with a `:workspaceId` param get this for free; anything nested under a channel/message/thread/file must declare `@WorkspaceScope({ from: "channel" | "message" | "file", param })` (class or handler level), or `bodyChannel` / `optionalQueryWorkspace` — see `internal-docs/api/permissions.md` § Workspace scope. Non-members get `404`, not `403`. If a handler uses `@CurrentActor()` on an unscoped route you'll get `INTERNAL_ERROR` — add the decorator.
+
+Per-row rules ("own message", "channel member", "last owner") are service-level, not CASL — a `403` from a service is a different thing to fix than a missing ability rule.

@@ -1,7 +1,7 @@
-import { Body, Controller, Param, Patch, Get, Req } from "@nestjs/common";
+import { Body, Controller, Patch, Get } from "@nestjs/common";
 import { ApiCookieAuth, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import type { UiConfigResource } from "@wire/types";
-import type { AuthedRequest } from "../auth/session.guard.js";
+import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { UiConfigService } from "./ui-config.service.js";
 import { UiConfigResourceDto, UpdateOrgUiConfigRequestDto, UpdateUserUiConfigRequestDto } from "./dto/ui-config.dto.js";
@@ -21,33 +21,29 @@ export class UiConfigController {
   @Get()
   @RequirePermission("read", "UiConfig")
   @ApiOkResponse({ type: UiConfigResourceDto })
-  get(@Req() req: AuthedRequest, @Param("workspaceId") workspaceId: string): UiConfigResource {
-    const userId = req.session!.user.id;
-    return this.uiConfig.resolve(workspaceId, userId);
+  get(@CurrentActor() actor: WorkspaceActor): Promise<UiConfigResource> {
+    return this.uiConfig.resolve(actor);
   }
 
   @Patch("org")
   @RequirePermission("manage", "UiConfig")
   @ApiOkResponse({ type: UiConfigResourceDto })
-  updateOrgLayer(
-    @Req() req: AuthedRequest,
-    @Param("workspaceId") workspaceId: string,
+  async updateOrgLayer(
+    @CurrentActor() actor: WorkspaceActor,
     @Body() body: UpdateOrgUiConfigRequestDto,
-  ): UiConfigResource {
-    this.uiConfig.setOrgLayer(workspaceId, body.override, body.locks);
-    return this.uiConfig.resolve(workspaceId, req.session!.user.id);
+  ): Promise<UiConfigResource> {
+    await this.uiConfig.setOrgLayer(actor, body.override, body.locks);
+    return this.uiConfig.resolve(actor);
   }
 
   @Patch("me")
   @RequirePermission("update", "UiConfig")
   @ApiOkResponse({ type: UiConfigResourceDto })
-  updateUserLayer(
-    @Req() req: AuthedRequest,
-    @Param("workspaceId") workspaceId: string,
+  async updateUserLayer(
+    @CurrentActor() actor: WorkspaceActor,
     @Body() body: UpdateUserUiConfigRequestDto,
-  ): UiConfigResource {
-    const userId = req.session!.user.id;
-    this.uiConfig.setUserLayer(workspaceId, userId, body.override);
-    return this.uiConfig.resolve(workspaceId, userId);
+  ): Promise<UiConfigResource> {
+    await this.uiConfig.setUserLayer(actor, body.override);
+    return this.uiConfig.resolve(actor);
   }
 }

@@ -1,6 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsString, Length, Matches } from "class-validator";
-import type { Agent, CreateAgentRequest } from "@wire/types";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { IsIn, IsOptional, IsString, Length, Matches } from "class-validator";
+import type { Agent, CreateAgentRequest, UpdateAgentRequest } from "@wire/types";
 
 export class AgentDto implements Agent {
   @ApiProperty({ example: "agt_64d9dea525ae84ef6f7bd361" })
@@ -38,4 +38,17 @@ export class CreateAgentRequestDto implements CreateAgentRequest {
   @ApiProperty()
   @IsString()
   harnessId!: string;
+}
+
+export class UpdateAgentRequestDto implements UpdateAgentRequest {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 64)
+  harnessId?: string;
+
+  @ApiPropertyOptional({ enum: ["active", "paused"] })
+  @IsOptional()
+  @IsIn(["active", "paused"])
+  status?: "active" | "paused";
 }

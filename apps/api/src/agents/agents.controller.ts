@@ -1,12 +1,14 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
-import { ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseInterceptors } from "@nestjs/common";
+import { ApiCookieAuth, ApiCreatedResponse, ApiHeader, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import type { Agent } from "@wire/types";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
 import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
 import { PaginatedResult } from "../common/dto/paginated-result.js";
+import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor.js";
+import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { AgentsService } from "./agents.service.js";
-import { AgentDto, CreateAgentRequestDto } from "./dto/agent.dto.js";
+import { AgentDto, CreateAgentRequestDto, UpdateAgentRequestDto } from "./dto/agent.dto.js";
 
 @ApiTags("Agents")
 @ApiCookieAuth()
@@ -17,24 +19,42 @@ export class AgentsController {
   @Get()
   @RequirePermission("read", "Agent")
   @ApiOkResponse({ type: AgentDto, isArray: true })
-  list(@Query() query: PaginationQueryDto): PaginatedResult<Agent> {
+  async list(@CurrentActor() actor: WorkspaceActor, @Query() query: PaginationQueryDto): Promise<PaginatedResult<Agent>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
-    const { items, total } = this.agents.list(page, perPage);
+    const { items, total } = await this.agents.list(actor, page, perPage);
     return new PaginatedResult(items, buildPaginationMeta(page, perPage, total));
   }
 
   @Get(":id")
   @RequirePermission("read", "Agent")
   @ApiOkResponse({ type: AgentDto })
-  getById(@Param("id") id: string): Agent {
-    return this.agents.getById(id);
+  getById(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<Agent> {
+    return this.agents.getById(actor, id);
   }
 
   @Post()
   @RequirePermission("create", "Agent")
+  @ApiHeader({ name: "Idempotency-Key", required: false, description: "Replays the original response if the same key is sent again." })
   @ApiCreatedResponse({ type: AgentDto })
-  create(@Param("workspaceId") workspaceId: string, @Body() body: CreateAgentRequestDto): Agent {
-    return this.agents.create(workspaceId, body);
+  @UseInterceptors(IdempotencyInterceptor)
+  create(@CurrentActor() actor: WorkspaceActor, @Body() body: CreateAgentRequestDto): Promise<Agent> {
+    return this.agents.create(actor, body);
+  }
+
+  @Patch(":id")
+  @RequirePermission("update", "Agent")
+  @ApiOkResponse({ type: AgentDto })
+  update(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string, @Body() body: UpdateAgentRequestDto): Promise<Agent> {
+    return this.agents.update(actor, id, body);
+  }
+
+  @Delete(":id")
+  @RequirePermission("delete", "Agent")
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ schema: { type: "null" } })
+  async remove(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<null> {
+    await this.agents.remove(actor, id);
+    return null;
   }
 }

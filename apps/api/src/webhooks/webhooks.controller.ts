@@ -4,6 +4,7 @@ import type { WebhookEndpoint } from "@wire/types";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
 import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
 import { PaginatedResult } from "../common/dto/paginated-result.js";
+import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { WebhooksService } from "./webhooks.service.js";
 import {
@@ -23,39 +24,39 @@ export class WebhooksController {
   @Get()
   @RequirePermission("read", "WebhookEndpoint")
   @ApiOkResponse({ type: WebhookEndpointDto, isArray: true })
-  list(
-    @Param("workspaceId") workspaceId: string,
+  async list(
+    @CurrentActor() actor: WorkspaceActor,
     @Query() query: PaginationQueryDto,
-  ): PaginatedResult<WebhookEndpoint> {
+  ): Promise<PaginatedResult<WebhookEndpoint>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
-    const { items, total } = this.webhooks.list(workspaceId, page, perPage);
+    const { items, total } = await this.webhooks.list(actor, page, perPage);
     return new PaginatedResult(items, buildPaginationMeta(page, perPage, total));
   }
 
   @Get(":id")
   @RequirePermission("read", "WebhookEndpoint")
   @ApiOkResponse({ type: WebhookEndpointDto })
-  getById(@Param("workspaceId") workspaceId: string, @Param("id") id: string): WebhookEndpoint {
-    return this.webhooks.getById(workspaceId, id);
+  getById(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<WebhookEndpoint> {
+    return this.webhooks.getById(actor, id);
   }
 
   @Post()
   @RequirePermission("create", "WebhookEndpoint")
   @ApiCreatedResponse({ type: WebhookEndpointCreatedDto })
   create(
-    @Param("workspaceId") workspaceId: string,
+    @CurrentActor() actor: WorkspaceActor,
     @Body() body: CreateWebhookEndpointRequestDto,
-  ): WebhookEndpointCreatedDto {
-    return this.webhooks.create(workspaceId, body);
+  ): Promise<WebhookEndpointCreatedDto> {
+    return this.webhooks.create(actor, body);
   }
 
   @Delete(":id")
   @RequirePermission("delete", "WebhookEndpoint")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })
-  remove(@Param("workspaceId") workspaceId: string, @Param("id") id: string): null {
-    this.webhooks.remove(workspaceId, id);
+  async remove(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<null> {
+    await this.webhooks.remove(actor, id);
     return null;
   }
 }

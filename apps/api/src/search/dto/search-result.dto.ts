@@ -6,11 +6,23 @@ export class SearchResultDto implements SearchResult {
   messageId!: string;
 
   @ApiProperty()
-  channelId!: string;
+  workspaceId!: string;
 
   @ApiProperty()
+  channelId!: string;
+
+  @ApiProperty({ nullable: true, type: String })
+  threadRootId!: string | null;
+
+  @ApiProperty()
+  actorId!: string;
+
+  @ApiProperty({ description: "Matching snippet; hits wrapped in <mark></mark>" })
   excerpt!: string;
 
-  @ApiProperty({ description: "Relevance score, 0-1. Mock implementation returns a constant." })
+  @ApiProperty({ description: "Relevance (ts_rank_cd); only comparable within one response" })
   score!: number;
+
+  @ApiProperty()
+  createdAt!: string;
 }

@@ -12,16 +12,20 @@ export type PermissionSubject =
   | "Workspace"
   | "Member"
   | "Channel"
+  | "ChannelMember"
   | "Message"
   | "Thread"
   | "Reaction"
   | "Pin"
+  | "Bookmark"
   | "Agent"
   | "File"
   | "Search"
   | "WebhookEndpoint"
   | "AuditEvent"
-  | "UiConfig";
+  | "UiConfig"
+  | "Event"
+  | "Presence";
 
 export type AppAbility = MongoAbility<[PermissionAction, PermissionSubject]>;
 

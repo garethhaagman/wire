@@ -1,6 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsString, Length, Matches } from "class-validator";
-import type { CreateWorkspaceRequest, Workspace } from "@wire/types";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { IsOptional, IsString, Length, Matches } from "class-validator";
+import type { CreateWorkspaceRequest, UpdateWorkspaceRequest, Workspace } from "@wire/types";
 
 // Swagger-only schema shadow of the @wire/types interface — see health-response.dto.ts
 // for why this exists alongside (not instead of) the canonical type.
@@ -34,4 +34,12 @@ export class CreateWorkspaceRequestDto implements CreateWorkspaceRequest {
   @IsString()
   @Matches(/^[a-z]{2}$/, { message: "dataRegion must be a 2-letter region code, e.g. 'us' or 'eu'" })
   dataRegion!: string;
+}
+
+export class UpdateWorkspaceRequestDto implements UpdateWorkspaceRequest {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  name?: string;
 }

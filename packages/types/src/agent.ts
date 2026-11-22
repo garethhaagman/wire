@@ -14,3 +14,8 @@ export interface CreateAgentRequest {
   handle: string;
   harnessId: string;
 }
+
+export interface UpdateAgentRequest {
+  harnessId?: string;
+  status?: "active" | "paused";
+}

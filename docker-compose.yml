@@ -1,6 +1,6 @@
 name: wire
 
-# `docker compose up` starts only Postgres; apps run natively via `make dev`.
+# `docker compose up` starts only Postgres and Redis; apps run natively via `make dev`.
 # The app containers are opt-in: `docker compose --profile docker up` (or `make docker-up`).
 
 services:
@@ -17,6 +17,20 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U wire -d wire"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Sessions cache, rate limits, idempotency keys, presence, and realtime pub/sub.
+  # Everything in it is reconstructible — Postgres is the source of truth.
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -45,6 +59,7 @@ services:
       NODE_ENV: development
       PORT: "3001"
       DATABASE_URL: postgres://wire:wire_dev_password@postgres:5432/wire
+      REDIS_URL: redis://redis:6379
       BETTER_AUTH_SECRET: dev-only-secret-change-me-32chars-min
       BETTER_AUTH_URL: http://localhost:3001
       WEB_ORIGIN: http://localhost:5173
@@ -54,6 +69,8 @@ services:
       - "3001:3001"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully

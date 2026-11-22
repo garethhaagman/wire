@@ -13,6 +13,8 @@ import type { RequestWithId } from "../middleware/request-id.middleware.js";
 import { ApiException } from "../errors/api-exception.js";
 import { errorCodeForStatus } from "../errors/http-status-error-code.map.js";
 
+const GENERIC_MESSAGE = "An unexpected error occurred.";
+
 /**
  * Catches every thrown error and maps it to the universal error envelope —
  * internal-docs/api/errors.md. Nothing else in the app should build an error
@@ -62,7 +64,12 @@ export class ApiExceptionFilter implements ExceptionFilter {
     }
 
     if (exception instanceof HttpException) {
-      const status = exception.getStatus();
+      const status: HttpStatus = exception.getStatus();
+      // A 5xx HttpException that isn't one of ours may carry a message from a
+      // library or dependency — never let it reach the client.
+      if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+        return { status, error: { code: errorCodeForStatus(status), message: GENERIC_MESSAGE } };
+      }
       const response = exception.getResponse();
       const message =
         typeof response === "string"
@@ -82,7 +89,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       error: {
         code: "INTERNAL_ERROR",
-        message: "An unexpected error occurred.",
+        message: GENERIC_MESSAGE,
       },
     };
   }

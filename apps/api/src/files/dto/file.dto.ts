@@ -1,10 +1,13 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, IsString, Min } from "class-validator";
+import { IsInt, IsString, Length, Max, Min } from "class-validator";
 import type { CreateFileRequest, WireFile } from "@wire/types";
 
 export class FileDto implements WireFile {
-  @ApiProperty({ example: "file_64d9dea525ae84ef6f7bd361" })
+  @ApiProperty({ example: "file_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   id!: WireFile["id"];
+
+  @ApiProperty()
+  workspaceId!: string;
 
   @ApiProperty()
   channelId!: string;
@@ -35,14 +38,17 @@ export class CreateFileRequestDto implements CreateFileRequest {
 
   @ApiProperty()
   @IsString()
+  @Length(1, 255)
   name!: string;
 
   @ApiProperty({ example: "image/png" })
   @IsString()
+  @Length(1, 255)
   mime!: string;
 
-  @ApiProperty()
+  @ApiProperty({ maximum: 5 * 1024 ** 3 })
   @IsInt()
   @Min(0)
+  @Max(5 * 1024 ** 3)
   sizeBytes!: number;
 }

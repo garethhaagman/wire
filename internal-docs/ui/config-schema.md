@@ -83,6 +83,6 @@ A new *arrangement* of existing UI (move the composer, resize a sidebar, pick a 
 
 The schema is zod specifically so an internal agent generating or modifying a `UiConfigOverride` gets the same type hints and `safeParse` validation a human editing it in TypeScript would — there is no separate "agent schema." This isn't built yet (no agent tool calls into `PATCH .../ui-config` today), but the validation path (`parseOrThrow` in `apps/api/src/ui-config/ui-config.service.ts`, surfacing zod issues as `VALIDATION_ERROR` field details per [api/errors.md](../api/errors.md)) is what that integration would reuse unchanged.
 
-## Storage (current vs. intended)
+## Storage
 
-Today: `UiConfigService` (`apps/api/src/ui-config/ui-config.service.ts`) holds the org layer and user layers in-memory `Map`s — same mock-service caveat as every other non-Postgres-backed resource in this app (see root README "Status"). Intended: org layer on `workspaces.ui_config` (jsonb) alongside the existing `policies` column (see [data-model/data-model.md](../data-model/data-model.md)), user layer on a new `members.ui_config_override` (jsonb) column, `locks` as a jsonb array on the same `workspaces` row. No migration exists yet — this is a Phase 2+ item per [product/04-implementation-roadmap.md](../product/04-implementation-roadmap.md).
+The org layer lives on `workspaces.ui_config` (jsonb) with `locks` on `workspaces.ui_config_locks` (jsonb array); the user layer on `members.ui_config_override` (jsonb) — migration `1700000000001-CreateMessagingSchema`. `UiConfigService` validates layers on write and re-validates on read, so a schema change can't make a stored layer crash resolution (an invalid stored layer is skipped and logged).

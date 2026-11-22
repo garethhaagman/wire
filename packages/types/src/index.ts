@@ -10,6 +10,8 @@ export * from "./webhook-endpoint.js";
 export * from "./audit-event.js";
 export * from "./file.js";
 export * from "./search.js";
+export * from "./bookmark.js";
+export * from "./event.js";
 export * from "./envelope.js";
 export * from "./pagination.js";
 export * from "./ui-config.js";

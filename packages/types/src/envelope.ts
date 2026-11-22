@@ -27,6 +27,7 @@ export interface ApiMeta {
   request_id: string;
   api_version: string;
   pagination?: ApiPagination;
+  cursor?: ApiCursorPagination;
 }
 
 export interface ApiPagination {
@@ -34,6 +35,17 @@ export interface ApiPagination {
   per_page: number;
   total: number;
   total_pages: number;
+}
+
+/**
+ * Keyset pagination for high-volume collections (messages, thread replies, events)
+ * where OFFSET/COUNT(*) don't scale — see internal-docs/api/pagination.md. Pass
+ * `next_cursor` back as `cursor` to fetch the next page.
+ */
+export interface ApiCursorPagination {
+  per_page: number;
+  has_more: boolean;
+  next_cursor: string | null;
 }
 
 /**

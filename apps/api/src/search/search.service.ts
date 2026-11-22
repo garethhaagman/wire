@@ -1,35 +1,50 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
+import { Database, listMembershipsForUser, searchMessages, type SearchScope } from "@wire/db";
 import type { SearchResult } from "@wire/types";
-import { MessagesService } from "../messages/messages.service.js";
+import type { RequestActor } from "../permissions/actor.js";
 
-const EXCERPT_RADIUS = 40;
+interface SearchInput {
+  query: string;
+  channelId?: string | undefined;
+  threadRootId?: string | undefined;
+  page: number;
+  perPage: number;
+}
 
 /**
- * Dummy/mock keyword search over the in-memory message store — case-insensitive
- * substring match, no ranking model. Real implementation (hybrid/semantic search,
- * embeddings, relevance scoring) per internal-docs/retrieval/retrieval.md.
+ * Keyword search over Postgres full-text (GIN index on messages.search_vector),
+ * served from the read replica when one is configured. The channel ACL is applied
+ * inside the query. Hybrid/semantic search (embeddings, re-ranking) is the target
+ * design in internal-docs/retrieval/retrieval.md.
  */
 @Injectable()
 export class SearchService {
-  constructor(private readonly messages: MessagesService) {}
+  constructor(@Inject(Database) private readonly db: Database) {}
 
-  search(query: string, page: number, perPage: number): { items: SearchResult[]; total: number } {
-    const needle = query.toLowerCase();
-    const matches = this.messages
-      .findAll((m) => m.body.toLowerCase().includes(needle))
-      .map((m): SearchResult => {
-        const index = m.body.toLowerCase().indexOf(needle);
-        const start = Math.max(0, index - EXCERPT_RADIUS);
-        const end = Math.min(m.body.length, index + needle.length + EXCERPT_RADIUS);
-        return {
-          messageId: m.id,
-          channelId: m.channelId,
-          excerpt: m.body.slice(start, end),
-          score: 1,
-        };
-      });
+  async search(actor: RequestActor, input: SearchInput): Promise<{ items: SearchResult[]; total: number }> {
+    const scope = await this.scopeFor(actor);
+    if (scope.memberIds.length === 0) return { items: [], total: 0 };
+    return searchMessages(this.db.reader, scope, {
+      query: input.query,
+      channelId: input.channelId,
+      threadRootId: input.threadRootId,
+      limit: input.perPage,
+      offset: (input.page - 1) * input.perPage,
+    });
+  }
 
-    const start = (page - 1) * perPage;
-    return { items: matches.slice(start, start + perPage), total: matches.length };
+  /** One workspace when `workspace_id` scoped the request, otherwise every workspace the caller belongs to. */
+  private async scopeFor(actor: RequestActor): Promise<SearchScope> {
+    if (actor.workspaceId && actor.member) {
+      return {
+        memberIds: [actor.member.id],
+        publicWorkspaceIds: actor.member.role === "guest" ? [] : [actor.workspaceId],
+      };
+    }
+    const memberships = await listMembershipsForUser(this.db, actor.userId);
+    return {
+      memberIds: memberships.map((m) => m.memberId),
+      publicWorkspaceIds: memberships.filter((m) => m.role !== "guest").map((m) => m.workspaceId),
+    };
   }
 }

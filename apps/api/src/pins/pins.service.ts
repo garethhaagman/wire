@@ -1,40 +1,54 @@
-import { randomBytes } from "node:crypto";
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { appendEvents, Database, deletePin, insertPin, listPins } from "@wire/db";
 import type { Pin } from "@wire/types";
-import { InMemoryStore } from "../common/mock/in-memory-store.js";
+import { ChannelAccessService } from "../channels/channel-access.service.js";
 import { ResourceConflictException } from "../common/errors/api-exception.js";
+import { OutboxRelayService } from "../events/outbox-relay.service.js";
+import type { WorkspaceActor } from "../permissions/actor.js";
 
-/**
- * Dummy/mock service — in-memory only, no persistence. Real implementation per
- * internal-docs/product/04-implementation-roadmap.md Phase 1.
- */
 @Injectable()
 export class PinsService {
-  private readonly store = new InMemoryStore<Pin>();
+  constructor(
+    @Inject(Database) private readonly db: Database,
+    private readonly access: ChannelAccessService,
+    private readonly relay: OutboxRelayService,
+  ) {}
 
-  list(channelId: string): Pin[] {
-    return this.store.findAll((p) => p.channelId === channelId);
+  async list(actor: WorkspaceActor, channelId: string): Promise<Pin[]> {
+    await this.access.readable(actor, channelId);
+    return listPins(this.db, channelId);
   }
 
-  add(channelId: string, messageId: string, pinnedBy: string): Pin {
-    const existing = this.store.findOne((p) => p.channelId === channelId && p.messageId === messageId);
-    if (existing) {
+  async add(actor: WorkspaceActor, channelId: string, messageId: string): Promise<Pin> {
+    await this.access.writable(actor, channelId);
+    await this.access.readableMessage(actor, messageId, { channelId });
+
+    const pin = await this.db.tx(async (tx) => {
+      const inserted = await insertPin(tx, { workspaceId: actor.workspaceId, channelId, messageId, pinnedBy: actor.member.id });
+      if (inserted) {
+        await appendEvents(tx, [{ workspaceId: actor.workspaceId, type: "pin.added", channelId, data: { pin: inserted } }]);
+      }
+      return inserted;
+    });
+    if (!pin) {
       throw new ResourceConflictException(`Message ${messageId} is already pinned in channel ${channelId}`);
     }
-
-    return this.store.insert({
-      id: `pin_${randomBytes(12).toString("hex")}`,
-      channelId,
-      messageId,
-      pinnedBy,
-      createdAt: new Date().toISOString(),
-    });
+    this.relay.kick();
+    return pin;
   }
 
-  remove(channelId: string, pinId: string): void {
-    const removed = this.store.remove((p) => p.channelId === channelId && p.id === pinId);
+  async remove(actor: WorkspaceActor, channelId: string, pinId: string): Promise<void> {
+    await this.access.writable(actor, channelId);
+    const removed = await this.db.tx(async (tx) => {
+      const pin = await deletePin(tx, channelId, pinId);
+      if (pin) {
+        await appendEvents(tx, [{ workspaceId: actor.workspaceId, type: "pin.removed", channelId, data: { pin } }]);
+      }
+      return pin;
+    });
     if (!removed) {
       throw new NotFoundException(`No pin with id ${pinId} in channel ${channelId}`);
     }
+    this.relay.kick();
   }
 }

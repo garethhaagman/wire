@@ -1,14 +1,10 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { ZodError } from "zod";
-import {
-  resolveUiConfig,
-  uiConfigOverrideSchema,
-  lockSetSchema,
-  type UiConfigOverride,
-  type LockSet,
-} from "@wire/ui-config";
+import { Database, getOrgUiConfig, getUiConfigOverride, setOrgUiConfig, setUiConfigOverride } from "@wire/db";
+import { resolveUiConfig, uiConfigOverrideSchema, lockSetSchema } from "@wire/ui-config";
 import type { UiConfigResource } from "@wire/types";
 import { ValidationException } from "../common/errors/api-exception.js";
+import type { WorkspaceActor } from "../permissions/actor.js";
 
 function parseOrThrow<T>(schema: { parse: (input: unknown) => T }, input: unknown): T {
   try {
@@ -27,50 +23,52 @@ function parseOrThrow<T>(schema: { parse: (input: unknown) => T }, input: unknow
   }
 }
 
-interface OrgLayer {
-  override: UiConfigOverride;
-  locks: LockSet;
-}
-
 /**
- * Dummy/mock service — in-memory only, no persistence, same caveat as every
- * other mock service in this app (see members.service.ts). Real
- * implementation stores the org layer on `workspaces.ui_config` and the user
- * layer on `members.ui_config_override` per internal-docs/ui/config-schema.md
- * "Storage".
+ * Org layer lives on `workspaces.ui_config` / `ui_config_locks`, the user layer on
+ * `members.ui_config_override` (internal-docs/ui/config-schema.md "Storage").
+ * Layers are validated on write and re-validated on read, so a schema change can
+ * never make a stored layer crash resolution — an invalid layer is skipped.
  */
 @Injectable()
 export class UiConfigService {
-  private readonly orgLayers = new Map<string, OrgLayer>();
-  private readonly userLayers = new Map<string, UiConfigOverride>();
+  private readonly logger = new Logger(UiConfigService.name);
 
-  private userKey(workspaceId: string, userId: string): string {
-    return `${workspaceId}:${userId}`;
-  }
+  constructor(@Inject(Database) private readonly db: Database) {}
 
-  resolve(workspaceId: string, userId: string): UiConfigResource {
-    const org = this.orgLayers.get(workspaceId);
-    const user = this.userLayers.get(this.userKey(workspaceId, userId));
+  async resolve(actor: WorkspaceActor): Promise<UiConfigResource> {
+    const [org, user] = await Promise.all([
+      getOrgUiConfig(this.db, actor.workspaceId),
+      getUiConfigOverride(this.db, actor.member.id),
+    ]);
 
     const { config, warnings } = resolveUiConfig({
-      org: org?.override,
-      user,
-      locks: org?.locks,
+      org: org ? this.stored(uiConfigOverrideSchema, org.override, "org override") : undefined,
+      locks: org ? this.stored(lockSetSchema, org.locks, "org locks") : undefined,
+      user: user === null ? undefined : this.stored(uiConfigOverrideSchema, user, "user override"),
     });
 
-    return { workspaceId, resolved: config, warnings };
+    return { workspaceId: actor.workspaceId, resolved: config, warnings };
   }
 
   /** Admin-only — see @RequirePermission("manage", "UiConfig") on the controller route. */
-  setOrgLayer(workspaceId: string, override: unknown, locks: unknown): void {
-    const parsedOverride = parseOrThrow(uiConfigOverrideSchema, override);
-    const parsedLocks = parseOrThrow(lockSetSchema, locks);
-    this.orgLayers.set(workspaceId, { override: parsedOverride, locks: parsedLocks });
+  async setOrgLayer(actor: WorkspaceActor, override: unknown, locks: unknown): Promise<void> {
+    await setOrgUiConfig(this.db, actor.workspaceId, {
+      override: parseOrThrow(uiConfigOverrideSchema, override),
+      locks: parseOrThrow(lockSetSchema, locks),
+    });
   }
 
-  /** A member may only ever write their own layer — enforced by the controller passing the session's own userId, never a param. */
-  setUserLayer(workspaceId: string, userId: string, override: unknown): void {
-    const parsedOverride = parseOrThrow(uiConfigOverrideSchema, override);
-    this.userLayers.set(this.userKey(workspaceId, userId), parsedOverride);
+  /** Always the caller's own member row — never a param. */
+  async setUserLayer(actor: WorkspaceActor, override: unknown): Promise<void> {
+    await setUiConfigOverride(this.db, actor.member.id, parseOrThrow(uiConfigOverrideSchema, override));
+  }
+
+  private stored<T>(schema: { safeParse: (input: unknown) => { success: true; data: T } | { success: false } }, value: unknown, label: string): T | undefined {
+    const result = schema.safeParse(value);
+    if (!result.success) {
+      this.logger.warn(`ignoring invalid stored ui-config ${label}`);
+      return undefined;
+    }
+    return result.data;
   }
 }

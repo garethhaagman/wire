@@ -1,30 +1,63 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { WorkspacesRepository, WorkspaceEntity, type ListWorkspacesResult } from "@wire/db";
-import type { Repository } from "typeorm";
-import type { CreateWorkspaceRequest, Workspace } from "@wire/types";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  claimInvitesByEmail,
+  Database,
+  findWorkspace,
+  insertWorkspace,
+  listWorkspacesForUser,
+  updateWorkspace,
+} from "@wire/db";
+import type { CreateWorkspaceRequest, UpdateWorkspaceRequest, Workspace } from "@wire/types";
+import type { RequestActor } from "../permissions/actor.js";
+import { MemberResolverService } from "../permissions/member-resolver.service.js";
 
 @Injectable()
 export class WorkspacesService {
-  private readonly repo: WorkspacesRepository;
+  constructor(
+    @Inject(Database) private readonly db: Database,
+    private readonly members: MemberResolverService,
+  ) {}
 
-  constructor(@InjectRepository(WorkspaceEntity) repo: Repository<WorkspaceEntity>) {
-    this.repo = new WorkspacesRepository(repo);
+  /** Workspaces the caller belongs to; pending invites for their email are claimed first. */
+  async list(actor: RequestActor, page: number, perPage: number): Promise<{ items: Workspace[]; total: number }> {
+    if (this.members.canClaim({ id: actor.userId, email: actor.email, emailVerified: actor.emailVerified })) {
+      const claimed = await claimInvitesByEmail(this.db, actor.userId, actor.email);
+      await Promise.all(claimed.map((m) => this.members.invalidate(m.workspaceId, actor.userId)));
+    }
+    return listWorkspacesForUser(this.db.primary, actor.userId, page, perPage);
   }
 
-  list(orgId: string, page: number, perPage: number): Promise<ListWorkspacesResult> {
-    return this.repo.list(orgId, { page, perPage });
-  }
-
-  async getById(orgId: string, id: string): Promise<Workspace> {
-    const workspace = await this.repo.findById(orgId, id);
+  async getById(id: string): Promise<Workspace> {
+    const workspace = await findWorkspace(this.db, id);
     if (!workspace) {
       throw new NotFoundException(`No workspace with id ${id}`);
     }
     return workspace;
   }
 
-  create(orgId: string, input: CreateWorkspaceRequest): Promise<Workspace> {
-    return this.repo.create(orgId, input);
+  /**
+   * Skeleton-scope tenancy: org_id is the creating user's id (see
+   * WorkspacesController). The creator becomes the owner member and joins #general
+   * in the same transaction.
+   */
+  async create(actor: RequestActor, input: CreateWorkspaceRequest): Promise<Workspace> {
+    const { workspace } = await this.db.tx((tx) =>
+      insertWorkspace(tx, {
+        orgId: actor.userId,
+        name: input.name,
+        dataRegion: input.dataRegion,
+        owner: { userId: actor.userId, email: actor.email, displayName: actor.name },
+      }),
+    );
+    await this.members.invalidate(workspace.id, actor.userId);
+    return workspace;
+  }
+
+  async update(id: string, input: UpdateWorkspaceRequest): Promise<Workspace> {
+    const workspace = await updateWorkspace(this.db, id, input);
+    if (!workspace) {
+      throw new NotFoundException(`No workspace with id ${id}`);
+    }
+    return workspace;
   }
 }

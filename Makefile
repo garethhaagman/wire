@@ -38,11 +38,11 @@ dev-web: env ## Run only the web app
 dev-docs: ## Run only the docs viewer
 	bun run dev:docs
 
-db: ## Start Postgres in Docker and wait until it's healthy
+db: ## Start Postgres and Redis in Docker and wait until they're healthy
 	bun run db:up
 
-db-down: ## Stop Postgres (keeps data)
-	$(COMPOSE) stop postgres
+db-down: ## Stop Postgres and Redis (keeps data)
+	$(COMPOSE) stop postgres redis
 
 migrate: ## Run Postgres migrations from your machine
 	bun run db:migrate

@@ -49,7 +49,7 @@ RateLimit-Reset: 30
 
 `RateLimit-*` headers are set on **every** response, not just 429s, so clients can monitor their remaining quota proactively.
 
-Implementation: `RateLimitMiddleware` (`apps/api/src/common/middleware/rate-limit.middleware.ts`) — currently an in-memory, per-IP, single-instance fixed-window limiter (1000 req/min). This enforces the real header/429/Retry-After contract so clients and SDKs can be built against correct behavior now; production needs a shared store (Redis) once there's more than one API instance, but the contract doesn't change when that lands.
+Implementation: `RateLimitMiddleware` (`apps/api/src/common/middleware/rate-limit.middleware.ts`) — a fixed-window limiter in Redis (one atomic Lua `INCR`+`PEXPIRE`), shared across every API replica. Keyed by session (hashed cookie) when present, else IP; `RATE_LIMIT_PER_MINUTE` (default 1000). It fails open — a Redis outage disables limiting rather than the API.
 
 ### SDK retry behavior
 
@@ -65,4 +65,4 @@ POST /v1/workspaces
 Idempotency-Key: a-client-generated-uuid
 ```
 
-A repeated request with the same key and route returns the original response instead of executing again. Implementation: `IdempotencyInterceptor` (`apps/api/src/common/interceptors/idempotency.interceptor.ts`), applied per-route via `@UseInterceptors()` on mutating endpoints — not global, since it only matters where duplicate execution is a real risk. In-memory, 24h TTL, single-instance; production needs a shared store for the same reason rate limiting does.
+A repeated request with the same key and route returns the original response instead of executing again. Implementation: `IdempotencyInterceptor` (`apps/api/src/common/interceptors/idempotency.interceptor.ts`), applied per-route via `@UseInterceptors()` on mutating endpoints — not global, since it only matters where duplicate execution is a real risk. Stored in Redis, scoped per user + method + path, 24h TTL. A request is first claimed with an atomic `SET NX` in-flight marker, so two concurrent requests with the same key can't both execute — the second gets `409` until the first finishes, then replays its response. A failed request releases the key so the client can retry.

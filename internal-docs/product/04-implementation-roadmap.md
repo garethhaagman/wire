@@ -4,12 +4,13 @@ Build phases for an implementation team. Status annotations reflect `apps/api`'s
 
 ## Phase 1 — API core + import
 
-- Workspaces, members, channels, messages, threads — **mock-implemented** (workspaces is Postgres/TypeORM-backed; members/channels/messages/threads are in-memory mocks)
-- Reactions, pins — **mock-implemented**
-- Files (metadata) — **mock-implemented**, no real blob storage or virus scan
-- Search (keyword only) — **mock-implemented**, substring match over mock messages; no ranking
-- Webhook-endpoints (subscription CRUD) — **mock-implemented**, no actual delivery worker
-- Audit log — **mock-implemented** (read endpoint exists; nothing auto-records audit events yet — see `apps/api/src/audit/audit.service.ts`)
+- Workspaces, members (invites + claim), channels (public/private/dm/group_dm, membership, archive, unread/read cursors), messages (edit history, tombstones), threads — **implemented**, Postgres-backed; see [data-model/scaling.md](../data-model/scaling.md)
+- Reactions, pins, bookmarks — **implemented**
+- Files (metadata) — **implemented** for metadata only; no blob storage (signed upload URLs) or virus scan
+- Search (keyword only) — **implemented** on Postgres full-text search with the channel ACL in SQL; no semantic/hybrid search
+- Webhooks — **implemented**: endpoint CRUD, transactional outbox, signed delivery worker with retries
+- Realtime — **implemented**: SSE stream with resume, presence, typing (Redis pub/sub fan-out)
+- Audit log — **implemented**: every successful mutating request is recorded automatically (`AuditInterceptor`)
 - **Slack export import** (`/workspaces/from-import`, backdated timestamps, claim flow) — not started
 - OAuth + API keys — not started (session-cookie auth via Better Auth exists; no `wire_sk_`/`wire_at_` token model)
 - OpenAPI validation gateway (reject unknown fields) — not started (requests are validated by DTO shape via `class-validator`, but unknown-field rejection isn't enforced)
