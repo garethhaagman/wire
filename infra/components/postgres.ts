@@ -14,7 +14,7 @@ export interface PostgresResult {
 
 /**
  * Self-hosted Postgres — see internal-docs/stack/self-hosting.md: this is the one
- * stateful system in the v1 topology (relational + pgvector + FTS, per
+ * durable stateful system in the v1 topology (relational + pgvector + FTS, per
  * internal-docs/stack/architecture.md). No managed RDS/Cloud SQL equivalent.
  */
 export function createPostgres(name: string, args: PostgresArgs): PostgresResult {
@@ -33,6 +33,13 @@ export function createPostgres(name: string, args: PostgresArgs): PostgresResult
     ports: [{ internal: 5432, external: args.port }],
     volumes: [{ volumeName: volume.name, containerPath: "/var/lib/postgresql/data" }],
     networksAdvanced: [{ name: args.networkName, aliases: ["postgres"] }],
+    healthcheck: {
+      tests: ["CMD-SHELL", "pg_isready -U wire -d wire"],
+      interval: "5s",
+      timeout: "5s",
+      retries: 10,
+    },
+    wait: true,
     restart: "unless-stopped",
   });
 

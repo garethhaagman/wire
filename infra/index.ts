@@ -5,6 +5,7 @@ import { createApiService } from "./components/apiService";
 import { createDocsService } from "./components/docsService";
 import { createNetwork } from "./components/network";
 import { createPostgres } from "./components/postgres";
+import { createRedis } from "./components/redis";
 import { createWebService } from "./components/webService";
 
 const repoRoot = path.resolve(__dirname, "..");
@@ -27,35 +28,47 @@ const authSecret =
 
 const network = createNetwork(name);
 
-const { connectionString } = createPostgres(name, {
+const postgres = createPostgres(name, {
   networkName: network.name,
   port: postgresPort,
   password: postgresPassword,
 });
 
-const migrate = new docker.Container(`${name}-migrate`, {
-  name: `${name}-migrate`,
-  image: new docker.Image(`${name}-migrate-image`, {
-    build: {
-      context: repoRoot,
-      dockerfile: path.join(repoRoot, "apps/api/Dockerfile"),
-      target: "build",
-    },
-    imageName: `${name}-migrate:local`,
-  }).imageName,
-  command: ["pnpm", "--filter", "@wire/db", "migrate"],
-  envs: [pulumi.interpolate`DATABASE_URL=${connectionString}`],
-  networksAdvanced: [{ name: network.name }],
-  mustRun: false,
-});
+const redis = createRedis(name, { networkName: network.name });
+
+// `attach` blocks until the container exits, so the api only starts once
+// migrations have finished; `mustRun: false` because it exits by design.
+const migrate = new docker.Container(
+  `${name}-migrate`,
+  {
+    name: `${name}-migrate`,
+    image: new docker.Image(`${name}-migrate-image`, {
+      build: {
+        context: repoRoot,
+        dockerfile: path.join(repoRoot, "apps/api/Dockerfile"),
+        target: "build",
+      },
+      imageName: `${name}-migrate:local`,
+    }).imageName,
+    workingDir: "/repo/packages/db",
+    command: ["bun", "run", "migrate"],
+    envs: [pulumi.interpolate`DATABASE_URL=${postgres.connectionString}`],
+    networksAdvanced: [{ name: network.name }],
+    attach: true,
+    logs: true,
+    mustRun: false,
+  },
+  { dependsOn: [postgres.container] },
+);
 
 const api = createApiService(name, {
   networkName: network.name,
   port: apiPort,
-  databaseUrl: connectionString,
+  databaseUrl: postgres.connectionString,
+  redisUrl: redis.url,
   webOrigin,
   authSecret,
-  dependsOn: [migrate],
+  dependsOn: [migrate, redis.container],
 });
 
 const web = createWebService(name, {

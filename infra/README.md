@@ -1,6 +1,6 @@
 # Wire infra (Pulumi)
 
-Provisions the same four containers as `docker-compose.yml` (postgres, api, web, docs) via Pulumi's `docker` provider, per [internal-docs/stack/infra-pulumi.md](../internal-docs/stack/infra-pulumi.md). Use this instead of `make docker-up` when you want changes tracked as infrastructure-as-code (diffs, history, multi-environment config) rather than ad hoc `docker compose up`.
+Provisions the same containers as `docker-compose.yml` (postgres, redis, a one-shot migrate job, api, web, docs) via Pulumi's `docker` provider, per [internal-docs/stack/infra-pulumi.md](../internal-docs/stack/infra-pulumi.md). Use this instead of `make docker-up` when you want changes tracked as infrastructure-as-code (diffs, history, multi-environment config) rather than ad hoc `docker compose up`.
 
 ## Local use
 

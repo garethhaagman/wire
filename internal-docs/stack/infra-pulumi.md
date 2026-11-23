@@ -16,6 +16,7 @@ infra/
 ├── components/
 │   ├── network.ts         # VPC/subnets or bare-metal network config
 │   ├── postgres.ts         # Postgres instance(s) + backup sidecar
+│   ├── redis.ts            # cache + pub/sub, no persistence
 │   ├── objectStore.ts       # self-hosted S3-compatible (MinIO/Garage) cluster
 │   ├── queue.ts              # Postgres-backed job table setup, or NATS if promoted
 │   ├── apiService.ts          # container + reverse proxy + TLS termination
@@ -23,6 +24,8 @@ infra/
 │   └── mcpService.ts            # container
 └── package.json
 ```
+
+This is the target layout. Built so far: `network.ts`, `postgres.ts`, `redis.ts` (no volume — reconstructible state only, see [self-hosting.md](./self-hosting.md)), `apiService.ts`, `webService.ts` and `docsService.ts`, plus a one-shot migrate container in `index.ts`. Postgres and Redis have healthchecks and are waited on; the api starts only after migrations exit. Not yet built: `objectStore.ts`, `queue.ts` (the queue is just Postgres tables, created by migrations), `workerService.ts`, `mcpService.ts`.
 
 ## State backend
 

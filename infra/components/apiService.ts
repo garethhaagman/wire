@@ -6,12 +6,14 @@ export interface ApiServiceArgs {
   networkName: pulumi.Input<string>;
   port: pulumi.Input<number>;
   databaseUrl: pulumi.Input<string>;
+  redisUrl: pulumi.Input<string>;
   webOrigin: pulumi.Input<string>;
   authSecret: pulumi.Input<string>;
   dependsOn?: pulumi.Resource[];
 }
 
 const repoRoot = path.resolve(__dirname, "..", "..");
+const INTERNAL_PORT = 3001;
 
 export function createApiService(name: string, args: ApiServiceArgs): docker.Container {
   const image = new docker.Image(`${name}-api-image`, {
@@ -29,13 +31,14 @@ export function createApiService(name: string, args: ApiServiceArgs): docker.Con
       image: image.imageName,
       envs: [
         "NODE_ENV=production",
-        pulumi.interpolate`PORT=${args.port}`,
+        `PORT=${INTERNAL_PORT}`,
         pulumi.interpolate`DATABASE_URL=${args.databaseUrl}`,
+        pulumi.interpolate`REDIS_URL=${args.redisUrl}`,
         pulumi.interpolate`BETTER_AUTH_SECRET=${args.authSecret}`,
         pulumi.interpolate`BETTER_AUTH_URL=http://localhost:${args.port}`,
         pulumi.interpolate`WEB_ORIGIN=${args.webOrigin}`,
       ],
-      ports: [{ internal: 3001, external: args.port }],
+      ports: [{ internal: INTERNAL_PORT, external: args.port }],
       networksAdvanced: [{ name: args.networkName, aliases: ["api"] }],
       restart: "unless-stopped",
     },
