@@ -2,42 +2,47 @@
 
 ## Tooling
 
-- **Package manager / workspaces**: pnpm workspaces (strict node_modules, fast, no phantom deps).
-- **Build orchestration**: Turborepo (task graph, remote-cache-free by default to keep "no managed services" true — cache locally/on self-hosted CI runners, not a vendor remote cache).
-- **TypeScript**: `strict: true`, project references across packages so `tsc -b` gives real incremental builds and cross-package type-checking.
-- **Lint/format**: ESLint + Prettier, single root config, no per-package overrides without a documented reason.
-- **Testing**: Vitest for unit/integration; a separate `tests/contract` suite replays the OpenAPI spec against the running `api` service (ties into [sdks/](../sdks/) drift checks).
+- **Runtime / package manager / workspaces**: Bun (`bun.lock`, `workspaces` in the root `package.json`). Apps run TypeScript directly — `apps/api` has no build step.
+- **Build orchestration**: Turborepo (task graph, local cache only — no vendor remote cache, keeping "no managed services" true).
+- **TypeScript**: `strict: true` plus `exactOptionalPropertyTypes`, shared via `tsconfig.base.json`; each package runs `tsc --noEmit`.
+- **Lint/format**: oxlint at the root, then ESLint per package (`@wire/eslint-config` plus the repo's own rule plugins `@wire/eslint-plugin-wire-api` and `@wire/eslint-plugin-wire-ui`), Prettier for formatting, knip for unused files/exports.
+- **Testing**: `bun test` (currently only `packages/ui-config`). A contract suite that replays `openapi.yaml` against the running `api` is still planned (ties into [sdks/](../sdks/) drift checks).
 
 ## Directory structure
 
 ```text
 wire/
 ├── apps/
-│   ├── api/                 # HTTP + WS/SSE service
-│   ├── worker/               # agent runs, automations, import, indexing
-│   └── mcp-server/           # MCP adapter
+│   ├── api/                     # NestJS HTTP + SSE service; also runs background workers (RUN_WORKERS)
+│   ├── web/                     # Vite + React client shell, driven by UiConfig
+│   └── docs/                    # Markdown viewer for internal-docs/
 ├── packages/
-│   ├── types/                 # @wire/types — generated from api/openapi.yaml, zero runtime deps
-│   ├── sdk-core/               # @wire/sdk-core — typed fetch client shared by generated SDKs and internal services
-│   ├── db/                     # @wire/db — Postgres schema, migrations, query layer (no ORM magic — see below)
-│   ├── domain/                 # @wire/domain — pure business logic: permission checks, mention resolution, condition DSL eval
-│   ├── harness/                 # @wire/harness — provider adapters (anthropic | openai | custom_http), isolated from apps/worker
-│   ├── events/                  # @wire/events — event envelope types, outbox helpers
-│   └── config/                  # @wire/config — env var parsing/validation (zod schemas), shared across apps
+│   ├── types/                   # @wire/types — API resource/event types, zero runtime deps
+│   ├── db/                      # @wire/db — Database (pg pools), typed query functions, migrations
+│   ├── config/                  # @wire/config — env var parsing/validation (zod), shared across apps
+│   ├── ui-config/               # @wire/ui-config — UI config schema, resolver, theme projection
+│   ├── eslint-config/           # shared ESLint config
+│   ├── eslint-plugin-wire-api/  # API rules (require-permission, no-bare-error-throw, no-numeric-id, …)
+│   └── eslint-plugin-wire-ui/   # UI rules (no-hardcoded-colors, …)
 ├── infra/                       # Pulumi TypeScript program — see infra-pulumi.md
-├── docs/ … product/ … etc.      # this spec (unchanged by the stack choice)
+├── internal-docs/               # this spec
+├── docker-compose.yml           # Postgres + Redis for local dev; full stack under the `docker` profile
+├── Makefile                     # `make dev`, `make migrate`, …
 ├── turbo.json
-├── pnpm-workspace.yaml
 └── tsconfig.base.json
 ```
 
-## Why `packages/types` is load-bearing
+Planned but not yet created: `apps/worker` (agent runs, automations, import, indexing — today the only background jobs are the outbox relay and webhook delivery, which run inside `apps/api`), `apps/mcp-server`, and `packages/harness` (provider adapters; see "Agent/harness isolation" below).
 
-`api/openapi.yaml` is the canonical contract (per root README). `packages/types` is generated from it (e.g. `openapi-typescript`) as a build step, not hand-maintained. Everything downstream — `apps/api` route handlers, `apps/worker` job payloads, `apps/mcp-server` tool schemas, and every published SDK in [sdks/](../sdks/) — imports from `@wire/types`. This is what makes "MCP tool schemas generated from OpenAPI, CI diff fails on drift" (per `mcp/README.md`) actually enforceable: drift becomes a type error, not a review-time judgment call.
+## Types and the OpenAPI contract
 
-## Database access: no ORM
+The contract is **code-first**: `internal-docs/api/openapi.yaml` is generated from the API's `@nestjs/swagger` decorators (`bun run openapi:export` in `apps/api`) and never hand-edited. `@wire/types` is hand-written TypeScript that the API's DTOs implement and that `apps/web` imports, so a shape change is a type error on both sides. Published SDKs and MCP tool schemas are generated from the exported spec, which is where CI drift checks belong.
 
-`@wire/db` wraps `postgres.js` or `pg` with hand-written, typed query functions per aggregate (`messages.ts`, `agentRuns.ts`, …) rather than an ORM. Given Postgres is also doing vector search and FTS (per [architecture.md](./architecture.md)), an ORM's query builder fights the exact queries that matter most (hybrid rank fusion, `tsvector` + `pgvector` combined scoring). Migrations are plain SQL, applied via a minimal runner (e.g. `node-pg-migrate` or `graphile-migrate`), checked into `packages/db/migrations/`.
+## Database access: no ORM in the request path
+
+`@wire/db` exposes a `Database` class (primary pool, optional read replica via `reader`, `tx()` helper that retries serialization failures and deadlocks) and hand-written, typed query functions per aggregate under `packages/db/src/repositories/` (`messages.ts`, `channels.ts`, …). Postgres also does full-text search and will do vector search (per [architecture.md](./architecture.md)), and an ORM's query builder fights exactly those queries — plus the row locks, `SKIP LOCKED` and keyset pagination the write path relies on.
+
+TypeORM is used **only** as the migration runner: migrations are TypeScript classes containing raw SQL in `packages/db/src/migrations/`, applied with `make migrate`, which then applies Better Auth's schema from plain SQL (`packages/db/migrations/0002_create_auth_tables.sql`). Scale-relevant schema decisions are in [data-model/scaling.md](../data-model/scaling.md).
 
 ## Internal package versioning
 
@@ -45,4 +50,4 @@ Internal `@wire/*` packages are version-locked to the monorepo (`workspace:*` pr
 
 ## Agent/harness isolation
 
-`@wire/harness` has no dependency on `@wire/db` or `apps/api` internals — it only knows provider wire formats (Anthropic Messages API, OpenAI Responses API, custom HTTP envelope per [harnesses/harnesses.md](../harnesses/harnesses.md)). This keeps vendor SDK churn from leaking into the request path, and makes it possible to unit-test harness adapters against fixture payloads with no running services.
+When `@wire/harness` is built, it should have no dependency on `@wire/db` or `apps/api` internals — only provider wire formats (Anthropic Messages API, OpenAI Responses API, custom HTTP envelope per [harnesses/harnesses.md](../harnesses/harnesses.md)). This keeps vendor SDK churn out of the request path and lets harness adapters be unit-tested against fixture payloads with no running services.

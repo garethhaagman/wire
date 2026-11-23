@@ -1,6 +1,5 @@
 /**
- * Boots the Nest app (requires a reachable Postgres — see internal-docs/stack/self-hosting.md
- * for local setup), generates the OpenAPI document from @nestjs/swagger decorators, writes it
+ * Boots the Nest app (requires a reachable Postgres — `make db migrate` locally), generates the OpenAPI document from @nestjs/swagger decorators, writes it
  * to internal-docs/api/openapi.yaml, then exits. The committed file is a generated artifact —
  * never hand-edit it; change the controllers/DTOs and re-run this script instead.
  *

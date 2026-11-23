@@ -7,6 +7,7 @@
 | Relational + vector + search DB | RDS/Cloud SQL + Pinecone/Weaviate | Single **Postgres** container (`pgvector` + `tsvector`), [architecture.md](./architecture.md) |
 | Object storage | S3/GCS | **MinIO** or **Garage** (S3-compatible) |
 | Queue | SQS/Managed Kafka/Cloud Tasks | Postgres-backed job table, promotable to **NATS** |
+| Cache / pub/sub | ElastiCache/Memorystore | Single **Redis** container — reconstructible state only, no persistence or backups required |
 | TLS/certs | ACM | **Caddy** or cert-manager + self-hosted ACME (Let's Encrypt is fine — it's a protocol, not a managed compute service) |
 | Secrets | Cloud KMS/Secrets Manager | **age**-encrypted Pulumi secrets or self-hosted **Vault** |
 | Observability | Datadog/Cloud-native APM | Self-hosted **Grafana + Loki + Tempo** (or just structured JSON logs + Postgres-queryable traces for the smallest deployments) |
@@ -17,9 +18,10 @@ This is a real operational commitment: Wire (the company) or the self-hosting cu
 
 For the default Compose target (per [infra-pulumi.md](./infra-pulumi.md)):
 
-- 1 host for `api` + `mcp-server` + reverse proxy.
+- 1 host for `api` + `mcp-server` + reverse proxy. Today the outbox relay and webhook delivery run inside `api` (`RUN_WORKERS=true`, the default); in larger deployments set it to `false` on request-serving replicas and run a few dedicated worker replicas instead.
 - 1 host (or same host, smaller deployments) for `postgres` with a persistent volume and a scheduled `pg_dump` (or `pgBackRest`) to the object store.
-- 1 host for `worker`, scaled horizontally by running more containers against the same Postgres-backed queue.
+- `redis` alongside `api` — small, no volume needed. If it's lost the API keeps serving (rate limiting and caches fail open; sessions fall back to Postgres) and realtime resumes when it returns.
+- 1 host for `worker` (once it exists), scaled horizontally by running more containers against the same Postgres-backed queue.
 - 1 object-store node (MinIO single-node is fine below a certain scale; cluster mode for HA).
 
 Three to four hosts total for a production-credible small deployment. This should be explicit in sales/demo material — it is a real differentiator against "you need a whole platform team" framings of self-hosting, see [gtm/distribution-channels.md](../gtm/distribution-channels.md).

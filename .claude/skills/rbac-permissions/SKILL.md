@@ -1,7 +1,7 @@
 ---
 name: rbac-permissions
 description: Use when adding a new endpoint's permission, changing an existing endpoint's permission, adding a new role or permission, or changing what admin/member can do. Step-by-step procedures for Wire's CASL-based RBAC in apps/api. For general endpoint conventions (envelope, errors, pagination), use api-design instead.
-version: "1.0.0"
+version: "1.1.0"
 ---
 
 # RBAC: roles and permissions
@@ -25,7 +25,7 @@ You're writing a new controller method (new resource or new action on an existin
    @Post()
    @RequirePermission("create", "Message")
    @ApiCreatedResponse({ type: MessageDto })
-   create(@Body() body: CreateMessageRequestDto): Message { ... }
+   create(@CurrentActor() actor: WorkspaceActor, @Body() body: CreateMessageRequestDto): Promise<Message> { ... }
    ```
 4. **Check `member` already has this `(action, subject)` pair** in `ability.factory.ts`. If yes, you're done. If no — stop and go to **Scenario 3**; don't skip the decision of whether `member` should get this or not.
 5. **Run `bun run lint`** in `apps/api`. The `wire-api/require-permission` rule fails the build if the decorator is missing — this is not optional, it's the actual enforcement mechanism, not just a convention.
@@ -61,12 +61,13 @@ This is the scenario that actually changes the *shape* of the permission system,
 
 ### Adding a new role (e.g. a third tier beyond admin/member)
 
-This is a bigger change — today `Role` is a 2-value union (`apps/api/src/permissions/permission.types.ts`) and `RoleResolverService` only distinguishes "has an admin/owner `Member.role`" vs. everything else. To add a role:
+This is a bigger change — today `Role` is a 2-value union (`apps/api/src/permissions/permission.types.ts`), derived from `Member.role` in `PermissionsGuard.canActivate()` (`permissions.guard.ts`): `owner`/`admin` → `admin`, everything else → `member`. To add a role:
 
 1. Extend `Role` in `permission.types.ts`.
 2. Add a branch in `defineAbilityFor()` (`ability.factory.ts`) for the new role — don't make it a modified copy of `member`'s rules inline; give it its own explicit list even if it overlaps, so each branch stays independently readable.
-3. Update `RoleResolverService.resolve()` — it currently only checks `member?.role === "admin" || member?.role === "owner"`. A third role needs its own branch here, sourced from wherever that role actually lives on the `Member` record (today: `Member.role`, which is `"owner" | "admin" | "member" | "guest"` in `@wire/types` — note two of those four values, `owner` and `guest`, aren't yet mapped to a CASL role at all; `owner` currently collapses into `admin`, `guest` currently collapses into `member`. Decide if that's still correct before building a new CASL role on top of it.)
-4. This is a multi-file, product-level change — don't do it to work around a single endpoint's awkward permission requirement. If you're here because of Scenario 1 or 2 and considering a new role, stop and confirm that's really the right fix first.
+3. Update the `Member.role` → `Role` mapping in `PermissionsGuard`. `Member.role` is `"owner" | "admin" | "member" | "guest"` (`@wire/types`); `owner` collapses into `admin` and `guest` into `member` at the CASL level. Guests are restricted in the services instead — `ChannelAccessService` limits them to channels they belong to, and owner-only rules (e.g. "last owner") live in `MembersService`. Decide whether a new CASL role replaces one of those service-level rules before adding it.
+4. If the new role changes what a cached membership means, remember `MemberResolverService` caches `{ id, role, displayName }` in Redis for 60s — invalidation on role change is already wired through `MembersService`, but a new source of role data would need its own `invalidate()` call.
+5. This is a multi-file, product-level change — don't do it to work around a single endpoint's awkward permission requirement. If you're here because of Scenario 1 or 2 and considering a new role, stop and confirm that's really the right fix first.
 
 ### Adding a new action
 

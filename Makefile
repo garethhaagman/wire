@@ -11,7 +11,7 @@ ENV_DIRS := apps/api apps/web packages/db
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
-# --- Local development (apps run natively with Bun, only Postgres in Docker) ---
+# --- Local development (apps run natively with Bun, only Postgres + Redis in Docker) ---
 
 setup: install env ## One-time: install deps and create .env files from .env.example
 
@@ -20,7 +20,7 @@ env: ## Create any missing .env files from .env.example (never overwrites)
 		if [ ! -f $$dir/.env ]; then cp $$dir/.env.example $$dir/.env && echo "  created $$dir/.env"; fi; \
 	done
 
-dev: env db migrate seed ## Start Postgres, migrate, seed dev data, then run api + web + docs with hot reload
+dev: env db migrate seed ## Start Postgres + Redis, migrate, seed dev data, then run api + web + docs with hot reload
 	@echo ""
 	@echo "  web           http://localhost:5173"
 	@echo "  api           http://localhost:3001"
@@ -29,7 +29,7 @@ dev: env db migrate seed ## Start Postgres, migrate, seed dev data, then run api
 	@echo ""
 	bun run dev
 
-dev-api: env db ## Run only the API (plus Postgres)
+dev-api: env db ## Run only the API (plus Postgres + Redis)
 	bun run dev:api
 
 dev-web: env ## Run only the web app
@@ -55,7 +55,7 @@ clean: ## Stop all containers and remove volumes (DESTROYS local Postgres data)
 
 # --- Full stack in Docker (closer to deployment; no hot reload of host edits) ---
 
-docker-up: ## Build and start postgres, api, web, docs all in Docker
+docker-up: ## Build and start postgres, redis, api, web, docs all in Docker
 	$(DOCKER_STACK) up -d --build
 	@echo ""
 	@echo "  web           http://localhost:5173"

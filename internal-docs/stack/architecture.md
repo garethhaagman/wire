@@ -15,40 +15,38 @@ The cost: Wire owns operational concerns (backups, failover, upgrades) that mana
 ```text
 ┌─────────────┐     ┌──────────────┐     ┌────────────────┐
 │   api        │────▶│  postgres     │     │  object-store   │
-│  (HTTP+WS)   │     │ (pg + pgvector│     │ (self-hosted    │
+│  (HTTP+SSE)  │     │ (pg + pgvector│     │ (self-hosted    │
 │              │     │   + fts)      │     │  S3-compatible) │
-└──────┬───────┘     └──────┬───────┘     └────────────────┘
-       │                    │
-       ▼                    ▼
-┌─────────────┐     ┌──────────────┐
-│  queue       │────▶│  worker       │
-│ (self-hosted │     │ (agent runs,  │
-│  Postgres-   │     │  indexing,    │
-│  backed or   │     │  automations, │
-│  NATS)       │     │  import jobs) │
-└─────────────┘     └──────────────┘
-       ▲
-       │
+└──┬───────┬───┘     └──────┬───────┘     └────────────────┘
+   │       │                │
+   │       ▼                ▼
+   │  ┌──────────┐   ┌──────────────┐
+   │  │ redis     │   │  worker       │
+   │  │ (cache,   │   │ (agent runs,  │
+   │  │  pub/sub) │   │  indexing,    │
+   │  └──────────┘   │  automations, │
+   │                  │  import jobs) │
+   ▼                  └──────────────┘
 ┌─────────────┐
 │  mcp-server  │  (thin adapter over api, same auth)
 └─────────────┘
 ```
 
-| Service | Responsibility | Maps to spec |
-|---------|-----------------|--------------|
-| `api` | HTTP + WS/SSE surface, auth, OpenAPI validation gateway | `api/openapi.yaml` |
-| `worker` | Agent runs, automation execution, import pipeline, indexing | `product/03-agents.md`, `automations/`, `import/` |
-| `mcp-server` | MCP tools/resources/prompts, proxies to `api` | `mcp/` |
-| `postgres` | Single system of record: relational + `pgvector` + `tsvector` | `data-model/` |
-| `object-store` | File uploads, import zips, exports (self-hosted S3-compatible, e.g. MinIO/Garage) | `import/`, Files in `data-model/` |
-| `queue` | Agent run scheduling, automation triggers, webhook delivery, import jobs | `automations/`, `product/03-agents.md` |
+| Service | Responsibility | Status | Maps to spec |
+|---------|-----------------|--------|--------------|
+| `api` | HTTP + SSE surface, auth, RBAC; with `RUN_WORKERS=true` also runs the outbox relay and webhook delivery | Running | `api/openapi.yaml` |
+| `postgres` | Single system of record: relational + `tsvector` (+ `pgvector` later); also the job queue (`SKIP LOCKED` tables) | Running | `data-model/` |
+| `redis` | Reconstructible state only: session cache, rate limits, idempotency keys, presence, membership cache, realtime pub/sub fan-out. The API fails open if it's down | Running | [data-model/scaling.md](../data-model/scaling.md) |
+| `worker` | Agent runs, automation execution, import pipeline, indexing | Planned | `product/03-agents.md`, `automations/`, `import/` |
+| `mcp-server` | MCP tools/resources/prompts, proxies to `api` | Planned | `mcp/` |
+| `object-store` | File uploads, import zips, exports (self-hosted S3-compatible, e.g. MinIO/Garage) | Planned | `import/`, Files in `data-model/` |
 
-Queue starts **Postgres-backed** (`SKIP LOCKED` job table) to avoid a second stateful system in v1; promote to NATS/Redis-streams only if queue depth or latency requirements demand it (see [infra-pulumi.md](./infra-pulumi.md)).
+The queue is **Postgres-backed** (`SKIP LOCKED` job tables — `events` outbox and `webhook_deliveries` today) to avoid a third stateful system; promote to NATS/Redis Streams only if queue depth or latency demands it. Redis is deliberately not a system of record: losing it costs cache warmth and in-flight presence, never data. Scaling details live in [data-model/scaling.md](../data-model/scaling.md).
 
 ## Request flow (example: agent mention)
 
-1. Client posts message → `api` validates against OpenAPI schema → writes to Postgres → emits `message.created` event (outbox-pattern row in same transaction).
-2. `worker` polls/consumes outbox, resolves `@mention` → enqueues `agent_run`.
+1. Client posts message → `api` validates the request DTO → writes to Postgres → appends a `message.created` row to the `events` outbox in the same transaction.
+2. The outbox relay fans the event out (Redis pub/sub for SSE, `webhook_deliveries` for webhooks — both implemented); `worker` will consume the same outbox, resolve `@mention` and enqueue an `agent_run` (planned).
 3. `worker` builds context (thread slice or `context_pack`), calls harness provider, writes `AgentRunStep`s.
 4. On completion, `worker` posts the reply message through the same `api` write path — agents never bypass the HTTP contract internally. This is the enforcement mechanism for "API-first": even first-party code is a client.
 

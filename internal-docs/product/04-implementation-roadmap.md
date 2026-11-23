@@ -28,7 +28,7 @@ Build phases for an implementation team. Status annotations reflect `apps/api`'s
 
 ## Phase 4 — Automations + events
 
-- Internal event bus, webhooks, SSE — webhook-endpoint *subscriptions* exist (Phase 1); no event bus, no delivery, no SSE
+- Internal event bus, webhooks, SSE — **implemented** in Phase 1 (transactional outbox → Redis pub/sub + webhook delivery worker); WebSocket transport not started
 - Automation executor with idempotency — not started
 
 ## Phase 5 — MCP
