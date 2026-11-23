@@ -8,24 +8,24 @@ export class WorkspaceDto implements Workspace {
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })
   id!: Workspace["id"];
 
-  @ApiProperty()
+  @ApiProperty({ example: "org_8f2c1a6e9b3d4f05" })
   orgId!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "Acme Corp" })
   name!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "us" })
   dataRegion!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "2026-01-15T09:30:00.000Z" })
   createdAt!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "2026-01-15T09:30:00.000Z" })
   updatedAt!: string;
 }
 
 export class CreateWorkspaceRequestDto implements CreateWorkspaceRequest {
-  @ApiProperty()
+  @ApiProperty({ example: "Acme Corp" })
   @IsString()
   @Length(1, 100)
   name!: string;
@@ -37,7 +37,7 @@ export class CreateWorkspaceRequestDto implements CreateWorkspaceRequest {
 }
 
 export class UpdateWorkspaceRequestDto implements UpdateWorkspaceRequest {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: "Acme Corp" })
   @IsOptional()
   @IsString()
   @Length(1, 100)

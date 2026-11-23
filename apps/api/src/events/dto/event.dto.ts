@@ -7,22 +7,27 @@ export class WireEventDto implements WireEvent {
   @ApiProperty({ example: "evt_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   id!: WireEvent["id"];
 
-  @ApiProperty({ description: "Workspace-wide replay cursor (SSE id / Last-Event-ID)" })
+  @ApiProperty({ example: 48213, description: "Workspace-wide replay cursor (SSE id / Last-Event-ID)" })
   seq!: number;
 
   @ApiProperty({ example: "message.created" })
   type!: WireEvent["type"];
 
-  @ApiProperty()
+  @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })
   workspaceId!: string;
 
-  @ApiProperty({ nullable: true, type: String })
+  @ApiProperty({ nullable: true, type: String, example: "ch_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   channelId!: string | null;
 
-  @ApiProperty({ type: Object })
+  @ApiProperty({
+    type: "object",
+    additionalProperties: true,
+    example: { messageId: "msg_01jd5x0k8f3v8q2m7n4r6t9w1y", body: "Hello!" },
+    description: "Event-type-specific payload — shape depends on `type`.",
+  })
   data!: Record<string, unknown>;
 
-  @ApiProperty()
+  @ApiProperty({ example: "2026-01-15T09:30:00.000Z" })
   createdAt!: string;
 }
 
@@ -47,7 +52,7 @@ export class StreamQueryDto {
   @IsString({ each: true })
   channel_ids?: string[];
 
-  @ApiPropertyOptional({ description: "Replay events after this seq first; the Last-Event-ID header takes precedence" })
+  @ApiPropertyOptional({ example: 48000, description: "Replay events after this seq first; the Last-Event-ID header takes precedence" })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -56,18 +61,18 @@ export class StreamQueryDto {
 }
 
 export class PresenceEntryDto implements PresenceEntry {
-  @ApiProperty()
+  @ApiProperty({ example: "mem_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   memberId!: string;
 
   @ApiProperty({ enum: ["active"] })
   status!: "active";
 
-  @ApiProperty()
+  @ApiProperty({ example: "2026-01-15T09:30:00.000Z" })
   lastSeenAt!: string;
 }
 
 export class TypingRequestDto {
-  @ApiPropertyOptional({ description: "Set when typing a thread reply" })
+  @ApiPropertyOptional({ example: "msg_01jd5x0k8f3v8q2m7n4r6t9w1y", description: "Set when typing a thread reply" })
   @IsOptional()
   @IsString()
   @Length(1, 64)

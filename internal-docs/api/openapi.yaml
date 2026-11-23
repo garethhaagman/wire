@@ -64,6 +64,7 @@ paths:
           in: query
           description: Replay events after this seq first; the Last-Event-ID header takes precedence
           schema:
+            example: 48000
             type: number
       responses:
         "200":
@@ -144,6 +145,7 @@ paths:
           schema:
             minimum: 1
             default: 1
+            example: 1
             type: number
         - name: per_page
           required: false
@@ -152,17 +154,20 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
+            example: 20
             type: number
         - name: sort
           required: false
           in: query
           description: Field to sort by; prefix with - for descending
           schema:
+            example: -createdAt
             type: string
         - name: search
           required: false
           in: query
           schema:
+            example: launch
             type: string
       responses:
         "200":
@@ -252,6 +257,7 @@ paths:
           schema:
             minimum: 1
             default: 1
+            example: 1
             type: number
         - name: per_page
           required: false
@@ -260,17 +266,20 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
+            example: 20
             type: number
         - name: sort
           required: false
           in: query
           description: Field to sort by; prefix with - for descending
           schema:
+            example: -createdAt
             type: string
         - name: search
           required: false
           in: query
           schema:
+            example: launch
             type: string
       responses:
         "200":
@@ -421,6 +430,7 @@ paths:
           schema:
             minimum: 1
             default: 1
+            example: 1
             type: number
         - name: per_page
           required: false
@@ -429,17 +439,20 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
+            example: 20
             type: number
         - name: sort
           required: false
           in: query
           description: Field to sort by; prefix with - for descending
           schema:
+            example: -createdAt
             type: string
         - name: search
           required: false
           in: query
           schema:
+            example: launch
             type: string
         - name: filter[archived]
           required: false
@@ -590,6 +603,7 @@ paths:
           schema:
             minimum: 1
             default: 1
+            example: 1
             type: number
         - name: per_page
           required: false
@@ -598,17 +612,20 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
+            example: 20
             type: number
         - name: sort
           required: false
           in: query
           description: Field to sort by; prefix with - for descending
           schema:
+            example: -createdAt
             type: string
         - name: search
           required: false
           in: query
           schema:
+            example: launch
             type: string
       responses:
         "200":
@@ -849,6 +866,7 @@ paths:
           schema:
             minimum: 1
             default: 1
+            example: 1
             type: number
         - name: per_page
           required: false
@@ -857,17 +875,20 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
+            example: 20
             type: number
         - name: sort
           required: false
           in: query
           description: Field to sort by; prefix with - for descending
           schema:
+            example: -createdAt
             type: string
         - name: search
           required: false
           in: query
           schema:
+            example: launch
             type: string
       responses:
         "200":
@@ -1205,6 +1226,7 @@ paths:
           schema:
             minimum: 1
             default: 1
+            example: 1
             type: number
         - name: per_page
           required: false
@@ -1213,17 +1235,20 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
+            example: 20
             type: number
         - name: sort
           required: false
           in: query
           description: Field to sort by; prefix with - for descending
           schema:
+            example: -createdAt
             type: string
         - name: search
           required: false
           in: query
           schema:
+            example: launch
             type: string
       responses:
         "200":
@@ -1283,23 +1308,27 @@ paths:
           in: query
           description: Keyword query. Supports "quoted phrases", OR, and -exclusions.
           schema:
+            example: launch plan
             type: string
         - name: workspace_id
           required: false
           in: query
           description: "Limit to one workspace (default: every workspace you belong to)"
           schema:
+            example: ws_64d9dea525ae84ef6f7bd361
             type: string
         - name: channel_id
           required: false
           in: query
           schema:
+            example: ch_01jd5x0k8f3v8q2m7n4r6t9w1y
             type: string
         - name: thread_root_id
           required: false
           in: query
           description: Limit to one thread (root and replies)
           schema:
+            example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
             type: string
         - name: page
           required: false
@@ -1307,6 +1336,7 @@ paths:
           schema:
             minimum: 1
             default: 1
+            example: 1
             type: number
         - name: per_page
           required: false
@@ -1315,6 +1345,7 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
+            example: 20
             type: number
       responses:
         "200":
@@ -1339,6 +1370,7 @@ paths:
           schema:
             minimum: 1
             default: 1
+            example: 1
             type: number
         - name: per_page
           required: false
@@ -1347,17 +1379,20 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
+            example: 20
             type: number
         - name: sort
           required: false
           in: query
           description: Field to sort by; prefix with - for descending
           schema:
+            example: -createdAt
             type: string
         - name: search
           required: false
           in: query
           schema:
+            example: launch
             type: string
       responses:
         "200":
@@ -1435,6 +1470,7 @@ paths:
           schema:
             minimum: 1
             default: 1
+            example: 1
             type: number
         - name: per_page
           required: false
@@ -1443,17 +1479,20 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
+            example: 20
             type: number
         - name: sort
           required: false
           in: query
           description: Field to sort by; prefix with - for descending
           schema:
+            example: -createdAt
             type: string
         - name: search
           required: false
           in: query
           schema:
+            example: launch
             type: string
       responses:
         "200":
@@ -1522,6 +1561,7 @@ paths:
           schema:
             minimum: 1
             default: 1
+            example: 1
             type: number
         - name: per_page
           required: false
@@ -1530,17 +1570,20 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
+            example: 20
             type: number
         - name: sort
           required: false
           in: query
           description: Field to sort by; prefix with - for descending
           schema:
+            example: -createdAt
             type: string
         - name: search
           required: false
           in: query
           schema:
+            example: launch
             type: string
       responses:
         "200":
@@ -1630,19 +1673,28 @@ components:
           example: evt_01jd5x0k8f3v8q2m7n4r6t9w1y
         seq:
           type: number
+          example: 48213
           description: Workspace-wide replay cursor (SSE id / Last-Event-ID)
         type:
           type: object
           example: message.created
         workspaceId:
           type: string
+          example: ws_64d9dea525ae84ef6f7bd361
         channelId:
           type: string
           nullable: true
+          example: ch_01jd5x0k8f3v8q2m7n4r6t9w1y
         data:
           type: object
+          additionalProperties: true
+          example:
+            messageId: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
+            body: Hello!
+          description: Event-type-specific payload — shape depends on `type`.
         createdAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
       required:
         - id
         - seq
@@ -1656,12 +1708,14 @@ components:
       properties:
         memberId:
           type: string
+          example: mem_01jd5x0k8f3v8q2m7n4r6t9w1y
         status:
           type: string
           enum:
             - active
         lastSeenAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
       required:
         - memberId
         - status
@@ -1671,6 +1725,7 @@ components:
       properties:
         threadRootId:
           type: string
+          example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
           description: Set when typing a thread reply
     HealthResponseDto:
       type: object
@@ -1681,8 +1736,10 @@ components:
             - ok
         version:
           type: string
+          example: 0.1.0
         timestamp:
           type: string
+          example: 2026-01-15T09:30:00.000Z
       required:
         - status
         - version
@@ -1695,14 +1752,19 @@ components:
           example: ws_64d9dea525ae84ef6f7bd361
         orgId:
           type: string
+          example: org_8f2c1a6e9b3d4f05
         name:
           type: string
+          example: Acme Corp
         dataRegion:
           type: string
+          example: us
         createdAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
         updatedAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
       required:
         - id
         - orgId
@@ -1715,6 +1777,7 @@ components:
       properties:
         name:
           type: string
+          example: Acme Corp
         dataRegion:
           type: string
           example: us
@@ -1726,6 +1789,7 @@ components:
       properties:
         name:
           type: string
+          example: Acme Corp
     MemberDto:
       type: object
       properties:
@@ -1734,14 +1798,18 @@ components:
           example: mem_01jd5x0k8f3v8q2m7n4r6t9w1y
         workspaceId:
           type: string
+          example: ws_64d9dea525ae84ef6f7bd361
         userId:
           type: string
           nullable: true
+          example: usr_01jd5x0k8f3v8q2m7n4r6t9w1y
           description: Null until the invite is claimed
         displayName:
           type: string
+          example: Jordan Lee
         email:
           type: string
+          example: jordan@example.com
         role:
           type: string
           enum: &a29
@@ -1751,8 +1819,10 @@ components:
             - guest
         createdAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
         updatedAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
       required:
         - id
         - workspaceId
@@ -1792,8 +1862,10 @@ components:
       properties:
         displayName:
           type: string
+          example: Jordan Lee
         email:
           type: string
+          example: jordan@example.com
         role:
           type: string
           enum: *a29
@@ -1806,6 +1878,7 @@ components:
       properties:
         displayName:
           type: string
+          example: Jordan Lee
         role:
           type: string
           enum: *a29
@@ -1818,8 +1891,10 @@ components:
           example: ch_01jd5x0k8f3v8q2m7n4r6t9w1y
         workspaceId:
           type: string
+          example: ws_64d9dea525ae84ef6f7bd361
         name:
           type: string
+          example: general
         type:
           type: string
           enum: &a30
@@ -1830,36 +1905,48 @@ components:
         topic:
           type: string
           nullable: true
+          example: Ship it 🚢
         purpose:
           type: string
           nullable: true
+          example: Coordinating releases and incident response
         createdBy:
           type: string
           nullable: true
+          example: mem_64d9dea525ae84ef6f7bd361
         memberCount:
           type: number
+          example: 12
         lastMessageSeq:
           type: number
+          example: 4821
           description: Highest message seq in the channel
         lastMessageAt:
           type: string
           nullable: true
+          example: 2026-01-15T09:30:00.000Z
         archivedAt:
           type: string
           nullable: true
+          example: null
         createdAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
         updatedAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
         isMember:
           type: boolean
+          example: true
           description: Whether the requesting member belongs to the channel
         lastReadSeq:
           type: number
           nullable: true
+          example: 4815
         unreadCount:
           type: number
           nullable: true
+          example: 6
           description: Unread top-level messages, capped at 100
       required:
         - id
@@ -1883,14 +1970,17 @@ components:
       properties:
         name:
           type: string
+          example: general
           description: Required for public/private channels; ignored for dm/group_dm
         type:
           type: string
           enum: *a30
         topic:
           type: string
+          example: Ship it 🚢
         purpose:
           type: string
+          example: Coordinating releases and incident response
         memberIds:
           description: Initial members besides you; required for dm (1) and group_dm (2-7)
           type: array
@@ -1903,23 +1993,30 @@ components:
       properties:
         name:
           type: string
+          example: general
         topic:
           type: string
           nullable: true
+          example: Ship it 🚢
         purpose:
           type: string
           nullable: true
+          example: Coordinating releases and incident response
     ChannelMemberDto:
       type: object
       properties:
         channelId:
           type: string
+          example: ch_01jd5x0k8f3v8q2m7n4r6t9w1y
         memberId:
           type: string
+          example: mem_64d9dea525ae84ef6f7bd361
         lastReadSeq:
           type: number
+          example: 4815
         joinedAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
       required:
         - channelId
         - memberId
@@ -1930,6 +2027,7 @@ components:
       properties:
         memberId:
           type: string
+          example: mem_64d9dea525ae84ef6f7bd361
           description: Your own member id to join, or another member's to add them
       required:
         - memberId
@@ -1938,6 +2036,7 @@ components:
       properties:
         seq:
           type: number
+          example: 4821
           description: Mark read up to this seq; omit to mark everything read
     MessageDto:
       type: object
@@ -1947,19 +2046,25 @@ components:
           example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
         workspaceId:
           type: string
+          example: ws_64d9dea525ae84ef6f7bd361
         channelId:
           type: string
+          example: ch_01jd5x0k8f3v8q2m7n4r6t9w1y
         seq:
           type: number
           description: Per-channel monotonically increasing sequence
+          example: 42
         threadRootId:
           type: string
           nullable: true
+          example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
         broadcast:
           type: boolean
           description: Thread reply also shown in the channel
+          example: false
         actorId:
           type: string
+          example: mem_01jd5x0k8f3v8q2m7n4r6t9w1y
         actorType:
           type: string
           enum:
@@ -1968,13 +2073,17 @@ components:
             - system
         body:
           type: string
+          example: Shipping the v2 config schema today.
         revision:
           type: number
+          example: 1
         replyCount:
           type: number
+          example: 3
         lastReplyAt:
           type: string
           nullable: true
+          example: 2026-01-15T09:30:00.000Z
         reactionCounts:
           type: object
           additionalProperties:
@@ -1984,13 +2093,17 @@ components:
         editedAt:
           type: string
           nullable: true
+          example: 2026-01-15T09:35:00.000Z
         deletedAt:
           type: string
           nullable: true
+          example: null
         createdAt:
           type: string
+          example: 2026-01-15T09:00:00.000Z
         updatedAt:
           type: string
+          example: 2026-01-15T09:35:00.000Z
       required:
         - id
         - workspaceId
@@ -2014,8 +2127,10 @@ components:
       properties:
         body:
           type: string
+          example: Shipping the v2 config schema today.
         threadRootId:
           type: string
+          example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
       required:
         - body
     UpdateMessageRequestDto:
@@ -2023,9 +2138,11 @@ components:
       properties:
         body:
           type: string
+          example: Shipping the v2 config schema today — now with examples.
         revision:
           type: number
           description: Expected current revision; 409 if the message has changed since
+          example: 1
       required:
         - body
     AgentDto:
@@ -2036,13 +2153,17 @@ components:
           example: agt_64d9dea525ae84ef6f7bd361
         workspaceId:
           type: string
+          example: ws_64d9dea525ae84ef6f7bd361
         handle:
           type: string
+          example: oncall-bot
         harnessId:
           type: string
+          example: harness_claude-code
         permissionSetId:
           type: string
           nullable: true
+          example: pset_64d9dea525ae84ef6f7bd361
         status:
           type: string
           enum:
@@ -2051,8 +2172,10 @@ components:
             - deleted
         createdAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
         updatedAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
       required:
         - id
         - workspaceId
@@ -2070,6 +2193,7 @@ components:
           example: oncall-bot
         harnessId:
           type: string
+          example: harness_claude-code
       required:
         - handle
         - harnessId
@@ -2078,6 +2202,7 @@ components:
       properties:
         harnessId:
           type: string
+          example: harness_claude-code
         status:
           type: string
           enum:
@@ -2088,9 +2213,11 @@ components:
       properties:
         body:
           type: string
+          example: Agreed, let's go with option B.
         broadcastToChannel:
           type: boolean
           description: Also post a copy of this reply to the channel
+          example: false
       required:
         - body
     ThreadReadStateDto:
@@ -2098,6 +2225,7 @@ components:
       properties:
         lastReadSeq:
           type: number
+          example: 42
       required:
         - lastReadSeq
     ReactionDto:
@@ -2108,13 +2236,16 @@ components:
           example: rxn_64d9dea525ae84ef6f7bd361
         messageId:
           type: string
+          example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
         actorId:
           type: string
+          example: mem_01jd5x0k8f3v8q2m7n4r6t9w1y
         emoji:
           type: string
           example: 👍
         createdAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
       required:
         - id
         - messageId
@@ -2137,12 +2268,16 @@ components:
           example: pin_64d9dea525ae84ef6f7bd361
         channelId:
           type: string
+          example: ch_01jd5x0k8f3v8q2m7n4r6t9w1y
         messageId:
           type: string
+          example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
         pinnedBy:
           type: string
+          example: mem_01jd5x0k8f3v8q2m7n4r6t9w1y
         createdAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
       required:
         - id
         - channelId
@@ -2154,6 +2289,7 @@ components:
       properties:
         messageId:
           type: string
+          example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
       required:
         - messageId
     BookmarkDto:
@@ -2164,12 +2300,16 @@ components:
           example: bkm_01jd5x0k8f3v8q2m7n4r6t9w1y
         workspaceId:
           type: string
+          example: ws_64d9dea525ae84ef6f7bd361
         memberId:
           type: string
+          example: mem_64d9dea525ae84ef6f7bd361
         messageId:
           type: string
+          example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
         createdAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
       required:
         - id
         - workspaceId
@@ -2181,6 +2321,7 @@ components:
       properties:
         messageId:
           type: string
+          example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
       required:
         - messageId
     SearchResultDto:
@@ -2188,23 +2329,31 @@ components:
       properties:
         messageId:
           type: string
+          example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
         workspaceId:
           type: string
+          example: ws_64d9dea525ae84ef6f7bd361
         channelId:
           type: string
+          example: ch_01jd5x0k8f3v8q2m7n4r6t9w1y
         threadRootId:
           type: string
           nullable: true
+          example: msg_01jd5wz2n0a1b2c3d4e5f6g7h8
         actorId:
           type: string
+          example: mem_01jd5x0k8f3v8q2m7n4r6t9w1y
         excerpt:
           type: string
           description: Matching snippet; hits wrapped in <mark></mark>
+          example: ...sent over the <mark>launch plan</mark> for next week...
         score:
           type: number
           description: Relevance (ts_rank_cd); only comparable within one response
+          example: 0.82
         createdAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
       required:
         - messageId
         - workspaceId
@@ -2222,21 +2371,27 @@ components:
           example: whe_64d9dea525ae84ef6f7bd361
         workspaceId:
           type: string
+          example: ws_64d9dea525ae84ef6f7bd361
         url:
           type: string
+          example: https://example.com/webhooks/wire
         enabledEvents:
           type: array
           items:
             type: string
         channelFilter:
           nullable: true
+          example: &a31
+            - ch_01jd5x0k8f3v8q2m7n4r6t9w1y
           type: array
           items:
             type: string
         createdAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
         updatedAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
       required:
         - id
         - workspaceId
@@ -2250,6 +2405,7 @@ components:
       properties:
         url:
           type: string
+          example: https://example.com/webhooks/wire
         enabledEvents:
           example:
             - message.created
@@ -2274,24 +2430,30 @@ components:
           example: whe_64d9dea525ae84ef6f7bd361
         workspaceId:
           type: string
+          example: ws_64d9dea525ae84ef6f7bd361
         url:
           type: string
+          example: https://example.com/webhooks/wire
         enabledEvents:
           type: array
           items:
             type: string
         channelFilter:
           nullable: true
+          example: *a31
           type: array
           items:
             type: string
         createdAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
         updatedAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
         secret:
           type: string
           description: Shown once. Store it — it cannot be retrieved again.
+          example: whsec_3f9a1c2b7e8d4f6a9b0c1d2e3f4a5b6c
       required:
         - id
         - workspaceId
@@ -2309,28 +2471,35 @@ components:
           example: aud_64d9dea525ae84ef6f7bd361
         workspaceId:
           type: string
+          example: ws_64d9dea525ae84ef6f7bd361
         actorId:
           type: string
+          example: mem_64d9dea525ae84ef6f7bd361
         ip:
           type: string
           nullable: true
+          example: 203.0.113.42
         resource:
           type: string
           example: Message
         resourceId:
           type: string
           nullable: true
+          example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
         action:
           type: string
           example: create:create
         agentRunId:
           type: string
           nullable: true
+          example: run_64d9dea525ae84ef6f7bd361
         requestId:
           type: string
           nullable: true
+          example: req_64d9dea525ae84ef6f7bd361
         createdAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
       required:
         - id
         - workspaceId
@@ -2350,16 +2519,23 @@ components:
           example: file_01jd5x0k8f3v8q2m7n4r6t9w1y
         workspaceId:
           type: string
+          example: ws_64d9dea525ae84ef6f7bd361
         channelId:
           type: string
+          example: ch_01jd5x0k8f3v8q2m7n4r6t9w1y
         uploadedBy:
           type: string
+          example: mem_01jd5x0k8f3v8q2m7n4r6t9w1y
         name:
           type: string
+          example: roadmap.pdf
         mime:
           type: string
+          example: application/pdf
         sizeBytes:
           type: number
+          example: 2458112
+          description: Size in bytes
         virusScanStatus:
           type: string
           enum:
@@ -2368,6 +2544,7 @@ components:
             - infected
         createdAt:
           type: string
+          example: 2026-01-15T09:30:00.000Z
       required:
         - id
         - workspaceId
@@ -2383,27 +2560,432 @@ components:
       properties:
         channelId:
           type: string
+          example: ch_01jd5x0k8f3v8q2m7n4r6t9w1y
         name:
           type: string
+          example: roadmap.pdf
         mime:
           type: string
           example: image/png
         sizeBytes:
           type: number
+          example: 2458112
           maximum: 5368709120
+          description: Size in bytes
       required:
         - channelId
         - name
         - mime
         - sizeBytes
+    SystemFontSourceDto:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+            - system
+      required:
+        - kind
+    GoogleFontSourceDto:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+            - google
+        family:
+          type: string
+          example: Inter
+      required:
+        - kind
+        - family
+    CustomFontSourceDto:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+            - custom
+        family:
+          type: string
+          example: Söhne
+        url:
+          type: string
+          example: https://assets.example.com/fonts/sohne.woff2
+      required:
+        - kind
+        - family
+        - url
+    LucideIconPackDto:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+            - lucide
+      required:
+        - kind
+    PhosphorIconPackDto:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+            - phosphor
+      required:
+        - kind
+    CustomIconPackDto:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+            - custom
+        id:
+          type: string
+          example: acme-sprite
+        spriteUrl:
+          type: string
+          example: https://assets.example.com/icons/acme-sprite.svg
+      required:
+        - kind
+        - id
+        - spriteUrl
+    ColorModePairDto:
+      type: object
+      properties:
+        light:
+          type: string
+          example: "#151514"
+          description: Any valid CSS color (hex, rgb(), oklch(), ...).
+        dark:
+          type: string
+          example: "#ecebe8"
+          description: Falls back to `light` when unset.
+      required:
+        - light
+    ColorRolesDto:
+      type: object
+      properties:
+        background:
+          example:
+            light: "#f2f1ed"
+            dark: "#0d0d0c"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        foreground:
+          example:
+            light: "#151514"
+            dark: "#ecebe8"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        primary:
+          example:
+            light: "#151514"
+            dark: "#ecebe8"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        primaryForeground:
+          example:
+            light: "#ffffff"
+            dark: "#151514"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        secondary:
+          example:
+            light: "#efeeea"
+            dark: "#1c1c1a"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        secondaryForeground:
+          example:
+            light: "#151514"
+            dark: "#ecebe8"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        accent:
+          example:
+            light: "#eceae5"
+            dark: "#232320"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        accentForeground:
+          example:
+            light: "#151514"
+            dark: "#ecebe8"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        muted:
+          example:
+            light: "#f7f6f3"
+            dark: "#161614"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        mutedForeground:
+          example:
+            light: "#6c6b66"
+            dark: "#9c9b96"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        destructive:
+          example:
+            light: "#c4322b"
+            dark: "#f0786f"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        destructiveForeground:
+          example:
+            light: "#ffffff"
+            dark: "#151514"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        border:
+          example:
+            light: "#e3e1db"
+            dark: "#2a2a27"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        ring:
+          example:
+            light: "#151514"
+            dark: "#ecebe8"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        card:
+          example:
+            light: "#ffffff"
+            dark: "#131312"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+        cardForeground:
+          example:
+            light: "#151514"
+            dark: "#ecebe8"
+          allOf:
+            - $ref: "#/components/schemas/ColorModePairDto"
+      required:
+        - background
+        - foreground
+        - primary
+        - primaryForeground
+        - secondary
+        - secondaryForeground
+        - accent
+        - accentForeground
+        - muted
+        - mutedForeground
+        - destructive
+        - destructiveForeground
+        - border
+        - ring
+        - card
+        - cardForeground
+    TypographyDto:
+      type: object
+      properties:
+        sans:
+          oneOf:
+            - $ref: "#/components/schemas/SystemFontSourceDto"
+            - $ref: "#/components/schemas/GoogleFontSourceDto"
+            - $ref: "#/components/schemas/CustomFontSourceDto"
+          example:
+            kind: system
+        mono:
+          oneOf:
+            - $ref: "#/components/schemas/SystemFontSourceDto"
+            - $ref: "#/components/schemas/GoogleFontSourceDto"
+            - $ref: "#/components/schemas/CustomFontSourceDto"
+          example:
+            kind: system
+        display:
+          oneOf:
+            - $ref: "#/components/schemas/SystemFontSourceDto"
+            - $ref: "#/components/schemas/GoogleFontSourceDto"
+            - $ref: "#/components/schemas/CustomFontSourceDto"
+          description: Headings/marketing type. Falls back to a system serif stack when unset.
+        baseSizePx:
+          type: number
+          minimum: 10
+          maximum: 24
+          example: 16
+          description: Base document font size in px.
+        scale:
+          type: string
+          enum:
+            - compact
+            - comfortable
+            - spacious
+          example: comfortable
+      required:
+        - sans
+        - mono
+        - baseSizePx
+        - scale
+    ThemeDto:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum:
+            - light
+            - dark
+            - system
+          example: light
+        colors:
+          $ref: "#/components/schemas/ColorRolesDto"
+        radius:
+          type: string
+          enum:
+            - none
+            - sm
+            - md
+            - lg
+            - xl
+            - full
+          example: md
+        typography:
+          $ref: "#/components/schemas/TypographyDto"
+        iconPack:
+          oneOf:
+            - $ref: "#/components/schemas/LucideIconPackDto"
+            - $ref: "#/components/schemas/PhosphorIconPackDto"
+            - $ref: "#/components/schemas/CustomIconPackDto"
+          example:
+            kind: lucide
+      required:
+        - mode
+        - colors
+        - radius
+        - typography
+        - iconPack
+    LogoDto:
+      type: object
+      properties:
+        mark:
+          type: string
+          example: https://assets.example.com/logo/mark.svg
+        full:
+          type: string
+          example: https://assets.example.com/logo/full.svg
+        markDark:
+          type: string
+          example: https://assets.example.com/logo/mark-dark.svg
+        fullDark:
+          type: string
+          example: https://assets.example.com/logo/full-dark.svg
+    BrandingDto:
+      type: object
+      properties:
+        productName:
+          type: string
+          example: Wire
+        logo:
+          $ref: "#/components/schemas/LogoDto"
+        faviconUrl:
+          type: string
+          example: https://assets.example.com/favicon.ico
+      required:
+        - productName
+        - logo
+    MotionDto:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          example: true
+          description: Global kill switch — respected even if a layout requests animation.
+        speed:
+          type: string
+          enum:
+            - slower
+            - normal
+            - faster
+          example: normal
+        respectReducedMotion:
+          type: boolean
+          example: true
+          description: "Honor OS-level prefers-reduced-motion by forcing `enabled: false`."
+      required:
+        - enabled
+        - speed
+        - respectReducedMotion
+    LayoutDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: default
+        name:
+          type: string
+          example: Default
+        description:
+          type: string
+          example: "Standard three-pane layout: nav rail, channel sidebar, main content."
+        slots:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/SlotConfigDto"
+          description: "Keyed by slot id (one of: nav.primary, nav.workspaceSwitcher, sidebar.channelList,
+            topbar, composer, thread.panel, search.trigger, command.palette). Must include every
+            required slot: nav.primary, sidebar.channelList, composer."
+          example:
+            nav.primary:
+              placement: sidebar-left
+              variant: default
+              props: {}
+            composer:
+              placement: bottom
+              variant: default
+              props: {}
+      required:
+        - id
+        - name
+        - slots
+    UiConfigDto:
+      type: object
+      properties:
+        schemaVersion:
+          type: number
+          example: 1
+          description: Bumped on breaking shape changes; see @wire/ui-config's schema.ts.
+        theme:
+          $ref: "#/components/schemas/ThemeDto"
+        branding:
+          $ref: "#/components/schemas/BrandingDto"
+        motion:
+          $ref: "#/components/schemas/MotionDto"
+        layouts:
+          type: array
+          items:
+            $ref: "#/components/schemas/LayoutDto"
+        activeLayoutId:
+          type: string
+          example: default
+          description: Which entry in `layouts` (by `id`) is active.
+        extensions:
+          type: object
+          additionalProperties: true
+          example: {}
+          description: Forward-compatibility staging area for fields not yet promoted to the typed schema —
+            see @wire/ui-config's extensions.ts.
+      required:
+        - schemaVersion
+        - theme
+        - branding
+        - motion
+        - layouts
+        - activeLayoutId
+        - extensions
     UiConfigResourceDto:
       type: object
       properties:
         workspaceId:
           type: string
+          example: ws_64d9dea525ae84ef6f7bd361
         resolved:
-          type: object
           description: Fully resolved UiConfig (base + org + user merged, locks applied).
+          allOf:
+            - $ref: "#/components/schemas/UiConfigDto"
         warnings:
           type: array
           items:
@@ -2424,6 +3006,7 @@ components:
             - org
         reason:
           type: string
+          example: Brand color is fixed company-wide.
       required:
         - path
         - lockedBy
@@ -2432,8 +3015,15 @@ components:
       properties:
         override:
           type: object
+          additionalProperties: true
           description: Deep-partial UiConfig override, validated against @wire/ui-config's
             uiConfigOverrideSchema.
+          example:
+            theme:
+              colors:
+                primary:
+                  light: "#2563eb"
+                  dark: "#60a5fa"
         locks:
           type: array
           items:
@@ -2446,7 +3036,11 @@ components:
       properties:
         override:
           type: object
+          additionalProperties: true
           description: Deep-partial UiConfig override, validated against @wire/ui-config's
             uiConfigOverrideSchema.
+          example:
+            theme:
+              mode: dark
       required:
         - override

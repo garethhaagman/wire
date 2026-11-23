@@ -17,35 +17,35 @@ export class MemberDto implements Member {
   @ApiProperty({ example: "mem_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   id!: Member["id"];
 
-  @ApiProperty()
+  @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })
   workspaceId!: string;
 
-  @ApiProperty({ nullable: true, type: String, description: "Null until the invite is claimed" })
+  @ApiProperty({ nullable: true, type: String, example: "usr_01jd5x0k8f3v8q2m7n4r6t9w1y", description: "Null until the invite is claimed" })
   userId!: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ example: "Jordan Lee" })
   displayName!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "jordan@example.com" })
   email!: string;
 
   @ApiProperty({ enum: ROLES })
   role!: Member["role"];
 
-  @ApiProperty()
+  @ApiProperty({ example: "2026-01-15T09:30:00.000Z" })
   createdAt!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "2026-01-15T09:30:00.000Z" })
   updatedAt!: string;
 }
 
 export class CreateMemberRequestDto implements CreateMemberRequest {
-  @ApiProperty()
+  @ApiProperty({ example: "Jordan Lee" })
   @IsString()
   @Length(1, 100)
   displayName!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "jordan@example.com" })
   @IsEmail()
   email!: string;
 
@@ -55,7 +55,7 @@ export class CreateMemberRequestDto implements CreateMemberRequest {
 }
 
 export class UpdateMemberRequestDto implements UpdateMemberRequest {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: "Jordan Lee" })
   @IsOptional()
   @IsString()
   @Length(1, 100)

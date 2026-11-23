@@ -6,33 +6,36 @@ export class WebhookEndpointDto implements WebhookEndpoint {
   @ApiProperty({ example: "whe_64d9dea525ae84ef6f7bd361" })
   id!: WebhookEndpoint["id"];
 
-  @ApiProperty()
+  @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })
   workspaceId!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "https://example.com/webhooks/wire" })
   url!: string;
 
   @ApiProperty({ type: [String] })
   enabledEvents!: string[];
 
-  @ApiProperty({ nullable: true, type: [String] })
+  @ApiProperty({ nullable: true, type: [String], example: ["ch_01jd5x0k8f3v8q2m7n4r6t9w1y"] })
   channelFilter!: string[] | null;
 
-  @ApiProperty()
+  @ApiProperty({ example: "2026-01-15T09:30:00.000Z" })
   createdAt!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "2026-01-15T09:30:00.000Z" })
   updatedAt!: string;
 }
 
 /** Only ever returned from create — the secret is shown once and never again. */
 export class WebhookEndpointCreatedDto extends WebhookEndpointDto {
-  @ApiProperty({ description: "Shown once. Store it — it cannot be retrieved again." })
+  @ApiProperty({
+    description: "Shown once. Store it — it cannot be retrieved again.",
+    example: "whsec_3f9a1c2b7e8d4f6a9b0c1d2e3f4a5b6c",
+  })
   secret!: string;
 }
 
 export class CreateWebhookEndpointRequestDto implements CreateWebhookEndpointRequest {
-  @ApiProperty()
+  @ApiProperty({ example: "https://example.com/webhooks/wire" })
   @IsUrl({ require_tld: false, protocols: ["http", "https"], require_protocol: true })
   @MaxLength(2048)
   url!: string;

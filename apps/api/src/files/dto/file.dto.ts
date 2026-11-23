@@ -6,37 +6,37 @@ export class FileDto implements WireFile {
   @ApiProperty({ example: "file_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   id!: WireFile["id"];
 
-  @ApiProperty()
+  @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })
   workspaceId!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "ch_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   channelId!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "mem_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   uploadedBy!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "roadmap.pdf" })
   name!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "application/pdf" })
   mime!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 2_458_112, description: "Size in bytes" })
   sizeBytes!: number;
 
   @ApiProperty({ enum: ["pending", "clean", "infected"] })
   virusScanStatus!: WireFile["virusScanStatus"];
 
-  @ApiProperty()
+  @ApiProperty({ example: "2026-01-15T09:30:00.000Z" })
   createdAt!: string;
 }
 
 export class CreateFileRequestDto implements CreateFileRequest {
-  @ApiProperty()
+  @ApiProperty({ example: "ch_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   @IsString()
   channelId!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "roadmap.pdf" })
   @IsString()
   @Length(1, 255)
   name!: string;
@@ -46,7 +46,7 @@ export class CreateFileRequestDto implements CreateFileRequest {
   @Length(1, 255)
   mime!: string;
 
-  @ApiProperty({ maximum: 5 * 1024 ** 3 })
+  @ApiProperty({ example: 2_458_112, maximum: 5 * 1024 ** 3, description: "Size in bytes" })
   @IsInt()
   @Min(0)
   @Max(5 * 1024 ** 3)

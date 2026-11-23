@@ -28,4 +28,11 @@ export default [
       "wire-api/no-numeric-id": "error",
     },
   },
+  {
+    files: ["src/**/dto/*.dto.ts"],
+    plugins: { "wire-api": wireApi },
+    rules: {
+      "wire-api/require-api-property-example": "error",
+    },
+  },
 ];

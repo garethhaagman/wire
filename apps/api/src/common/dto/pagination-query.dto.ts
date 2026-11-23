@@ -8,14 +8,14 @@ import { IsInt, IsOptional, IsString, Max, Min } from "class-validator";
  * since their keys are dynamic and can't be bound by a fixed DTO property.
  */
 export class PaginationQueryDto {
-  @ApiPropertyOptional({ minimum: 1, default: 1 })
+  @ApiPropertyOptional({ minimum: 1, default: 1, example: 1 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   page?: number = 1;
 
-  @ApiPropertyOptional({ minimum: 1, maximum: 100, default: 20 })
+  @ApiPropertyOptional({ minimum: 1, maximum: 100, default: 20, example: 20 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -23,12 +23,12 @@ export class PaginationQueryDto {
   @Max(100)
   per_page?: number = 20;
 
-  @ApiPropertyOptional({ description: "Field to sort by; prefix with - for descending" })
+  @ApiPropertyOptional({ description: "Field to sort by; prefix with - for descending", example: "-createdAt" })
   @IsOptional()
   @IsString()
   sort?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: "launch" })
   @IsOptional()
   @IsString()
   search?: string;

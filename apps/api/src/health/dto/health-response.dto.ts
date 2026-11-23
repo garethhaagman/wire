@@ -8,9 +8,9 @@ export class HealthResponseDto implements HealthResponse {
   @ApiProperty({ enum: ["ok"] })
   status!: "ok";
 
-  @ApiProperty()
+  @ApiProperty({ example: "0.1.0" })
   version!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "2026-01-15T09:30:00.000Z" })
   timestamp!: string;
 }

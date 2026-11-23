@@ -1,7 +1,7 @@
 ---
 name: api-design
 description: Use when adding, changing, or reviewing any endpoint in apps/api — a new resource controller, a new DTO, a new error case, or anything touching the HTTP surface. Also use when asked about Wire's API conventions, response envelope, error codes, pagination, headers, or OpenAPI spec generation.
-version: "1.3.0"
+version: "1.4.0"
 ---
 
 # Wire API design
@@ -19,7 +19,7 @@ cd apps/api && DATABASE_URL=... bun run openapi:export
 Use `internal-docs/api/workspaces` (well, `apps/api/src/workspaces/`) as the reference shape. For a resource `Foo`:
 
 1. **Types** (`packages/types/src/foo.ts`): `Foo` interface with a prefixed string-literal `id` (`` `foo_${string}` ``), `CreateFooRequest`. Export from `packages/types/src/index.ts`.
-2. **DTOs** (`apps/api/src/foo/dto/foo.dto.ts`): a Swagger-only class per type implementing the `@wire/types` interface, decorated with `@ApiProperty()`. The request DTO gets `class-validator` decorators (`@IsString()`, `@Length()`, etc.) — this is what actually validates incoming requests via the global `ValidationPipe`.
+2. **DTOs** (`apps/api/src/foo/dto/foo.dto.ts`): a Swagger-only class per type implementing the `@wire/types` interface, decorated with `@ApiProperty()`. The request DTO gets `class-validator` decorators (`@IsString()`, `@Length()`, etc.) — this is what actually validates incoming requests via the global `ValidationPipe`. See "DTO examples" below — every `@ApiProperty` needs a concrete example/enum/typed reference, not just a bare type.
 3. **Service** (`apps/api/src/foo/foo.service.ts`): business logic. Throw `NotFoundException` (or other Nest built-ins) for the common cases; throw `ApiException` subclasses only when the default status→code mapping isn't precise enough (see Errors below).
 4. **Controller** (`apps/api/src/foo/foo.controller.ts`): see Naming & verbs below for method names, URL shape, and the required decorators.
 5. **Permissions**: add `"Foo"` to `PermissionSubject` in `apps/api/src/permissions/permission.types.ts`, decide which actions `member` gets in `ability.factory.ts` (admin always gets everything via `manage all`), then put `@RequirePermission(action, "Foo")` on every handler — see Permissions below.
@@ -123,12 +123,25 @@ Never stringify an ordinary number to dodge floating-point worries — that's no
 
 All `@wire/types` resource IDs are already string-literal template types (`` `ws_${string}` ``, etc.) — a new resource must follow the same pattern, never a numeric ID. `wire-api/no-numeric-id` lints for an ID-shaped DTO property (`id`, `*Id`, `*_id`) typed `number` or decorated `@ApiProperty({ type: Number })` / `@IsNumber()`.
 
+## DTO examples — every field must show a real shape
+
+A bare `@ApiProperty()` (or one with only `description`/`nullable`/`required`) renders in the generated spec as an untyped placeholder — a consumer generating a client or reading the spec has nothing to go on. Every `@ApiProperty`/`@ApiPropertyOptional` must carry at least one of:
+
+- **`example`** — a concrete, realistic value. This covers almost everything: `@ApiProperty({ example: "ch_01jd5x0k8f3v8q2m7n4r6t9w1y" })` for an ID (match the resource's actual prefix), `@ApiProperty({ example: "2026-01-15T09:30:00.000Z" })` for a timestamp, `@ApiProperty({ nullable: true, type: String, example: "Q4 planning" })` for a nullable field (example the *populated* case, not `null`).
+- **`enum`** — for a closed set of string literals: `@ApiProperty({ enum: ["human", "agent", "system"] })`. Satisfies the rule on its own; don't bolt on a redundant `example` unless it adds information `enum` doesn't already give.
+- **`oneOf`** with `$ref`s — for a discriminated union (zod `discriminatedUnion` or a TS union of object shapes): define one Swagger class per variant, register them with `@ApiExtraModels(...)` on the containing DTO, and reference them via `getSchemaPath()`. See `UiConfigDto`/`ThemeDto` in `apps/api/src/ui-config/dto/ui-config.dto.ts` for the reference shape (font source / icon pack variants).
+- **A concrete `type`** — a nested DTO class (`type: () => FooDto` or `type: [FooDto]`), or `type: "object"` paired with `additionalProperties` for a `Record<string, X>` dictionary field, with a representative `example`: `@ApiProperty({ type: "object", additionalProperties: { type: "integer" }, example: { "👍": 3 } })` (the `reactionCounts` pattern, `message.dto.ts`). A bare `type: String`/`Number`/`Boolean` does **not** satisfy this — it only restates what TypeScript already infers from the property, and gives a spec consumer no more than they already had.
+
+For a deeply nested domain type that already has its own validated schema elsewhere (e.g. a zod schema in a `packages/*` package), don't duplicate every nested field's validator — model the shape as a parallel tree of Swagger-only DTO classes (one per nested object/union) purely for documentation, the way `UiConfigResourceDto` → `UiConfigDto` → `ThemeDto` → `ColorRolesDto` does, with the real validation still happening server-side against the canonical schema.
+
+Enforced by `wire-api/require-api-property-example` on every `src/**/dto/*.dto.ts` file — see Lint enforcement below.
+
 ## SDK-facing client code
 
 `apps/web/src/lib/api-client.ts`'s `apiFetch<T>()` is the reference "one generic handler" pattern — copy it, don't reinvent response-unwrapping logic per call site. Full detail: `internal-docs/api/sdk-architecture.md`.
 
 ## Lint enforcement
 
-`@wire/eslint-plugin-wire-api` (`packages/eslint-plugin-wire-api/`) enforces several of the above automatically on every `apps/api` file: `require-api-response` (every HTTP-decorated handler needs an `@Api*Response` decorator — this is what makes the generated spec complete), `require-permission` (every HTTP-decorated handler needs `@RequirePermission` or `@Public()`), `controller-verb-naming`, `no-bare-error-throw`, `no-manual-envelope`, `no-numeric-id`. Run `bun run lint` before considering an endpoint done.
+`@wire/eslint-plugin-wire-api` (`packages/eslint-plugin-wire-api/`) enforces several of the above automatically on every `apps/api` file: `require-api-response` (every HTTP-decorated handler needs an `@Api*Response` decorator — this is what makes the generated spec complete), `require-permission` (every HTTP-decorated handler needs `@RequirePermission` or `@Public()`), `controller-verb-naming`, `no-bare-error-throw`, `no-manual-envelope`, `no-numeric-id`, and `require-api-property-example` (every `@ApiProperty`/`@ApiPropertyOptional` in `src/**/dto/*.dto.ts` needs an `example`, `enum`, `oneOf`, or concrete `type` — see "DTO examples" above). Run `bun run lint` before considering an endpoint done.
 
 This custom plugin exists specifically because **oxlint** (the fast first-pass linter, config at root `.oxlintrc.json`) can't load custom plugins or do type-aware checks — it covers generic correctness/style rules only. ESLint + `@wire/eslint-plugin-wire-api` is where anything Wire-specific or type-aware lives. `bun run lint` runs both (oxlint first, since it's near-instant, then ESLint).
