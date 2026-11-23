@@ -10,6 +10,7 @@ export * from "./repositories/messages.js";
 export * from "./repositories/reactions.js";
 export * from "./repositories/bookmarks.js";
 export * from "./repositories/agents.js";
+export * from "./repositories/agent-runs.js";
 export * from "./repositories/files.js";
 export * from "./repositories/events.js";
 export * from "./repositories/webhooks.js";

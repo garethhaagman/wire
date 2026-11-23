@@ -34,6 +34,8 @@ export const WIRE_EVENT_TYPES = [
   "member.removed",
   "agent.created",
   "agent.updated",
+  "agent.run.created",
+  "agent.run.completed",
   "file.created",
 ] as const;
 

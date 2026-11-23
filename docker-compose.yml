@@ -2,6 +2,10 @@ name: wire
 
 # `docker compose up` starts only Postgres and Redis; apps run natively via `make dev`.
 # The app containers are opt-in: `docker compose --profile docker up` (or `make docker-up`).
+# The local S3-compatible store (Garage) is also opt-in: `docker compose --profile s3 up`
+# — apps/api's FilesService defaults to LocalDiskAdapter (zero config, see
+# apps/api/src/files/storage/local-disk-adapter.ts) and only needs Garage/S3 when you
+# want to exercise the real S3Adapter path locally.
 
 services:
   postgres:
@@ -31,6 +35,37 @@ services:
       - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Apache-2.0 S3-compatible object store for local dev — not MinIO, whose
+  # server/console releases moved behind AGPLv3 licensing. Speaks the real S3 API,
+  # so apps/api/src/files/storage/s3-adapter.ts needs no Garage-specific code, only
+  # S3_ENDPOINT pointed here instead of real AWS (see apps/api/.env.example).
+  #
+  # One-time setup after first `docker compose --profile s3 up -d garage` — the
+  # official image is scratch-based (no shell), so this is a host-side script
+  # driving the `garage` CLI via `docker compose exec` rather than a script
+  # copied into the container:
+  #
+  #   ./infra/garage/init.sh
+  #
+  # It prints where it wrote the generated S3 credentials (Garage can't be told
+  # a chosen access-key-id/secret-key at creation time) — copy them into
+  # apps/api/.env. Re-running after the first time is a no-op.
+  garage:
+    profiles: ["s3"]
+    image: dxflrs/garage:v2.5.0
+    restart: unless-stopped
+    volumes:
+      - ./infra/garage/garage.toml:/etc/garage.toml:ro
+      - garage_meta:/var/lib/garage/meta
+      - garage_data:/var/lib/garage/data
+    ports:
+      - "3900:3900"
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -99,3 +134,5 @@ services:
 
 volumes:
   postgres_data:
+  garage_meta:
+  garage_data:

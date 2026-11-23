@@ -1,6 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsInt, IsString, Length, Max, Min } from "class-validator";
-import type { CreateFileRequest, WireFile } from "@wire/types";
+import type {
+  CreateUploadRequest,
+  CreateUploadResponse,
+  DownloadUrlResponse,
+  WireFile,
+} from "@wire/types";
 
 export class FileDto implements WireFile {
   @ApiProperty({ example: "file_01jd5x0k8f3v8q2m7n4r6t9w1y" })
@@ -24,6 +29,9 @@ export class FileDto implements WireFile {
   @ApiProperty({ example: 2_458_112, description: "Size in bytes" })
   sizeBytes!: number;
 
+  @ApiProperty({ example: true, description: "False until confirmUpload() verifies the blob actually landed in storage." })
+  sizeConfirmed!: boolean;
+
   @ApiProperty({ enum: ["pending", "clean", "infected"] })
   virusScanStatus!: WireFile["virusScanStatus"];
 
@@ -31,7 +39,7 @@ export class FileDto implements WireFile {
   createdAt!: string;
 }
 
-export class CreateFileRequestDto implements CreateFileRequest {
+export class CreateUploadRequestDto implements CreateUploadRequest {
   @ApiProperty({ example: "ch_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   @IsString()
   channelId!: string;
@@ -51,4 +59,28 @@ export class CreateFileRequestDto implements CreateFileRequest {
   @Min(0)
   @Max(5 * 1024 ** 3)
   sizeBytes!: number;
+}
+
+export class CreateUploadResponseDto implements CreateUploadResponse {
+  @ApiProperty({ type: () => FileDto })
+  file!: WireFile;
+
+  @ApiProperty({ example: "https://wire-files.s3.us-east-1.amazonaws.com/ws_64d9.../blob_01jd5x...?X-Amz-Signature=..." })
+  uploadUrl!: string;
+
+  @ApiProperty({ enum: ["PUT"] })
+  method!: "PUT";
+
+  @ApiProperty({
+    required: false,
+    type: Object,
+    additionalProperties: { type: "string" },
+    example: { "Content-Type": "image/png" },
+  })
+  headers?: Record<string, string>;
+}
+
+export class DownloadUrlResponseDto implements DownloadUrlResponse {
+  @ApiProperty({ example: "https://wire-files.s3.us-east-1.amazonaws.com/ws_64d9.../blob_01jd5x...?X-Amz-Signature=..." })
+  downloadUrl!: string;
 }

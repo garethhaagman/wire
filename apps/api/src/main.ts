@@ -1,9 +1,11 @@
+import { WsAdapter } from "@nestjs/platform-ws";
 import { parseApiEnv } from "@wire/config";
 import { createApp } from "./create-app.js";
 
 async function bootstrap(): Promise<void> {
   const env = parseApiEnv();
   const app = await createApp();
+  app.useWebSocketAdapter(new WsAdapter(app));
 
   await app.init();
   await app.listen(env.PORT, "0.0.0.0");

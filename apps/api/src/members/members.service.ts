@@ -1,4 +1,4 @@
-import { ForbiddenException, HttpStatus, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, HttpStatus, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import {
   addChannelMembers,
   appendEvents,
@@ -7,6 +7,7 @@ import {
   findDefaultChannelIds,
   findMember,
   findUserByEmail,
+  findWorkspace,
   getPreferences,
   isUniqueViolation,
   listMembers,
@@ -16,6 +17,7 @@ import {
   upsertMember,
   type NewEvent,
 } from "@wire/db";
+import type { ApiEnv } from "@wire/config";
 import type {
   CreateMemberRequest,
   Member,
@@ -23,15 +25,25 @@ import type {
   UpdateMemberPreferencesRequest,
   UpdateMemberRequest,
 } from "@wire/types";
+import { API_ENV } from "../config/env.provider.js";
 import { ApiException, ResourceConflictException } from "../common/errors/api-exception.js";
+import { selectEmailSender } from "../email/select-email-sender.js";
 import { OutboxRelayService } from "../events/outbox-relay.service.js";
 import { isAdmin, type WorkspaceActor } from "../permissions/actor.js";
+
+/** Workspace names are user-controlled; escape before interpolating into an HTML email body. */
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
+}
 import { MemberResolverService } from "../permissions/member-resolver.service.js";
 
 @Injectable()
 export class MembersService {
+  private readonly logger = new Logger(MembersService.name);
+
   constructor(
     @Inject(Database) private readonly db: Database,
+    @Inject(API_ENV) private readonly env: ApiEnv,
     private readonly resolver: MemberResolverService,
     private readonly relay: OutboxRelayService,
   ) {}
@@ -101,7 +113,35 @@ export class MembersService {
     }
     this.relay.kick();
     await this.resolver.invalidate(actor.workspaceId, member.userId);
+
+    this.sendInviteEmail(actor.workspaceId, member).catch((err: unknown) => {
+      this.logger.error(`invite email failed for member ${member.id}`, err);
+    });
+
     return member;
+  }
+
+  /**
+   * Fire-and-forget after the invite commits — never blocks member creation, never
+   * retried on failure (a missed send just means the invitee doesn't get an email;
+   * they can still be told directly or re-invited).
+   */
+  private async sendInviteEmail(workspaceId: string, member: Member): Promise<void> {
+    const workspace = await findWorkspace(this.db, workspaceId);
+    const workspaceName = workspace?.name ?? "a Wire workspace";
+    // No dedicated accept-invite page exists yet in apps/web — this links to the
+    // web app's root with the workspace id, which is enough to land a signed-in or
+    // sign-up flow in the right place today, but a real invite-accept route is a
+    // frontend gap, not something this backend task builds.
+    const link = `${this.env.WEB_ORIGIN}/?workspaceId=${encodeURIComponent(workspaceId)}`;
+    const safeWorkspaceName = escapeHtml(workspaceName);
+
+    await selectEmailSender(this.env)({
+      to: member.email,
+      subject: `You've been invited to ${workspaceName} on Wire`,
+      text: `You've been invited to join ${workspaceName} on Wire. Sign in at ${link} to get started.`,
+      html: `<p>You've been invited to join <strong>${safeWorkspaceName}</strong> on Wire.</p><p><a href="${link}">Sign in to get started</a>.</p>`,
+    });
   }
 
   /** Members may edit their own display name; changing roles (or anyone else) is admin-only. */

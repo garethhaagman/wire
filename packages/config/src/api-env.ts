@@ -35,10 +35,33 @@ export const apiEnvSchema = z
     /** Google OAuth client — "Sign in with Google" is enabled only when both are set. */
     GOOGLE_CLIENT_ID: optionalString,
     GOOGLE_CLIENT_SECRET: optionalString,
+    /** Agent harness LLM backend. Unset means agent runs use the deterministic mock harness. */
+    ANTHROPIC_API_KEY: optionalString,
+    /**
+     * File blob storage. Unset S3_BUCKET means files are stored on local disk
+     * (LocalDiskAdapter) — zero config, nothing external to run. Set S3_BUCKET (+
+     * region/creds) to use S3Adapter instead; S3_ENDPOINT + S3_FORCE_PATH_STYLE
+     * point the same adapter at a local Garage instance instead of real AWS.
+     */
+    S3_BUCKET: optionalString,
+    S3_REGION: optionalString,
+    S3_ENDPOINT: optionalString.pipe(z.string().url().optional()),
+    S3_ACCESS_KEY_ID: optionalString,
+    S3_SECRET_ACCESS_KEY: optionalString,
+    S3_FORCE_PATH_STYLE: z.enum(["true", "false"]).optional(),
+    /** Local-disk upload/download URLs are signed with this; defaults to BETTER_AUTH_SECRET so no new secret is needed. */
+    LOCAL_UPLOAD_DIR: optionalString,
+    /** Outbound email (invites, etc). Unset means emails are logged via console, not delivered. */
+    RESEND_API_KEY: optionalString,
+    EMAIL_FROM_ADDRESS: z.string().min(1).default("Wire <no-reply@wire.local>"),
   })
   .refine((env) => Boolean(env.GOOGLE_CLIENT_ID) === Boolean(env.GOOGLE_CLIENT_SECRET), {
     message: "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set together",
     path: ["GOOGLE_CLIENT_SECRET"],
+  })
+  .refine((env) => !env.S3_BUCKET || (env.S3_ACCESS_KEY_ID && env.S3_SECRET_ACCESS_KEY && env.S3_REGION), {
+    message: "S3_BUCKET requires S3_REGION, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY",
+    path: ["S3_BUCKET"],
   });
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>;

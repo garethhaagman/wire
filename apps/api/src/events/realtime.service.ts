@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { Inject, Injectable, Logger, type OnApplicationShutdown } from "@nestjs/common";
-import type { Request, Response } from "express";
 import type { Redis } from "ioredis";
 import { Database, findChannelRecord, listChannelMemberIds, listEventsAfter } from "@wire/db";
 import type { Channel, WireEvent } from "@wire/types";
@@ -10,20 +9,34 @@ import { describeRedisError, REDIS } from "../redis/redis.module.js";
 import { PresenceService } from "./presence.service.js";
 import { workspaceChannel, type RealtimeEnvelope } from "./realtime-channel.js";
 
-const HEARTBEAT_MS = 15_000;
+export const HEARTBEAT_MS = 15_000;
 const MEMBERSHIP_TTL_MS = 30_000;
 /** A client this far behind is told to resync from the REST API instead of replaying. */
 const MAX_REPLAY_EVENTS = 5000;
 const REPLAY_PAGE = 500;
-/** Slow consumers are disconnected (they resume via Last-Event-ID) instead of buffering unbounded memory. */
-const MAX_BUFFERED_BYTES = 1 << 20;
 
 const MEMBERSHIP_EVENTS = new Set(["channel.member.joined", "channel.member.left"]);
 
-interface StreamFilters {
+export interface StreamFilters {
   types: Set<string> | null;
   channelIds: Set<string> | null;
   afterSeq: number | null;
+}
+
+/**
+ * Transport-specific wire encoding and backpressure, implemented once per
+ * transport (SSE: sse-sink.ts; WS: ws-sink.ts). RealtimeService only ever
+ * calls through this — it has no notion of either transport's frame format,
+ * so ACL/audience/replay logic (the part that matters for correctness) lives
+ * in exactly one place regardless of how many transports exist.
+ */
+export interface StreamSink {
+  readonly ended: boolean;
+  sendEvent(event: WireEvent): void;
+  sendEphemeral(type: string, channelId: string | null, data: Record<string, unknown>): void;
+  sendResync(): void;
+  ping(): void;
+  end(): void;
 }
 
 interface Connection {
@@ -31,7 +44,7 @@ interface Connection {
   workspaceId: string;
   memberId: string;
   isGuest: boolean;
-  res: Response;
+  sink: StreamSink;
   filters: StreamFilters;
   /** Live events that arrive while the backlog replays; flushed (deduped by seq) afterwards. */
   backlog: WireEvent[] | null;
@@ -39,7 +52,7 @@ interface Connection {
 }
 
 /**
- * Server-sent-events gateway. Fan-out topology:
+ * Realtime fan-out core, shared by every transport. Topology:
  *
  *   outbox relay ──PUBLISH wire:ws:{id}──▶ Redis ──▶ every replica subscribed to that workspace
  *                                                     └─▶ local connections, ACL-filtered per channel
@@ -64,21 +77,19 @@ export class RealtimeService implements OnApplicationShutdown {
     private readonly presence: PresenceService,
   ) {}
 
-  async open(actor: WorkspaceActor, req: Request, res: Response, filters: StreamFilters): Promise<void> {
-    res.status(200);
-    res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-    res.setHeader("Cache-Control", "no-cache, no-transform");
-    res.setHeader("Connection", "keep-alive");
-    res.setHeader("X-Accel-Buffering", "no");
-    res.flushHeaders();
-    res.write(`retry: 3000\n\n`);
-
+  /**
+   * Registers a connection against a sink the caller already created and
+   * attached (SSE has already written response headers; WS has already
+   * accepted the upgrade). Replays from `filters.afterSeq` if set, then
+   * leaves the connection attached until `close()` is called.
+   */
+  async attachSink(actor: WorkspaceActor, sink: StreamSink, filters: StreamFilters): Promise<{ close: () => void }> {
     const conn: Connection = {
       id: randomUUID(),
       workspaceId: actor.workspaceId,
       memberId: actor.member.id,
       isGuest: actor.member.role === "guest",
-      res,
+      sink,
       filters,
       backlog: filters.afterSeq !== null ? [] : null,
       lastSeq: filters.afterSeq ?? 0,
@@ -87,28 +98,25 @@ export class RealtimeService implements OnApplicationShutdown {
     await this.attach(conn);
     void this.presence.heartbeat(actor.workspaceId, actor.member.id);
 
-    const heartbeat = setInterval(() => {
-      this.write(conn, `: ping\n\n`);
-      void this.presence.heartbeat(actor.workspaceId, actor.member.id);
-    }, HEARTBEAT_MS);
-
-    req.on("close", () => {
-      clearInterval(heartbeat);
-      void this.detach(conn);
-    });
-
     if (filters.afterSeq !== null) await this.replay(conn, filters.afterSeq);
+
+    return { close: () => void this.detach(conn) };
+  }
+
+  /** Heartbeat tick for a still-open connection — called by the transport on its own timer. */
+  heartbeat(actor: WorkspaceActor): void {
+    void this.presence.heartbeat(actor.workspaceId, actor.member.id);
   }
 
   /** Ends every open stream for a member (e.g. after removal from the workspace). */
   disconnectMember(workspaceId: string, memberId: string): void {
     for (const conn of this.byWorkspace.get(workspaceId) ?? []) {
-      if (conn.memberId === memberId) conn.res.end();
+      if (conn.memberId === memberId) conn.sink.end();
     }
   }
 
   onApplicationShutdown(): void {
-    for (const conns of this.byWorkspace.values()) for (const conn of conns) conn.res.end();
+    for (const conns of this.byWorkspace.values()) for (const conn of conns) conn.sink.end();
     this.byWorkspace.clear();
     if (this.subscriber) this.subscriber.disconnect();
   }
@@ -186,9 +194,10 @@ export class RealtimeService implements OnApplicationShutdown {
     const conns = this.byWorkspace.get(envelope.workspaceId);
     if (!conns) return;
     const audience = await this.audienceFor(envelope.channelId, null, conns);
-    const frame = `event: ${envelope.type}\ndata: ${JSON.stringify({ channelId: envelope.channelId, ...envelope.data })}\n\n`;
     for (const conn of conns) {
-      if (this.visible(conn, envelope.type, envelope.channelId, audience)) this.write(conn, frame);
+      if (this.visible(conn, envelope.type, envelope.channelId, audience)) {
+        conn.sink.sendEphemeral(envelope.type, envelope.channelId, envelope.data);
+      }
     }
   }
 
@@ -244,7 +253,7 @@ export class RealtimeService implements OnApplicationShutdown {
       sent += page.items.length;
       if (!page.hasMore) break;
       if (sent >= MAX_REPLAY_EVENTS) {
-        this.write(conn, `event: resync\ndata: {"reason":"too_far_behind"}\n\n`);
+        conn.sink.sendResync();
         break;
       }
     }
@@ -259,18 +268,9 @@ export class RealtimeService implements OnApplicationShutdown {
   }
 
   private sendEvent(conn: Connection, event: WireEvent): void {
+    if (conn.sink.ended) return;
     if (event.seq > conn.lastSeq) conn.lastSeq = event.seq;
-    this.write(conn, `id: ${event.seq}\nevent: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
-  }
-
-  private write(conn: Connection, frame: string): void {
-    if (conn.res.writableEnded) return;
-    if (conn.res.writableLength > MAX_BUFFERED_BYTES) {
-      this.logger.warn(`disconnecting slow consumer ${conn.id}`);
-      conn.res.end();
-      return;
-    }
-    conn.res.write(frame);
+    conn.sink.sendEvent(event);
   }
 
   private async channelType(channelId: string): Promise<Channel["type"] | null> {

@@ -54,6 +54,15 @@ export async function findAgent(db: Queryable, workspaceId: string, id: string):
   return rows[0] ? toAgent(rows[0]) : null;
 }
 
+/** Used by @handle mention parsing on message post — only active agents can be triggered. */
+export async function findAgentByHandle(db: Queryable, workspaceId: string, handle: string): Promise<Agent | null> {
+  const { rows } = await db.query<AgentRow>(
+    `select * from agents where workspace_id = $1 and handle = $2 and status = 'active'`,
+    [workspaceId, handle],
+  );
+  return rows[0] ? toAgent(rows[0]) : null;
+}
+
 /** A handle clash surfaces as a unique violation on UQ_agents_workspace_handle. */
 export async function insertAgent(
   db: Queryable,

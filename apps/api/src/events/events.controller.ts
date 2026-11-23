@@ -14,7 +14,8 @@ import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
 import { PresenceService } from "./presence.service.js";
-import { RealtimeService } from "./realtime.service.js";
+import { HEARTBEAT_MS, RealtimeService } from "./realtime.service.js";
+import { SseSink } from "./sse-sink.js";
 import { PresenceEntryDto, StreamQueryDto, TypingRequestDto, WireEventDto } from "./dto/event.dto.js";
 
 /**
@@ -71,10 +72,30 @@ export class EventsController {
   ): Promise<void> {
     const lastEventId = Number(req.header("Last-Event-ID"));
     const afterSeq = Number.isInteger(lastEventId) && lastEventId >= 0 ? lastEventId : (query.after_seq ?? null);
-    await this.realtime.open(actor, req, res, {
+
+    res.status(200);
+    res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
+    res.flushHeaders();
+    res.write(`retry: 3000\n\n`);
+
+    const sink = new SseSink(actor.member.id, res);
+    const { close } = await this.realtime.attachSink(actor, sink, {
       types: query.types?.length ? new Set(query.types) : null,
       channelIds: query.channel_ids?.length ? new Set(query.channel_ids) : null,
       afterSeq,
+    });
+
+    const heartbeat = setInterval(() => {
+      sink.ping();
+      this.realtime.heartbeat(actor);
+    }, HEARTBEAT_MS);
+
+    req.on("close", () => {
+      clearInterval(heartbeat);
+      close();
     });
   }
 

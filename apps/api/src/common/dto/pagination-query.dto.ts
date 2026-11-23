@@ -1,11 +1,14 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsInt, IsOptional, IsString, Max, Min } from "class-validator";
+import { IsInt, IsObject, IsOptional, IsString, Max, Min } from "class-validator";
 
 /**
  * Shared query params for every collection endpoint — internal-docs/api/pagination.md.
- * filter[field]=value params are read directly off the raw query object (ParsedFilterQuery)
- * since their keys are dynamic and can't be bound by a fixed DTO property.
+ * filter[field]=value params are read directly off the raw query object via
+ * parseFilterQuery(req.query), not off this DTO's `filter` property — but `filter`
+ * still has to be declared here so the global ValidationPipe's forbidNonWhitelisted
+ * doesn't reject it as an unrecognized field; its keys are dynamic per endpoint and
+ * can't be given individual DTO properties.
  */
 export class PaginationQueryDto {
   @ApiPropertyOptional({ minimum: 1, default: 1, example: 1 })
@@ -32,6 +35,16 @@ export class PaginationQueryDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiPropertyOptional({
+    type: "object",
+    additionalProperties: { type: "string" },
+    example: { type: "public", joined: "true" },
+    description: "Dynamic filter[field]=value params — see each endpoint's own @ApiQuery filter[...] entries for the fields it supports.",
+  })
+  @IsOptional()
+  @IsObject()
+  filter?: Record<string, string>;
 }
 
 export function parseFilterQuery(rawQuery: Record<string, unknown>): Record<string, string> {

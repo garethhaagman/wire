@@ -1,9 +1,10 @@
-import { ForbiddenException, HttpStatus, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, HttpStatus, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import {
   addChannelMembers,
   appendEvents,
   Database,
   editMessage,
+  findAgentByHandle,
   listChannelMessages,
   listThreadReplies,
   markThreadRead,
@@ -12,11 +13,15 @@ import {
   type NewEvent,
 } from "@wire/db";
 import type { ApiCursorPagination, Message } from "@wire/types";
+import { AgentRunnerService } from "../agents/agent-runner.service.js";
 import { ChannelAccessService } from "../channels/channel-access.service.js";
 import { encodeCursor, type CursorDirection } from "../common/dto/cursor-paginated-result.js";
 import { ApiException, ResourceConflictException } from "../common/errors/api-exception.js";
 import { OutboxRelayService } from "../events/outbox-relay.service.js";
 import { isAdmin, type WorkspaceActor } from "../permissions/actor.js";
+
+/** Matches the handle charset enforced on creation — apps/api/src/agents/dto/agent.dto.ts's @Matches. */
+const MENTION_PATTERN = /@([a-z0-9-]+)/g;
 
 interface PostMessageInput {
   channelId: string;
@@ -27,10 +32,13 @@ interface PostMessageInput {
 
 @Injectable()
 export class MessagesService {
+  private readonly logger = new Logger(MessagesService.name);
+
   constructor(
     @Inject(Database) private readonly db: Database,
     private readonly access: ChannelAccessService,
     private readonly relay: OutboxRelayService,
+    private readonly agentRunner: AgentRunnerService,
   ) {}
 
   async list(
@@ -109,7 +117,33 @@ export class MessagesService {
     });
 
     this.relay.kick();
+
+    this.triggerMentionedAgents(actor, message).catch((err: unknown) => {
+      this.logger.error(`mention parsing failed for message ${message.id}`, err);
+    });
+
     return message;
+  }
+
+  /**
+   * Fire-and-forget after the message transaction commits — never blocks posting,
+   * never retried on failure (a missed trigger just means no agent reply, not a
+   * data-integrity problem). Only human-authored messages are scanned, so an
+   * agent's own reply can't re-trigger itself or another agent in a loop.
+   */
+  private async triggerMentionedAgents(actor: WorkspaceActor, message: Message): Promise<void> {
+    const handles = new Set([...message.body.matchAll(MENTION_PATTERN)].map((match) => match[1]!));
+    for (const handle of handles) {
+      const agent = await findAgentByHandle(this.db, actor.workspaceId, handle);
+      if (!agent) continue;
+      await this.agentRunner.trigger({
+        workspaceId: actor.workspaceId,
+        agent,
+        prompt: message.body,
+        channelId: message.channelId,
+        triggeredByMessageId: message.id,
+      });
+    }
   }
 
   /** Authors edit their own messages — admins can delete others' but never put words in their mouth. */

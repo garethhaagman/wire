@@ -42,6 +42,7 @@ export async function createApp(): Promise<NestExpressApplication> {
     new ValidationPipe({
       transform: true,
       whitelist: true,
+      forbidNonWhitelisted: true,
       exceptionFactory: validationExceptionFactory,
     }),
   );
