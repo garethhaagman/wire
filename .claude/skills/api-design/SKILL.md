@@ -1,7 +1,7 @@
 ---
 name: api-design
 description: Use when adding, changing, or reviewing any endpoint in apps/api — a new resource controller, a new DTO, a new error case, or anything touching the HTTP surface. Also use when asked about Wire's API conventions, response envelope, error codes, pagination, headers, or OpenAPI spec generation.
-version: "1.4.0"
+version: "1.5.0"
 ---
 
 # Wire API design
@@ -136,12 +136,14 @@ For a deeply nested domain type that already has its own validated schema elsewh
 
 Enforced by `wire-api/require-api-property-example` on every `src/**/dto/*.dto.ts` file — see Lint enforcement below.
 
+`description` strings on any Swagger decorator (`@ApiProperty`, `@ApiOkResponse`, `@ApiHeader`, `@ApiQuery`, ...), and the OpenAPI document's own top-level description (`export-openapi.ts`'s `setDescription(...)`), must use plain ASCII punctuation, not an em dash (—): it renders inconsistently across the doc-viewing/SDK-generation tools downstream of the generated spec. Use a comma, colon, or hyphen instead. Enforced by `wire-api/no-em-dash-in-api-description` on controllers, DTOs, and `export-openapi.ts`.
+
 ## SDK-facing client code
 
 `apps/web/src/lib/api-client.ts`'s `apiFetch<T>()` is the reference "one generic handler" pattern — copy it, don't reinvent response-unwrapping logic per call site. Full detail: `internal-docs/api/sdk-architecture.md`.
 
 ## Lint enforcement
 
-`@wire/eslint-plugin-wire-api` (`packages/eslint-plugin-wire-api/`) enforces several of the above automatically on every `apps/api` file: `require-api-response` (every HTTP-decorated handler needs an `@Api*Response` decorator — this is what makes the generated spec complete), `require-permission` (every HTTP-decorated handler needs `@RequirePermission` or `@Public()`), `controller-verb-naming`, `no-bare-error-throw`, `no-manual-envelope`, `no-numeric-id`, and `require-api-property-example` (every `@ApiProperty`/`@ApiPropertyOptional` in `src/**/dto/*.dto.ts` needs an `example`, `enum`, `oneOf`, or concrete `type` — see "DTO examples" above). Run `bun run lint` before considering an endpoint done.
+`@wire/eslint-plugin-wire-api` (`packages/eslint-plugin-wire-api/`) enforces several of the above automatically on every `apps/api` file: `require-api-response` (every HTTP-decorated handler needs an `@Api*Response` decorator — this is what makes the generated spec complete), `require-permission` (every HTTP-decorated handler needs `@RequirePermission` or `@Public()`), `controller-verb-naming`, `no-bare-error-throw`, `no-manual-envelope`, `no-numeric-id`, `require-api-property-example` (every `@ApiProperty`/`@ApiPropertyOptional` in `src/**/dto/*.dto.ts` needs an `example`, `enum`, `oneOf`, or concrete `type` — see "DTO examples" above), and `no-em-dash-in-api-description` (no em dash in any OpenAPI-facing `description` string). Run `bun run lint` before considering an endpoint done.
 
 This custom plugin exists specifically because **oxlint** (the fast first-pass linter, config at root `.oxlintrc.json`) can't load custom plugins or do type-aware checks — it covers generic correctness/style rules only. ESLint + `@wire/eslint-plugin-wire-api` is where anything Wire-specific or type-aware lives. `bun run lint` runs both (oxlint first, since it's near-instant, then ESLint).

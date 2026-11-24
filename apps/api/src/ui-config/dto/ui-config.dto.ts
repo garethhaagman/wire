@@ -282,7 +282,7 @@ export class BrandingDto implements Branding {
 }
 
 export class MotionDto implements Motion {
-  @ApiProperty({ example: true, description: "Global kill switch — respected even if a layout requests animation." })
+  @ApiProperty({ example: true, description: "Global kill switch, respected even if a layout requests animation." })
   enabled!: boolean;
 
   @ApiProperty({ enum: ["slower", "normal", "faster"], example: "normal" })
@@ -308,7 +308,7 @@ export class SlotConfigDto implements SlotConfig {
     type: "object",
     additionalProperties: true,
     example: {},
-    description: "Slot-local style overrides; intentionally loose — see @wire/ui-config's extensions.ts.",
+    description: "Slot-local style overrides; intentionally loose, see @wire/ui-config's extensions.ts.",
   })
   props!: Record<string, unknown>;
 }
@@ -358,7 +358,7 @@ export class UiConfigDto implements UiConfig {
     type: "object",
     additionalProperties: true,
     example: {},
-    description: "Forward-compatibility staging area for fields not yet promoted to the typed schema — see @wire/ui-config's extensions.ts.",
+    description: "Forward-compatibility staging area for fields not yet promoted to the typed schema, see @wire/ui-config's extensions.ts.",
   })
   extensions!: Record<string, unknown>;
 }

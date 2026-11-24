@@ -16,6 +16,7 @@ export default [
       "wire-api/require-api-response": "error",
       "wire-api/controller-verb-naming": "warn",
       "wire-api/require-permission": "error",
+      "wire-api/no-em-dash-in-api-description": "error",
     },
   },
   {
@@ -33,6 +34,14 @@ export default [
     plugins: { "wire-api": wireApi },
     rules: {
       "wire-api/require-api-property-example": "error",
+      "wire-api/no-em-dash-in-api-description": "error",
+    },
+  },
+  {
+    files: ["scripts/export-openapi.ts"],
+    plugins: { "wire-api": wireApi },
+    rules: {
+      "wire-api/no-em-dash-in-api-description": "error",
     },
   },
 ];

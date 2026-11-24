@@ -1,8 +1,13 @@
-# Single-node Garage config for local dev only (mirrors Postgres/Redis — a plain,
-# insecure dev credential is fine here; see docker-compose.yml). Garage is an
-# Apache-2.0 S3-compatible object store used as the local stand-in for S3Adapter
-# (apps/api/src/files/storage/s3-adapter.ts) instead of MinIO, whose server/console
-# releases moved behind AGPLv3 licensing — see internal-docs/product discussion.
+# Single-node Garage config for local dev only (mirrors Postgres/Redis — this
+# instance never leaves your machine and holds no real data; see
+# docker-compose.yml). Garage is an Apache-2.0 S3-compatible object store used
+# as the local stand-in for S3Adapter (apps/api/src/files/storage/s3-adapter.ts)
+# instead of MinIO, whose server/console releases moved behind AGPLv3 licensing
+# — see internal-docs/product discussion.
+#
+# rpc_secret/admin_token below are placeholders — Garage requires rpc_secret to
+# be real 32-byte hex (64 chars) before it will even start; generate your own
+# with `openssl rand -hex 32` and replace "your_secret_here" before first run.
 metadata_dir = "/var/lib/garage/meta"
 data_dir = "/var/lib/garage/data"
 db_engine = "sqlite"
@@ -11,7 +16,7 @@ replication_factor = 1
 
 rpc_bind_addr = "[::]:3901"
 rpc_public_addr = "127.0.0.1:3901"
-rpc_secret = "854daa3f95e6d3d48df8e8bbec703c923f8326e441adbb1dd87922fcf33eefa3"
+rpc_secret = "your_secret_here"
 
 [s3_api]
 s3_region = "garage"
@@ -20,4 +25,4 @@ root_domain = ".s3.garage.localhost"
 
 [admin]
 api_bind_addr = "[::]:3903"
-admin_token = "dev-admin-token-change-me"
+admin_token = "your_secret_here"

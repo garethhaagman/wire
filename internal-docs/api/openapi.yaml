@@ -169,6 +169,18 @@ paths:
           schema:
             example: launch
             type: string
+        - name: filter
+          required: false
+          in: query
+          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+            entries for the fields it supports.
+          schema:
+            additionalProperties:
+              type: string
+            example:
+              type: public
+              joined: "true"
+            type: object
       responses:
         "200":
           description: ""
@@ -281,6 +293,18 @@ paths:
           schema:
             example: launch
             type: string
+        - name: filter
+          required: false
+          in: query
+          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+            entries for the fields it supports.
+          schema:
+            additionalProperties:
+              type: string
+            example:
+              type: public
+              joined: "true"
+            type: object
       responses:
         "200":
           description: ""
@@ -454,6 +478,18 @@ paths:
           schema:
             example: launch
             type: string
+        - name: filter
+          required: false
+          in: query
+          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+            entries for the fields it supports.
+          schema:
+            additionalProperties:
+              type: string
+            example:
+              type: public
+              joined: "true"
+            type: object
         - name: filter[archived]
           required: false
           in: query
@@ -627,6 +663,18 @@ paths:
           schema:
             example: launch
             type: string
+        - name: filter
+          required: false
+          in: query
+          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+            entries for the fields it supports.
+          schema:
+            additionalProperties:
+              type: string
+            example:
+              type: public
+              joined: "true"
+            type: object
       responses:
         "200":
           description: ""
@@ -890,6 +938,18 @@ paths:
           schema:
             example: launch
             type: string
+        - name: filter
+          required: false
+          in: query
+          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+            entries for the fields it supports.
+          schema:
+            additionalProperties:
+              type: string
+            example:
+              type: public
+              joined: "true"
+            type: object
       responses:
         "200":
           description: ""
@@ -985,6 +1045,116 @@ paths:
                 type: "null"
       security: *a13
       tags: *a14
+  /v1/workspaces/{workspaceId}/agents/{agentId}/runs:
+    post:
+      operationId: AgentRunsController_run
+      parameters:
+        - name: agentId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAgentRunRequestDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentRunDto"
+      security: &a15
+        - cookie: []
+      tags: &a16
+        - Agents
+    get:
+      operationId: AgentRunsController_list
+      parameters:
+        - name: agentId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            default: 1
+            example: 1
+            type: number
+        - name: per_page
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: Field to sort by; prefix with - for descending
+          schema:
+            example: -createdAt
+            type: string
+        - name: search
+          required: false
+          in: query
+          schema:
+            example: launch
+            type: string
+        - name: filter
+          required: false
+          in: query
+          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+            entries for the fields it supports.
+          schema:
+            additionalProperties:
+              type: string
+            example:
+              type: public
+              joined: "true"
+            type: object
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgentRunDto"
+      security: *a15
+      tags: *a16
+  /v1/workspaces/{workspaceId}/agents/{agentId}/runs/{runId}:
+    get:
+      operationId: AgentRunsController_getById
+      parameters:
+        - name: agentId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: runId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentRunWithStepsDto"
+      security: *a15
+      tags: *a16
   /v1/threads/{threadRootId}/messages:
     get:
       operationId: ThreadsController_list
@@ -1025,9 +1195,9 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/MessageDto"
-      security: &a15
+      security: &a17
         - cookie: []
-      tags: &a16
+      tags: &a18
         - Threads
     post:
       operationId: ThreadsController_reply
@@ -1056,8 +1226,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MessageDto"
-      security: *a15
-      tags: *a16
+      security: *a17
+      tags: *a18
   /v1/threads/{threadRootId}/mark-read:
     post:
       operationId: ThreadsController_executeMarkRead
@@ -1080,8 +1250,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ThreadReadStateDto"
-      security: *a15
-      tags: *a16
+      security: *a17
+      tags: *a18
   /v1/messages/{messageId}/reactions:
     get:
       operationId: ReactionsController_list
@@ -1100,9 +1270,9 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ReactionDto"
-      security: &a17
+      security: &a19
         - cookie: []
-      tags: &a18
+      tags: &a20
         - Reactions
     post:
       operationId: ReactionsController_add
@@ -1125,8 +1295,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReactionDto"
-      security: *a17
-      tags: *a18
+      security: *a19
+      tags: *a20
     delete:
       operationId: ReactionsController_remove
       parameters:
@@ -1146,8 +1316,8 @@ paths:
             application/json:
               schema:
                 type: "null"
-      security: *a17
-      tags: *a18
+      security: *a19
+      tags: *a20
   /v1/channels/{channelId}/pins:
     get:
       operationId: PinsController_list
@@ -1166,9 +1336,9 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/PinDto"
-      security: &a19
+      security: &a21
         - cookie: []
-      tags: &a20
+      tags: &a22
         - Pins
     post:
       operationId: PinsController_add
@@ -1191,8 +1361,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PinDto"
-      security: *a19
-      tags: *a20
+      security: *a21
+      tags: *a22
   /v1/channels/{channelId}/pins/{id}:
     delete:
       operationId: PinsController_remove
@@ -1214,8 +1384,8 @@ paths:
             application/json:
               schema:
                 type: "null"
-      security: *a19
-      tags: *a20
+      security: *a21
+      tags: *a22
   /v1/workspaces/{workspaceId}/bookmarks:
     get:
       operationId: BookmarksController_list
@@ -1250,6 +1420,18 @@ paths:
           schema:
             example: launch
             type: string
+        - name: filter
+          required: false
+          in: query
+          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+            entries for the fields it supports.
+          schema:
+            additionalProperties:
+              type: string
+            example:
+              type: public
+              joined: "true"
+            type: object
       responses:
         "200":
           description: ""
@@ -1259,9 +1441,9 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/BookmarkDto"
-      security: &a21
+      security: &a23
         - cookie: []
-      tags: &a22
+      tags: &a24
         - Bookmarks
     post:
       operationId: BookmarksController_add
@@ -1279,8 +1461,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/BookmarkDto"
-      security: *a21
-      tags: *a22
+      security: *a23
+      tags: *a24
   /v1/workspaces/{workspaceId}/bookmarks/{id}:
     delete:
       operationId: BookmarksController_remove
@@ -1297,8 +1479,8 @@ paths:
             application/json:
               schema:
                 type: "null"
-      security: *a21
-      tags: *a22
+      security: *a23
+      tags: *a24
   /v1/search:
     get:
       operationId: SearchController_list
@@ -1394,6 +1576,18 @@ paths:
           schema:
             example: launch
             type: string
+        - name: filter
+          required: false
+          in: query
+          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+            entries for the fields it supports.
+          schema:
+            additionalProperties:
+              type: string
+            example:
+              type: public
+              joined: "true"
+            type: object
       responses:
         "200":
           description: ""
@@ -1403,9 +1597,9 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WebhookEndpointDto"
-      security: &a23
+      security: &a25
         - cookie: []
-      tags: &a24
+      tags: &a26
         - Webhooks
     post:
       operationId: WebhooksController_create
@@ -1423,8 +1617,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WebhookEndpointCreatedDto"
-      security: *a23
-      tags: *a24
+      security: *a25
+      tags: *a26
   /v1/workspaces/{workspaceId}/webhook-endpoints/{id}:
     get:
       operationId: WebhooksController_getById
@@ -1441,8 +1635,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WebhookEndpointDto"
-      security: *a23
-      tags: *a24
+      security: *a25
+      tags: *a26
     delete:
       operationId: WebhooksController_remove
       parameters:
@@ -1458,8 +1652,8 @@ paths:
             application/json:
               schema:
                 type: "null"
-      security: *a23
-      tags: *a24
+      security: *a25
+      tags: *a26
   /v1/workspaces/{workspaceId}/audit-events:
     get:
       operationId: AuditController_list
@@ -1494,6 +1688,18 @@ paths:
           schema:
             example: launch
             type: string
+        - name: filter
+          required: false
+          in: query
+          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+            entries for the fields it supports.
+          schema:
+            additionalProperties:
+              type: string
+            example:
+              type: public
+              joined: "true"
+            type: object
       responses:
         "200":
           description: ""
@@ -1523,29 +1729,65 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FileDto"
-      security: &a25
+      security: &a27
         - cookie: []
-      tags: &a26
+      tags: &a28
         - Files
-  /v1/files:
+  /v1/files/upload-requests:
     post:
-      operationId: FilesController_create
+      operationId: FilesController_createUploadRequest
       parameters: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateFileRequestDto"
+              $ref: "#/components/schemas/CreateUploadRequestDto"
       responses:
         "201":
           description: ""
           content:
             application/json:
               schema:
+                $ref: "#/components/schemas/CreateUploadResponseDto"
+      security: *a27
+      tags: *a28
+  /v1/files/{id}/confirm:
+    post:
+      operationId: FilesController_createUploadConfirmation
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
                 $ref: "#/components/schemas/FileDto"
-      security: *a25
-      tags: *a26
+      security: *a27
+      tags: *a28
+  /v1/files/{id}/download-url:
+    get:
+      operationId: FilesController_getDownloadUrl
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DownloadUrlResponseDto"
+      security: *a27
+      tags: *a28
   /v1/channels/{channelId}/files:
     get:
       operationId: FilesController_list
@@ -1585,6 +1827,18 @@ paths:
           schema:
             example: launch
             type: string
+        - name: filter
+          required: false
+          in: query
+          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+            entries for the fields it supports.
+          schema:
+            additionalProperties:
+              type: string
+            example:
+              type: public
+              joined: "true"
+            type: object
       responses:
         "200":
           description: ""
@@ -1594,8 +1848,49 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/FileDto"
-      security: *a25
-      tags: *a26
+      security: *a27
+      tags: *a28
+  /v1/files/_local-upload/{key}:
+    put:
+      operationId: FilesController_setLocalUpload
+      parameters:
+        - name: key
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: token
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "null"
+      security: *a27
+      tags: *a28
+    get:
+      operationId: FilesController_getLocalDownload
+      parameters:
+        - name: key
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: token
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: application/octet-stream
+      security: *a27
+      tags: *a28
   /v1/workspaces/{workspaceId}/ui-config:
     get:
       operationId: UiConfigController_get
@@ -1607,9 +1902,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UiConfigResourceDto"
-      security: &a27
+      security: &a29
         - cookie: []
-      tags: &a28
+      tags: &a30
         - UiConfig
   /v1/workspaces/{workspaceId}/ui-config/org:
     patch:
@@ -1628,8 +1923,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UiConfigResourceDto"
-      security: *a27
-      tags: *a28
+      security: *a29
+      tags: *a30
   /v1/workspaces/{workspaceId}/ui-config/me:
     patch:
       operationId: UiConfigController_updateUserLayer
@@ -1647,12 +1942,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UiConfigResourceDto"
-      security: *a27
-      tags: *a28
+      security: *a29
+      tags: *a30
 info:
   title: Wire API
   description: Primary HTTP surface for the Wire AI-native team messaging platform. Generated from
-    @nestjs/swagger decorators in apps/api — do not hand-edit. Regenerate with `bun run
+    @nestjs/swagger decorators in apps/api, do not hand-edit. Regenerate with `bun run
     openapi:export`.
   version: 0.1.0
   contact: {}
@@ -1691,7 +1986,7 @@ components:
           example:
             messageId: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
             body: Hello!
-          description: Event-type-specific payload — shape depends on `type`.
+          description: Event-type-specific payload, shape depends on `type`.
         createdAt:
           type: string
           example: 2026-01-15T09:30:00.000Z
@@ -1812,7 +2107,7 @@ components:
           example: jordan@example.com
         role:
           type: string
-          enum: &a29
+          enum: &a31
             - owner
             - admin
             - member
@@ -1868,7 +2163,7 @@ components:
           example: jordan@example.com
         role:
           type: string
-          enum: *a29
+          enum: *a31
       required:
         - displayName
         - email
@@ -1881,7 +2176,7 @@ components:
           example: Jordan Lee
         role:
           type: string
-          enum: *a29
+          enum: *a31
           description: Admin-only
     ChannelDto:
       type: object
@@ -1897,7 +2192,7 @@ components:
           example: general
         type:
           type: string
-          enum: &a30
+          enum: &a32
             - public
             - private
             - dm
@@ -1974,7 +2269,7 @@ components:
           description: Required for public/private channels; ignored for dm/group_dm
         type:
           type: string
-          enum: *a30
+          enum: *a32
         topic:
           type: string
           example: Ship it 🚢
@@ -2208,6 +2503,189 @@ components:
           enum:
             - active
             - paused
+    CreateAgentRunRequestDto:
+      type: object
+      properties:
+        prompt:
+          type: string
+          example: Summarize today's incidents
+        channelId:
+          type: string
+          example: ch_01jd5x0k8f3v8q2m7n4r6t9w1y
+          description: Post the agent's reply to this channel when the run succeeds.
+      required:
+        - prompt
+    AgentRunDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: run_64d9dea525ae84ef6f7bd361
+        workspaceId:
+          type: string
+          example: ws_64d9dea525ae84ef6f7bd361
+        agentId:
+          type: object
+          example: agt_64d9dea525ae84ef6f7bd361
+        triggeredByMessageId:
+          type: string
+          nullable: true
+          example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
+        channelId:
+          type: string
+          nullable: true
+          example: ch_01jd5x0k8f3v8q2m7n4r6t9w1y
+        status:
+          type: string
+          enum: &a33
+            - queued
+            - running
+            - succeeded
+            - failed
+        input:
+          type: object
+          additionalProperties: true
+          example: &a34
+            prompt: Summarize today's incidents
+        output:
+          type: string
+          nullable: true
+          example: Here's a summary of today's incidents...
+        error:
+          type: string
+          nullable: true
+          example: Harness call timed out after 30s.
+        startedAt:
+          type: string
+          nullable: true
+          example: 2026-01-15T09:30:00.000Z
+        finishedAt:
+          type: string
+          nullable: true
+          example: 2026-01-15T09:30:04.000Z
+        createdAt:
+          type: string
+          example: 2026-01-15T09:30:00.000Z
+        updatedAt:
+          type: string
+          example: 2026-01-15T09:30:04.000Z
+      required:
+        - id
+        - workspaceId
+        - agentId
+        - triggeredByMessageId
+        - channelId
+        - status
+        - input
+        - output
+        - error
+        - startedAt
+        - finishedAt
+        - createdAt
+        - updatedAt
+    AgentRunStepDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: step_64d9dea525ae84ef6f7bd361
+        runId:
+          type: object
+          example: run_64d9dea525ae84ef6f7bd361
+        seq:
+          type: number
+          example: 0
+        type:
+          type: string
+          enum:
+            - model_call
+            - tool_call
+            - tool_result
+            - final
+        data:
+          type: object
+          additionalProperties: true
+          example:
+            provider: anthropic
+            model: claude-sonnet-5
+        createdAt:
+          type: string
+          example: 2026-01-15T09:30:00.000Z
+      required:
+        - id
+        - runId
+        - seq
+        - type
+        - data
+        - createdAt
+    AgentRunWithStepsDto:
+      type: object
+      properties:
+        id:
+          type: object
+          example: run_64d9dea525ae84ef6f7bd361
+        workspaceId:
+          type: string
+          example: ws_64d9dea525ae84ef6f7bd361
+        agentId:
+          type: object
+          example: agt_64d9dea525ae84ef6f7bd361
+        triggeredByMessageId:
+          type: string
+          nullable: true
+          example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
+        channelId:
+          type: string
+          nullable: true
+          example: ch_01jd5x0k8f3v8q2m7n4r6t9w1y
+        status:
+          type: string
+          enum: *a33
+        input:
+          type: object
+          additionalProperties: true
+          example: *a34
+        output:
+          type: string
+          nullable: true
+          example: Here's a summary of today's incidents...
+        error:
+          type: string
+          nullable: true
+          example: Harness call timed out after 30s.
+        startedAt:
+          type: string
+          nullable: true
+          example: 2026-01-15T09:30:00.000Z
+        finishedAt:
+          type: string
+          nullable: true
+          example: 2026-01-15T09:30:04.000Z
+        createdAt:
+          type: string
+          example: 2026-01-15T09:30:00.000Z
+        updatedAt:
+          type: string
+          example: 2026-01-15T09:30:04.000Z
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentRunStepDto"
+      required:
+        - id
+        - workspaceId
+        - agentId
+        - triggeredByMessageId
+        - channelId
+        - status
+        - input
+        - output
+        - error
+        - startedAt
+        - finishedAt
+        - createdAt
+        - updatedAt
+        - steps
     CreateThreadReplyRequestDto:
       type: object
       properties:
@@ -2381,7 +2859,7 @@ components:
             type: string
         channelFilter:
           nullable: true
-          example: &a31
+          example: &a35
             - ch_01jd5x0k8f3v8q2m7n4r6t9w1y
           type: array
           items:
@@ -2440,7 +2918,7 @@ components:
             type: string
         channelFilter:
           nullable: true
-          example: *a31
+          example: *a35
           type: array
           items:
             type: string
@@ -2452,8 +2930,8 @@ components:
           example: 2026-01-15T09:30:00.000Z
         secret:
           type: string
-          description: Shown once. Store it — it cannot be retrieved again.
-          example: whsec_3f9a1c2b7e8d4f6a9b0c1d2e3f4a5b6c
+          description: "Shown once. Store it: it cannot be retrieved again."
+          example: whsec_your_secret_here
       required:
         - id
         - workspaceId
@@ -2536,6 +3014,10 @@ components:
           type: number
           example: 2458112
           description: Size in bytes
+        sizeConfirmed:
+          type: boolean
+          example: true
+          description: False until confirmUpload() verifies the blob actually landed in storage.
         virusScanStatus:
           type: string
           enum:
@@ -2553,9 +3035,10 @@ components:
         - name
         - mime
         - sizeBytes
+        - sizeConfirmed
         - virusScanStatus
         - createdAt
-    CreateFileRequestDto:
+    CreateUploadRequestDto:
       type: object
       properties:
         channelId:
@@ -2577,6 +3060,36 @@ components:
         - name
         - mime
         - sizeBytes
+    CreateUploadResponseDto:
+      type: object
+      properties:
+        file:
+          $ref: "#/components/schemas/FileDto"
+        uploadUrl:
+          type: string
+          example: https://wire-files.s3.us-east-1.amazonaws.com/ws_64d9.../blob_01jd5x...?X-Amz-Signature=...
+        method:
+          type: string
+          enum:
+            - PUT
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            Content-Type: image/png
+      required:
+        - file
+        - uploadUrl
+        - method
+    DownloadUrlResponseDto:
+      type: object
+      properties:
+        downloadUrl:
+          type: string
+          example: https://wire-files.s3.us-east-1.amazonaws.com/ws_64d9.../blob_01jd5x...?X-Amz-Signature=...
+      required:
+        - downloadUrl
     SystemFontSourceDto:
       type: object
       properties:
@@ -2893,7 +3406,7 @@ components:
         enabled:
           type: boolean
           example: true
-          description: Global kill switch — respected even if a layout requests animation.
+          description: Global kill switch, respected even if a layout requests animation.
         speed:
           type: string
           enum:
@@ -2966,8 +3479,8 @@ components:
           type: object
           additionalProperties: true
           example: {}
-          description: Forward-compatibility staging area for fields not yet promoted to the typed schema —
-            see @wire/ui-config's extensions.ts.
+          description: Forward-compatibility staging area for fields not yet promoted to the typed schema, see
+            @wire/ui-config's extensions.ts.
       required:
         - schemaVersion
         - theme

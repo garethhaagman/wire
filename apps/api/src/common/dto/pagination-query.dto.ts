@@ -40,7 +40,7 @@ export class PaginationQueryDto {
     type: "object",
     additionalProperties: { type: "string" },
     example: { type: "public", joined: "true" },
-    description: "Dynamic filter[field]=value params — see each endpoint's own @ApiQuery filter[...] entries for the fields it supports.",
+    description: "Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...] entries for the fields it supports.",
   })
   @IsOptional()
   @IsObject()

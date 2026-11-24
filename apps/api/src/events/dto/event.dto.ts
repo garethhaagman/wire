@@ -23,7 +23,7 @@ export class WireEventDto implements WireEvent {
     type: "object",
     additionalProperties: true,
     example: { messageId: "msg_01jd5x0k8f3v8q2m7n4r6t9w1y", body: "Hello!" },
-    description: "Event-type-specific payload — shape depends on `type`.",
+    description: "Event-type-specific payload, shape depends on `type`.",
   })
   data!: Record<string, unknown>;
 

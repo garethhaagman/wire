@@ -28,8 +28,8 @@ export class WebhookEndpointDto implements WebhookEndpoint {
 /** Only ever returned from create — the secret is shown once and never again. */
 export class WebhookEndpointCreatedDto extends WebhookEndpointDto {
   @ApiProperty({
-    description: "Shown once. Store it — it cannot be retrieved again.",
-    example: "whsec_3f9a1c2b7e8d4f6a9b0c1d2e3f4a5b6c",
+    description: "Shown once. Store it: it cannot be retrieved again.",
+    example: "whsec_your_secret_here",
   })
   secret!: string;
 }
