@@ -8,7 +8,10 @@ import { Reflector } from "@nestjs/core";
 import type { Response } from "express";
 import type { Observable } from "rxjs";
 import { tap } from "rxjs";
-import { DEPRECATED_METADATA_KEY, type DeprecationMetadata } from "../decorators/deprecated.decorator.js";
+import {
+  DEPRECATED_METADATA_KEY,
+  type DeprecationMetadata,
+} from "../decorators/deprecated.decorator.js";
 
 /**
  * Sets Deprecation/Sunset/Link headers on routes marked with @Deprecated().

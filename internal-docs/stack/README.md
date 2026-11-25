@@ -2,13 +2,13 @@
 
 Normative-ish engineering direction for implementing the Wire spec. The rest of this repo (`product/`, `api/`, `data-model/`, etc.) is implementation-agnostic by design; this folder is where that changes — it commits to a specific stack so a build team isn't blocked re-deciding infrastructure per phase.
 
-| Doc | Contents |
-|-----|----------|
-| [architecture.md](./architecture.md) | Service boundaries, request flow, why self-hosted |
-| [monorepo-layout.md](./monorepo-layout.md) | TypeScript monorepo structure, shared packages, tooling |
-| [infra-pulumi.md](./infra-pulumi.md) | Pulumi (TypeScript) stacks, environments, self-hosted topology |
-| [self-hosting.md](./self-hosting.md) | What "no managed services" means in practice, operator runbook surface |
-| [../ui/stack.md](../ui/stack.md) | Client UI stack (React, Tailwind, shadcn/ui) — kept in `ui/` alongside the config system it supports, not here |
+| Doc                                        | Contents                                                                                                       |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| [architecture.md](./architecture.md)       | Service boundaries, request flow, why self-hosted                                                              |
+| [monorepo-layout.md](./monorepo-layout.md) | TypeScript monorepo structure, shared packages, tooling                                                        |
+| [infra-pulumi.md](./infra-pulumi.md)       | Pulumi (TypeScript) stacks, environments, self-hosted topology                                                 |
+| [self-hosting.md](./self-hosting.md)       | What "no managed services" means in practice, operator runbook surface                                         |
+| [../ui/stack.md](../ui/stack.md)           | Client UI stack (React, Tailwind, shadcn/ui) — kept in `ui/` alongside the config system it supports, not here |
 
 ## Non-negotiables (from product direction)
 

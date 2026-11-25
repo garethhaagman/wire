@@ -27,8 +27,12 @@ export class CreateAgentRuns1700000000002 implements MigrationInterface {
         "updated_at" timestamptz not null default now()
       )
     `);
-    await queryRunner.query(`create index "IDX_agent_runs_agent_created" on "agent_runs" ("agent_id", "created_at" desc)`);
-    await queryRunner.query(`create index "IDX_agent_runs_workspace" on "agent_runs" ("workspace_id")`);
+    await queryRunner.query(
+      `create index "IDX_agent_runs_agent_created" on "agent_runs" ("agent_id", "created_at" desc)`,
+    );
+    await queryRunner.query(
+      `create index "IDX_agent_runs_workspace" on "agent_runs" ("workspace_id")`,
+    );
 
     await queryRunner.query(`
       create table "agent_run_steps" (
@@ -41,7 +45,9 @@ export class CreateAgentRuns1700000000002 implements MigrationInterface {
         constraint "UQ_agent_run_steps_run_seq" unique ("run_id", "seq")
       )
     `);
-    await queryRunner.query(`create index "IDX_agent_run_steps_run" on "agent_run_steps" ("run_id", "seq")`);
+    await queryRunner.query(
+      `create index "IDX_agent_run_steps_run" on "agent_run_steps" ("run_id", "seq")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

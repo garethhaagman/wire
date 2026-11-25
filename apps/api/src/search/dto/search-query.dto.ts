@@ -3,7 +3,10 @@ import { Type } from "class-transformer";
 import { IsInt, IsOptional, IsString, Length, Max, Min } from "class-validator";
 
 export class SearchQueryDto {
-  @ApiProperty({ description: 'Keyword query. Supports "quoted phrases", OR, and -exclusions.', example: "launch plan" })
+  @ApiProperty({
+    description: 'Keyword query. Supports "quoted phrases", OR, and -exclusions.',
+    example: "launch plan",
+  })
   @IsString()
   @Length(1, 500)
   q!: string;

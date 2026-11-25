@@ -24,7 +24,13 @@ const UiConfigContext = createContext<UiConfigContextValue | null>(null);
  * internal-docs/ui/theming-and-layout.md "No flash, no blank state": the
  * shell is never unstyled, it just re-themes once the real config lands.
  */
-export function UiConfigProvider({ workspaceId, children }: { workspaceId: string; children: ReactNode }): React.JSX.Element {
+export function UiConfigProvider({
+  workspaceId,
+  children,
+}: {
+  workspaceId: string;
+  children: ReactNode;
+}): React.JSX.Element {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -50,7 +56,10 @@ export function UiConfigProvider({ workspaceId, children }: { workspaceId: strin
     },
   });
 
-  const iconRegistry = useMemo(() => createIconRegistry(config.theme.iconPack), [config.theme.iconPack]);
+  const iconRegistry = useMemo(
+    () => createIconRegistry(config.theme.iconPack),
+    [config.theme.iconPack],
+  );
 
   const value: UiConfigContextValue = {
     config,

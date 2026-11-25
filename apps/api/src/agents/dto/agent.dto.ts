@@ -1,6 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { IsIn, IsOptional, IsString, Length, Matches } from "class-validator";
-import type { Agent, AgentRun, AgentRunStep, CreateAgentRequest, CreateAgentRunRequest, UpdateAgentRequest } from "@wire/types";
+import type {
+  Agent,
+  AgentRun,
+  AgentRunStep,
+  CreateAgentRequest,
+  CreateAgentRunRequest,
+  UpdateAgentRequest,
+} from "@wire/types";
 
 export class AgentDto implements Agent {
   @ApiProperty({ example: "agt_64d9dea525ae84ef6f7bd361" })
@@ -66,7 +73,11 @@ export class AgentRunStepDto implements AgentRunStep {
   @ApiProperty({ enum: ["model_call", "tool_call", "tool_result", "final"] })
   type!: AgentRunStep["type"];
 
-  @ApiProperty({ type: "object", additionalProperties: true, example: { provider: "anthropic", model: "claude-sonnet-5" } })
+  @ApiProperty({
+    type: "object",
+    additionalProperties: true,
+    example: { provider: "anthropic", model: "claude-sonnet-5" },
+  })
   data!: unknown;
 
   @ApiProperty({ example: "2026-01-15T09:30:00.000Z" })
@@ -92,10 +103,18 @@ export class AgentRunDto implements AgentRun {
   @ApiProperty({ enum: ["queued", "running", "succeeded", "failed"] })
   status!: AgentRun["status"];
 
-  @ApiProperty({ type: "object", additionalProperties: true, example: { prompt: "Summarize today's incidents" } })
+  @ApiProperty({
+    type: "object",
+    additionalProperties: true,
+    example: { prompt: "Summarize today's incidents" },
+  })
   input!: AgentRun["input"];
 
-  @ApiProperty({ nullable: true, type: String, example: "Here's a summary of today's incidents..." })
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    example: "Here's a summary of today's incidents...",
+  })
   output!: string | null;
 
   @ApiProperty({ nullable: true, type: String, example: "Harness call timed out after 30s." })
@@ -120,7 +139,10 @@ export class CreateAgentRunRequestDto implements CreateAgentRunRequest {
   @Length(1, 8000)
   prompt!: string;
 
-  @ApiPropertyOptional({ example: "ch_01jd5x0k8f3v8q2m7n4r6t9w1y", description: "Post the agent's reply to this channel when the run succeeds." })
+  @ApiPropertyOptional({
+    example: "ch_01jd5x0k8f3v8q2m7n4r6t9w1y",
+    description: "Post the agent's reply to this channel when the run succeeds.",
+  })
   @IsOptional()
   @IsString()
   channelId?: string;

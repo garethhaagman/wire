@@ -40,12 +40,19 @@ export async function listMembers(
       `select * from members where ${where} order by display_name, id limit $3 offset $4`,
       [workspaceId, search, options.perPage, (options.page - 1) * options.perPage],
     ),
-    db.query<{ total: number }>(`select count(*)::int as total from members where ${where}`, [workspaceId, search]),
+    db.query<{ total: number }>(`select count(*)::int as total from members where ${where}`, [
+      workspaceId,
+      search,
+    ]),
   ]);
   return { items: rows.rows.map(toMember), total: count.rows[0]?.total ?? 0 };
 }
 
-export async function findMember(db: Queryable, workspaceId: string, id: string): Promise<Member | null> {
+export async function findMember(
+  db: Queryable,
+  workspaceId: string,
+  id: string,
+): Promise<Member | null> {
   const { rows } = await db.query<MemberRow>(
     `select * from members where workspace_id = $1 and id = $2 and ${ACTIVE}`,
     [workspaceId, id],
@@ -53,7 +60,11 @@ export async function findMember(db: Queryable, workspaceId: string, id: string)
   return rows[0] ? toMember(rows[0]) : null;
 }
 
-export async function findMemberByUser(db: Queryable, workspaceId: string, userId: string): Promise<Member | null> {
+export async function findMemberByUser(
+  db: Queryable,
+  workspaceId: string,
+  userId: string,
+): Promise<Member | null> {
   const { rows } = await db.query<MemberRow>(
     `select * from members where workspace_id = $1 and user_id = $2 and ${ACTIVE}`,
     [workspaceId, userId],
@@ -62,7 +73,11 @@ export async function findMemberByUser(db: Queryable, workspaceId: string, userI
 }
 
 /** Active member ids among `ids` in the workspace — validates channel/DM invitees. */
-export async function filterActiveMemberIds(db: Queryable, workspaceId: string, ids: string[]): Promise<string[]> {
+export async function filterActiveMemberIds(
+  db: Queryable,
+  workspaceId: string,
+  ids: string[],
+): Promise<string[]> {
   if (ids.length === 0) return [];
   const { rows } = await db.query<{ id: string }>(
     `select id from members where workspace_id = $1 and id = any($2::text[]) and ${ACTIVE}`,
@@ -112,7 +127,13 @@ export async function findUserByEmail(
  */
 export async function upsertMember(
   db: Queryable,
-  input: { workspaceId: string; email: string; displayName: string; role: Member["role"]; userId: string | null },
+  input: {
+    workspaceId: string;
+    email: string;
+    displayName: string;
+    role: Member["role"];
+    userId: string | null;
+  },
 ): Promise<Member | null> {
   const { rows } = await db.query<MemberRow>(
     `insert into members (id, workspace_id, user_id, email, display_name, role)
@@ -155,7 +176,11 @@ export async function lockActiveOwnerIds(tx: Queryable, workspaceId: string): Pr
  * Soft-removes a member and drops their channel memberships, keeping
  * channels.member_count consistent in the same transaction.
  */
-export async function deactivateMember(tx: Queryable, workspaceId: string, id: string): Promise<Member | null> {
+export async function deactivateMember(
+  tx: Queryable,
+  workspaceId: string,
+  id: string,
+): Promise<Member | null> {
   const { rows } = await tx.query<MemberRow>(
     `update members set deactivated_at = now(), updated_at = now()
      where workspace_id = $1 and id = $2 and ${ACTIVE} returning *`,
@@ -207,9 +232,13 @@ export async function getUiConfigOverride(db: Queryable, memberId: string): Prom
   return rows[0]?.ui_config_override ?? null;
 }
 
-export async function setUiConfigOverride(db: Queryable, memberId: string, override: unknown): Promise<void> {
-  await db.query(`update members set ui_config_override = $2::jsonb, updated_at = now() where id = $1`, [
-    memberId,
-    JSON.stringify(override),
-  ]);
+export async function setUiConfigOverride(
+  db: Queryable,
+  memberId: string,
+  override: unknown,
+): Promise<void> {
+  await db.query(
+    `update members set ui_config_override = $2::jsonb, updated_at = now() where id = $1`,
+    [memberId, JSON.stringify(override)],
+  );
 }

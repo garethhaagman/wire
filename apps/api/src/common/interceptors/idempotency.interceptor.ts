@@ -43,7 +43,11 @@ export class IdempotencyInterceptor implements NestInterceptor {
     if (!idempotencyKey) return next.handle();
 
     if (idempotencyKey.length > 255) {
-      throw new ApiException("VALIDATION_ERROR", "Idempotency-Key must be at most 255 characters.", HttpStatus.BAD_REQUEST);
+      throw new ApiException(
+        "VALIDATION_ERROR",
+        "Idempotency-Key must be at most 255 characters.",
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const userId = req.session?.user.id ?? "anonymous";
@@ -65,7 +69,9 @@ export class IdempotencyInterceptor implements NestInterceptor {
             from(
               this.redis
                 .set(key, JSON.stringify({ response }), "EX", TTL_SECONDS)
-                .catch((err: Error) => warnRedisFailure(this.redis, this.logger, "idempotency store failed", err)),
+                .catch((err: Error) =>
+                  warnRedisFailure(this.redis, this.logger, "idempotency store failed", err),
+                ),
             ).pipe(mergeMap(() => of(response))),
           ),
           catchError((err: unknown) =>
@@ -80,7 +86,9 @@ export class IdempotencyInterceptor implements NestInterceptor {
     );
   }
 
-  private async claim(key: string): Promise<{ kind: "execute" } | { kind: "in_flight" } | { kind: "replay"; response: unknown }> {
+  private async claim(
+    key: string,
+  ): Promise<{ kind: "execute" } | { kind: "in_flight" } | { kind: "replay"; response: unknown }> {
     try {
       const claimed = await this.redis.set(key, IN_FLIGHT, "EX", IN_FLIGHT_TTL_SECONDS, "NX");
       if (claimed === "OK") return { kind: "execute" };
@@ -89,7 +97,12 @@ export class IdempotencyInterceptor implements NestInterceptor {
       if (existing === IN_FLIGHT) return { kind: "in_flight" };
       return { kind: "replay", response: (JSON.parse(existing) as { response: unknown }).response };
     } catch (err) {
-      warnRedisFailure(this.redis, this.logger, "idempotency store unavailable, executing without it", err);
+      warnRedisFailure(
+        this.redis,
+        this.logger,
+        "idempotency store unavailable, executing without it",
+        err,
+      );
       return { kind: "execute" };
     }
   }

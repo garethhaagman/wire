@@ -34,13 +34,17 @@ export function decodeCursor(cursor: string | undefined): DecodedCursor | undefi
   if (!cursor) return undefined;
   const match = /^([ab]):(\d{1,15})$/.exec(Buffer.from(cursor, "base64url").toString("utf8"));
   if (!match) {
-    throw new ValidationException([{ field: "cursor", code: "INVALID_CURSOR", message: "cursor is malformed" }]);
+    throw new ValidationException([
+      { field: "cursor", code: "INVALID_CURSOR", message: "cursor is malformed" },
+    ]);
   }
   return { direction: match[1] === "b" ? "before" : "after", seq: Number(match[2]) };
 }
 
 export class CursorQueryDto {
-  @ApiPropertyOptional({ description: "Opaque cursor from a previous response's meta.cursor.next_cursor" })
+  @ApiPropertyOptional({
+    description: "Opaque cursor from a previous response's meta.cursor.next_cursor",
+  })
   @IsOptional()
   @IsString()
   @Matches(/^[A-Za-z0-9_-]{1,64}$/)
@@ -48,7 +52,8 @@ export class CursorQueryDto {
 
   @ApiPropertyOptional({
     minimum: 0,
-    description: "Return items with seq greater than this, oldest first (catch-up after reconnect). Ignored when cursor is set.",
+    description:
+      "Return items with seq greater than this, oldest first (catch-up after reconnect). Ignored when cursor is set.",
   })
   @IsOptional()
   @Type(() => Number)
@@ -66,7 +71,9 @@ export class CursorQueryDto {
 }
 
 /** Resolves cursor/after_seq into one keyset bound; `before` with no seq means "newest first from the head". */
-export function resolveCursor(query: CursorQueryDto): DecodedCursor | { direction: "before"; seq: undefined } {
+export function resolveCursor(
+  query: CursorQueryDto,
+): DecodedCursor | { direction: "before"; seq: undefined } {
   const decoded = decodeCursor(query.cursor);
   if (decoded) return decoded;
   if (query.after_seq !== undefined) return { direction: "after", seq: query.after_seq };

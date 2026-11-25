@@ -13,13 +13,21 @@ export class BookmarksService {
     private readonly access: ChannelAccessService,
   ) {}
 
-  list(actor: WorkspaceActor, page: number, perPage: number): Promise<{ items: Bookmark[]; total: number }> {
+  list(
+    actor: WorkspaceActor,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: Bookmark[]; total: number }> {
     return listBookmarks(this.db, actor.member.id, page, perPage);
   }
 
   async add(actor: WorkspaceActor, messageId: string): Promise<Bookmark> {
     await this.access.readableMessage(actor, messageId);
-    const bookmark = await insertBookmark(this.db, { workspaceId: actor.workspaceId, memberId: actor.member.id, messageId });
+    const bookmark = await insertBookmark(this.db, {
+      workspaceId: actor.workspaceId,
+      memberId: actor.member.id,
+      messageId,
+    });
     if (!bookmark) {
       throw new ResourceConflictException(`Message ${messageId} is already bookmarked`);
     }

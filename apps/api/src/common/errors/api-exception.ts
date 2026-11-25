@@ -21,7 +21,12 @@ export class ApiException extends HttpException {
 
 export class ValidationException extends ApiException {
   constructor(details: ApiErrorDetail[]) {
-    super("VALIDATION_ERROR", "The request contains invalid fields.", HttpStatus.UNPROCESSABLE_ENTITY, details);
+    super(
+      "VALIDATION_ERROR",
+      "The request contains invalid fields.",
+      HttpStatus.UNPROCESSABLE_ENTITY,
+      details,
+    );
   }
 }
 

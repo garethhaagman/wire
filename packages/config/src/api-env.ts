@@ -1,7 +1,10 @@
 import { z } from "zod";
 
 /** Blank `KEY=` lines in .env files mean "unset", not an empty value. */
-const optionalString = z.preprocess((value) => (value === "" ? undefined : value), z.string().min(1).optional());
+const optionalString = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.string().min(1).optional(),
+);
 
 export const apiEnvSchema = z
   .object({
@@ -59,10 +62,13 @@ export const apiEnvSchema = z
     message: "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set together",
     path: ["GOOGLE_CLIENT_SECRET"],
   })
-  .refine((env) => !env.S3_BUCKET || (env.S3_ACCESS_KEY_ID && env.S3_SECRET_ACCESS_KEY && env.S3_REGION), {
-    message: "S3_BUCKET requires S3_REGION, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY",
-    path: ["S3_BUCKET"],
-  });
+  .refine(
+    (env) => !env.S3_BUCKET || (env.S3_ACCESS_KEY_ID && env.S3_SECRET_ACCESS_KEY && env.S3_REGION),
+    {
+      message: "S3_BUCKET requires S3_REGION, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY",
+      path: ["S3_BUCKET"],
+    },
+  );
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>;
 

@@ -32,22 +32,35 @@ export class ScopeResolverService {
         return typeof value === "string" && value ? value : undefined;
       }
       case "channel":
-        return this.cached(paramValue(req, source.param), async (id) => (await findChannelRecord(this.db, id))?.workspaceId);
+        return this.cached(
+          paramValue(req, source.param),
+          async (id) => (await findChannelRecord(this.db, id))?.workspaceId,
+        );
       case "message":
-        return this.cached(paramValue(req, source.param), async (id) => (await findMessage(this.db, id))?.workspaceId);
+        return this.cached(
+          paramValue(req, source.param),
+          async (id) => (await findMessage(this.db, id))?.workspaceId,
+        );
       case "file":
-        return this.cached(paramValue(req, source.param), async (id) => (await findFile(this.db, id))?.workspaceId);
+        return this.cached(
+          paramValue(req, source.param),
+          async (id) => (await findFile(this.db, id))?.workspaceId,
+        );
       case "bodyChannel": {
         const body = req.body as Record<string, unknown> | undefined;
         const value = body?.[source.field];
-        return this.cached(typeof value === "string" ? value : undefined, async (id) =>
-          (await findChannelRecord(this.db, id))?.workspaceId,
+        return this.cached(
+          typeof value === "string" ? value : undefined,
+          async (id) => (await findChannelRecord(this.db, id))?.workspaceId,
         );
       }
     }
   }
 
-  private async cached(id: string | undefined, load: (id: string) => Promise<string | undefined>): Promise<string | null> {
+  private async cached(
+    id: string | undefined,
+    load: (id: string) => Promise<string | undefined>,
+  ): Promise<string | null> {
     if (!id) return null;
     const hit = this.workspaceByResource.get(id);
     if (hit) return hit;

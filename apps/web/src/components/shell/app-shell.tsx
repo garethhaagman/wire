@@ -18,11 +18,18 @@ export function AppShell({ children }: { children: ReactNode }): React.JSX.Eleme
     // Guaranteed not to happen post-resolve (resolveUiConfig snaps dangling
     // activeLayoutId back to a real layout) — this is a last-resort guard,
     // not an expected path.
-    return <div className="flex h-dvh items-center justify-center text-muted-foreground">No layout available.</div>;
+    return (
+      <div className="flex h-dvh items-center justify-center text-muted-foreground">
+        No layout available.
+      </div>
+    );
   }
 
   return (
-    <div className="flex h-dvh w-full bg-background text-foreground" data-motion-speed={config.motion.speed}>
+    <div
+      className="flex h-dvh w-full bg-background text-foreground"
+      data-motion-speed={config.motion.speed}
+    >
       {renderSlotsFor(layout, "sidebar-left")}
       <div className="flex min-w-0 flex-1 flex-col">
         {renderSlotsFor(layout, "top")}

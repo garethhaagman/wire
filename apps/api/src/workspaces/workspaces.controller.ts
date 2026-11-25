@@ -1,5 +1,11 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, UseInterceptors } from "@nestjs/common";
-import { ApiCookieAuth, ApiCreatedResponse, ApiHeader, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiHeader,
+  ApiOkResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Workspace } from "@wire/types";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
 import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
@@ -9,7 +15,11 @@ import { CurrentUser, type RequestActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
 import { WorkspacesService } from "./workspaces.service.js";
-import { CreateWorkspaceRequestDto, UpdateWorkspaceRequestDto, WorkspaceDto } from "./dto/workspace.dto.js";
+import {
+  CreateWorkspaceRequestDto,
+  UpdateWorkspaceRequestDto,
+  WorkspaceDto,
+} from "./dto/workspace.dto.js";
 
 /**
  * Skeleton-scope simplification: org_id is derived from the session user's id.
@@ -26,7 +36,10 @@ export class WorkspacesController {
   @Get()
   @RequirePermission("read", "Workspace")
   @ApiOkResponse({ type: WorkspaceDto, isArray: true })
-  async list(@CurrentUser() actor: RequestActor, @Query() query: PaginationQueryDto): Promise<PaginatedResult<Workspace>> {
+  async list(
+    @CurrentUser() actor: RequestActor,
+    @Query() query: PaginationQueryDto,
+  ): Promise<PaginatedResult<Workspace>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
     const { items, total } = await this.workspaces.list(actor, page, perPage);
@@ -50,7 +63,10 @@ export class WorkspacesController {
   })
   @ApiCreatedResponse({ type: WorkspaceDto })
   @UseInterceptors(IdempotencyInterceptor)
-  create(@CurrentUser() actor: RequestActor, @Body() body: CreateWorkspaceRequestDto): Promise<Workspace> {
+  create(
+    @CurrentUser() actor: RequestActor,
+    @Body() body: CreateWorkspaceRequestDto,
+  ): Promise<Workspace> {
     return this.workspaces.create(actor, body);
   }
 

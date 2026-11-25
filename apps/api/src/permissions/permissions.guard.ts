@@ -1,4 +1,11 @@
-import { CanActivate, ExecutionContext, HttpStatus, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  CanActivate,
+  ExecutionContext,
+  HttpStatus,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import type { AuthedRequest } from "../auth/session.guard.js";
 import { Public } from "../auth/public.decorator.js";
@@ -95,7 +102,10 @@ export class PermissionsGuard implements CanActivate {
   }
 
   private scopeSource(context: ExecutionContext, req: AuthedRequest): WorkspaceScopeSource | null {
-    const declared = this.reflector.getAllAndOverride(WorkspaceScope, [context.getHandler(), context.getClass()]);
+    const declared = this.reflector.getAllAndOverride(WorkspaceScope, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
     if (declared) return declared;
     return req.params["workspaceId"] ? { from: "workspace", param: "workspaceId" } : null;
   }

@@ -56,7 +56,12 @@ export class AgentRunnerService {
         input: { prompt: input.prompt, ...(input.context ? { context: input.context } : {}) },
       });
       await appendEvents(tx, [
-        { workspaceId: input.workspaceId, type: "agent.run.created", channelId: input.channelId ?? null, data: { run: created } },
+        {
+          workspaceId: input.workspaceId,
+          type: "agent.run.created",
+          channelId: input.channelId ?? null,
+          data: { run: created },
+        },
       ]);
       return created;
     });
@@ -81,7 +86,12 @@ export class AgentRunnerService {
         type: "model_call",
         data: { prompt: run.input.prompt, usage: result.usage },
       });
-      await insertAgentRunStep(this.db, { runId: run.id, seq: 1, type: "final", data: { output: result.text } });
+      await insertAgentRunStep(this.db, {
+        runId: run.id,
+        seq: 1,
+        type: "final",
+        data: { output: result.text },
+      });
 
       const finished = await updateAgentRun(this.db, run.id, {
         status: "succeeded",
@@ -94,21 +104,40 @@ export class AgentRunnerService {
       }
 
       await appendEvents(this.db, [
-        { workspaceId: run.workspaceId, type: "agent.run.completed", channelId: run.channelId, data: { run: finished } },
+        {
+          workspaceId: run.workspaceId,
+          type: "agent.run.completed",
+          channelId: run.channelId,
+          data: { run: finished },
+        },
       ]);
       this.relay.kick();
     } catch (err: unknown) {
       this.logger.error(`agent run ${run.id} failed`, err);
       const message = err instanceof Error ? err.message : "Unknown model error.";
-      const failed = await updateAgentRun(this.db, run.id, { status: "failed", error: message, finishedAt: new Date() });
+      const failed = await updateAgentRun(this.db, run.id, {
+        status: "failed",
+        error: message,
+        finishedAt: new Date(),
+      });
       await appendEvents(this.db, [
-        { workspaceId: run.workspaceId, type: "agent.run.completed", channelId: run.channelId, data: { run: failed } },
+        {
+          workspaceId: run.workspaceId,
+          type: "agent.run.completed",
+          channelId: run.channelId,
+          data: { run: failed },
+        },
       ]);
       this.relay.kick();
     }
   }
 
-  private async postReply(workspaceId: string, channelId: string, agent: Agent, body: string): Promise<void> {
+  private async postReply(
+    workspaceId: string,
+    channelId: string,
+    agent: Agent,
+    body: string,
+  ): Promise<void> {
     await this.db.tx(async (tx) => {
       const result = await insertMessage(tx, {
         workspaceId,
@@ -120,7 +149,9 @@ export class AgentRunnerService {
         broadcast: false,
       });
       if (!result.ok) {
-        this.logger.warn(`agent ${agent.id} could not post to channel ${channelId}: ${result.reason}`);
+        this.logger.warn(
+          `agent ${agent.id} could not post to channel ${channelId}: ${result.reason}`,
+        );
         return;
       }
       await appendEvents(tx, [

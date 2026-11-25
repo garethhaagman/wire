@@ -10,7 +10,12 @@ export const REDIS = Symbol("REDIS");
  * reported once by the client's error handler, so per-call warnings would only
  * repeat it on every request.
  */
-export function warnRedisFailure(redis: Redis, logger: Logger, context: string, err: unknown): void {
+export function warnRedisFailure(
+  redis: Redis,
+  logger: Logger,
+  context: string,
+  err: unknown,
+): void {
   if (redis.status !== "ready") return;
   logger.warn(`${context}: ${describeRedisError(err as Error)}`);
 }
@@ -47,7 +52,9 @@ export function describeRedisError(err: Error & { code?: string }): string {
         client.on("error", (err: Error & { code?: string }) => {
           if (down) return;
           down = true;
-          logger.warn(`redis unavailable (${describeRedisError(err)}) — degrading: rate limits, idempotency and caches are bypassed until it returns`);
+          logger.warn(
+            `redis unavailable (${describeRedisError(err)}) — degrading: rate limits, idempotency and caches are bypassed until it returns`,
+          );
         });
         client.on("ready", () => {
           if (down) logger.log("redis reconnected");

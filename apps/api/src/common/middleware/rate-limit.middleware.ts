@@ -40,7 +40,10 @@ export class RateLimitMiddleware implements NestMiddleware {
     let count: number;
     let ttlMs: number;
     try {
-      const result = (await this.redis.eval(FIXED_WINDOW_SCRIPT, 1, this.key(req), WINDOW_MS)) as [number, number];
+      const result = (await this.redis.eval(FIXED_WINDOW_SCRIPT, 1, this.key(req), WINDOW_MS)) as [
+        number,
+        number,
+      ];
       [count, ttlMs] = result;
     } catch (err) {
       warnRedisFailure(this.redis, this.logger, "rate limiter unavailable, failing open", err);
@@ -81,7 +84,10 @@ export class RateLimitMiddleware implements NestMiddleware {
     const token = cookie
       .split(";")
       .map((part) => part.trim())
-      .find((part) => part.startsWith(`${SESSION_COOKIE}=`) || part.startsWith(`__Secure-${SESSION_COOKIE}=`));
+      .find(
+        (part) =>
+          part.startsWith(`${SESSION_COOKIE}=`) || part.startsWith(`__Secure-${SESSION_COOKIE}=`),
+      );
     if (token) {
       return `wire:rl:s:${createHash("sha256").update(token).digest("base64url").slice(0, 22)}`;
     }

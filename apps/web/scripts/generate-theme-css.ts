@@ -8,7 +8,9 @@ const contents = `/* Generated from @wire/ui-config's colorRolesSchema by script
 if (process.argv.includes("--check")) {
   const current = existsSync(target) ? readFileSync(target, "utf8") : "";
   if (current !== contents) {
-    console.error("src/styles/theme.generated.css is out of date with @wire/ui-config. Run `bun run gen:theme` in apps/web.");
+    console.error(
+      "src/styles/theme.generated.css is out of date with @wire/ui-config. Run `bun run gen:theme` in apps/web.",
+    );
     process.exit(1);
   }
 } else {

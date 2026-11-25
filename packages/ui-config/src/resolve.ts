@@ -1,5 +1,10 @@
 import { baseUiConfig } from "./base-config.js";
-import { uiConfigSchema, uiConfigOverrideSchema, type UiConfig, type UiConfigOverride } from "./schema.js";
+import {
+  uiConfigSchema,
+  uiConfigOverrideSchema,
+  type UiConfig,
+  type UiConfigOverride,
+} from "./schema.js";
 import { REQUIRED_SLOT_IDS } from "./slots.js";
 import type { LockSet } from "./locks.js";
 
@@ -62,7 +67,9 @@ function parseOverride(
   if (!raw) return null;
   const result = uiConfigOverrideSchema.safeParse(raw);
   if (!result.success) {
-    warnings.push(`${layer} override failed validation and was ignored: ${result.error.issues.map((i) => i.path.join(".")).join(", ")}`);
+    warnings.push(
+      `${layer} override failed validation and was ignored: ${result.error.issues.map((i) => i.path.join(".")).join(", ")}`,
+    );
     return null;
   }
   return result.data;
@@ -133,7 +140,9 @@ function setPath<T>(obj: T, segments: string[], value: unknown): T {
 function enforceActiveLayoutReference(config: UiConfig, warnings: string[]): UiConfig {
   if (config.layouts.some((layout) => layout.id === config.activeLayoutId)) return config;
   const fallbackId = config.layouts[0]?.id ?? baseUiConfig.activeLayoutId;
-  warnings.push(`activeLayoutId "${config.activeLayoutId}" does not match any layout; falling back to "${fallbackId}".`);
+  warnings.push(
+    `activeLayoutId "${config.activeLayoutId}" does not match any layout; falling back to "${fallbackId}".`,
+  );
   return { ...config, activeLayoutId: fallbackId };
 }
 
@@ -155,7 +164,9 @@ function enforceRequiredSlots(config: UiConfig, warnings: string[]): UiConfig {
   const missing = REQUIRED_SLOT_IDS.filter((slotId) => !activeLayout.slots[slotId]);
   if (missing.length === 0) return config;
 
-  warnings.push(`Active layout "${activeLayout.id}" is missing required slot(s) [${missing.join(", ")}]; backfilled from base layout.`);
+  warnings.push(
+    `Active layout "${activeLayout.id}" is missing required slot(s) [${missing.join(", ")}]; backfilled from base layout.`,
+  );
 
   const patchedSlots = { ...activeLayout.slots };
   for (const slotId of missing) {

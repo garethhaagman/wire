@@ -18,12 +18,15 @@ describe("baseUiConfig", () => {
     expect(baseUiConfig.layouts.map((l) => l.id)).toContain(baseUiConfig.activeLayoutId);
   });
 
-  test.each(baseUiConfig.layouts.map((l) => [l.id, l] as const))("layout %s mounts every required slot", (_id, layout) => {
-    for (const slotId of REQUIRED_SLOT_IDS) {
-      expect(layout.slots[slotId]).toBeDefined();
-      expect(layout.slots[slotId]?.placement).not.toBe("hidden");
-    }
-  });
+  test.each(baseUiConfig.layouts.map((l) => [l.id, l] as const))(
+    "layout %s mounts every required slot",
+    (_id, layout) => {
+      for (const slotId of REQUIRED_SLOT_IDS) {
+        expect(layout.slots[slotId]).toBeDefined();
+        expect(layout.slots[slotId]?.placement).not.toBe("hidden");
+      }
+    },
+  );
 
   test("resolves to itself with no layers and no warnings", () => {
     const { config, warnings } = resolveUiConfig({});

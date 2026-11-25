@@ -1,6 +1,12 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { ZodError } from "zod";
-import { Database, getOrgUiConfig, getUiConfigOverride, setOrgUiConfig, setUiConfigOverride } from "@wire/db";
+import {
+  Database,
+  getOrgUiConfig,
+  getUiConfigOverride,
+  setOrgUiConfig,
+  setUiConfigOverride,
+} from "@wire/db";
 import { resolveUiConfig, uiConfigOverrideSchema, lockSetSchema } from "@wire/ui-config";
 import type { UiConfigResource } from "@wire/types";
 import { ValidationException } from "../common/errors/api-exception.js";
@@ -60,10 +66,18 @@ export class UiConfigService {
 
   /** Always the caller's own member row — never a param. */
   async setUserLayer(actor: WorkspaceActor, override: unknown): Promise<void> {
-    await setUiConfigOverride(this.db, actor.member.id, parseOrThrow(uiConfigOverrideSchema, override));
+    await setUiConfigOverride(
+      this.db,
+      actor.member.id,
+      parseOrThrow(uiConfigOverrideSchema, override),
+    );
   }
 
-  private stored<T>(schema: { safeParse: (input: unknown) => { success: true; data: T } | { success: false } }, value: unknown, label: string): T | undefined {
+  private stored<T>(
+    schema: { safeParse: (input: unknown) => { success: true; data: T } | { success: false } },
+    value: unknown,
+    label: string,
+  ): T | undefined {
     const result = schema.safeParse(value);
     if (!result.success) {
       this.logger.warn(`ignoring invalid stored ui-config ${label}`);

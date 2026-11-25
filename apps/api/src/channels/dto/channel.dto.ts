@@ -1,5 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { ArrayMaxSize, IsArray, IsIn, IsInt, IsOptional, IsString, Length, Min, ValidateIf } from "class-validator";
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Length,
+  Min,
+  ValidateIf,
+} from "class-validator";
 import type {
   AddChannelMemberRequest,
   Channel,
@@ -27,7 +37,11 @@ export class ChannelDto implements Channel {
   @ApiProperty({ nullable: true, type: String, example: "Ship it 🚢" })
   topic!: string | null;
 
-  @ApiProperty({ nullable: true, type: String, example: "Coordinating releases and incident response" })
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    example: "Coordinating releases and incident response",
+  })
   purpose!: string | null;
 
   @ApiProperty({ nullable: true, type: String, example: "mem_64d9dea525ae84ef6f7bd361" })
@@ -51,18 +65,29 @@ export class ChannelDto implements Channel {
   @ApiProperty({ example: "2026-01-15T09:30:00.000Z" })
   updatedAt!: string;
 
-  @ApiProperty({ example: true, description: "Whether the requesting member belongs to the channel" })
+  @ApiProperty({
+    example: true,
+    description: "Whether the requesting member belongs to the channel",
+  })
   isMember!: boolean;
 
   @ApiProperty({ nullable: true, type: Number, example: 4815 })
   lastReadSeq!: number | null;
 
-  @ApiProperty({ nullable: true, type: Number, example: 6, description: "Unread top-level messages, capped at 100" })
+  @ApiProperty({
+    nullable: true,
+    type: Number,
+    example: 6,
+    description: "Unread top-level messages, capped at 100",
+  })
   unreadCount!: number | null;
 }
 
 export class CreateChannelRequestDto implements CreateChannelRequest {
-  @ApiPropertyOptional({ example: "general", description: "Required for public/private channels; ignored for dm/group_dm" })
+  @ApiPropertyOptional({
+    example: "general",
+    description: "Required for public/private channels; ignored for dm/group_dm",
+  })
   @ValidateIf((o: CreateChannelRequestDto) => o.type === "public" || o.type === "private")
   @IsString()
   @Length(1, 80)
@@ -84,7 +109,10 @@ export class CreateChannelRequestDto implements CreateChannelRequest {
   @Length(0, 250)
   purpose?: string;
 
-  @ApiPropertyOptional({ type: [String], description: "Initial members besides you; required for dm (1) and group_dm (2-7)" })
+  @ApiPropertyOptional({
+    type: [String],
+    description: "Initial members besides you; required for dm (1) and group_dm (2-7)",
+  })
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(1000)
@@ -105,7 +133,11 @@ export class UpdateChannelRequestDto implements UpdateChannelRequest {
   @Length(0, 250)
   topic?: string | null;
 
-  @ApiPropertyOptional({ nullable: true, type: String, example: "Coordinating releases and incident response" })
+  @ApiPropertyOptional({
+    nullable: true,
+    type: String,
+    example: "Coordinating releases and incident response",
+  })
   @IsOptional()
   @IsString()
   @Length(0, 250)
@@ -127,14 +159,20 @@ export class ChannelMemberDto implements ChannelMember {
 }
 
 export class AddChannelMemberRequestDto implements AddChannelMemberRequest {
-  @ApiProperty({ example: "mem_64d9dea525ae84ef6f7bd361", description: "Your own member id to join, or another member's to add them" })
+  @ApiProperty({
+    example: "mem_64d9dea525ae84ef6f7bd361",
+    description: "Your own member id to join, or another member's to add them",
+  })
   @IsString()
   @Length(1, 64)
   memberId!: string;
 }
 
 export class MarkReadRequestDto implements MarkReadRequest {
-  @ApiPropertyOptional({ example: 4821, description: "Mark read up to this seq; omit to mark everything read" })
+  @ApiPropertyOptional({
+    example: 4821,
+    description: "Mark read up to this seq; omit to mark everything read",
+  })
   @IsOptional()
   @IsInt()
   @Min(0)

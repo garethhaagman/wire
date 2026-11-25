@@ -1,4 +1,10 @@
-import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  CanActivate,
+  ExecutionContext,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import type { Request } from "express";
 import { AUTH_INSTANCE } from "./auth.module.js";

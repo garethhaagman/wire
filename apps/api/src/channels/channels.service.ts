@@ -16,7 +16,12 @@ import {
   updateChannel,
   type ListChannelsOptions,
 } from "@wire/db";
-import type { Channel, ChannelMember, CreateChannelRequest, UpdateChannelRequest } from "@wire/types";
+import type {
+  Channel,
+  ChannelMember,
+  CreateChannelRequest,
+  UpdateChannelRequest,
+} from "@wire/types";
 import { ResourceConflictException, ValidationException } from "../common/errors/api-exception.js";
 import { OutboxRelayService } from "../events/outbox-relay.service.js";
 import { isAdmin, type WorkspaceActor } from "../permissions/actor.js";
@@ -65,18 +70,45 @@ export class ChannelsService {
     const requested = [...new Set(input.memberIds ?? [])].filter((id) => id !== actor.member.id);
     const memberIds = await filterActiveMemberIds(this.db, actor.workspaceId, requested);
     if (memberIds.length !== requested.length) {
-      throw new ValidationException([{ field: "memberIds", code: "UNKNOWN_MEMBER", message: "Every memberId must be an active member of this workspace." }]);
+      throw new ValidationException([
+        {
+          field: "memberIds",
+          code: "UNKNOWN_MEMBER",
+          message: "Every memberId must be an active member of this workspace.",
+        },
+      ]);
     }
     if (input.type === "dm" && memberIds.length > 1) {
-      throw new ValidationException([{ field: "memberIds", code: "INVALID_DM", message: "A dm has exactly one other member (or none, for a self-DM)." }]);
+      throw new ValidationException([
+        {
+          field: "memberIds",
+          code: "INVALID_DM",
+          message: "A dm has exactly one other member (or none, for a self-DM).",
+        },
+      ]);
     }
-    if (input.type === "group_dm" && (memberIds.length < 2 || memberIds.length > MAX_GROUP_DM_MEMBERS - 1)) {
-      throw new ValidationException([{ field: "memberIds", code: "INVALID_GROUP_DM", message: `A group_dm has 3 to ${MAX_GROUP_DM_MEMBERS} participants including you.` }]);
+    if (
+      input.type === "group_dm" &&
+      (memberIds.length < 2 || memberIds.length > MAX_GROUP_DM_MEMBERS - 1)
+    ) {
+      throw new ValidationException([
+        {
+          field: "memberIds",
+          code: "INVALID_GROUP_DM",
+          message: `A group_dm has 3 to ${MAX_GROUP_DM_MEMBERS} participants including you.`,
+        },
+      ]);
     }
 
     const name = isConversation ? input.type : normalizeName(input.name ?? "");
     if (!isConversation && !CHANNEL_NAME.test(name)) {
-      throw new ValidationException([{ field: "name", code: "INVALID_NAME", message: "Channel names are lowercase letters, numbers, - and _, up to 80 characters." }]);
+      throw new ValidationException([
+        {
+          field: "name",
+          code: "INVALID_NAME",
+          message: "Channel names are lowercase letters, numbers, - and _, up to 80 characters.",
+        },
+      ]);
     }
 
     const result = await this.db
@@ -92,7 +124,12 @@ export class ChannelsService {
         });
         if (created.created) {
           await appendEvents(tx, [
-            { workspaceId: actor.workspaceId, type: "channel.created", channelId: created.id, data: { channelId: created.id, type: input.type, name } },
+            {
+              workspaceId: actor.workspaceId,
+              type: "channel.created",
+              channelId: created.id,
+              data: { channelId: created.id, type: input.type, name },
+            },
             ...[actor.member.id, ...memberIds].map((memberId) => ({
               workspaceId: actor.workspaceId,
               type: "channel.member.joined" as const,
@@ -120,18 +157,31 @@ export class ChannelsService {
       throw new ForbiddenException("Join the channel to change its details.");
     }
     if ((channel.type === "dm" || channel.type === "group_dm") && input.name !== undefined) {
-      throw new ValidationException([{ field: "name", code: "IMMUTABLE", message: "Direct messages can't be renamed." }]);
+      throw new ValidationException([
+        { field: "name", code: "IMMUTABLE", message: "Direct messages can't be renamed." },
+      ]);
     }
     const name = input.name !== undefined ? normalizeName(input.name) : undefined;
     if (name !== undefined && !CHANNEL_NAME.test(name)) {
-      throw new ValidationException([{ field: "name", code: "INVALID_NAME", message: "Channel names are lowercase letters, numbers, - and _, up to 80 characters." }]);
+      throw new ValidationException([
+        {
+          field: "name",
+          code: "INVALID_NAME",
+          message: "Channel names are lowercase letters, numbers, - and _, up to 80 characters.",
+        },
+      ]);
     }
 
     await this.db
       .tx(async (tx) => {
         await updateChannel(tx, id, { name, topic: input.topic, purpose: input.purpose });
         await appendEvents(tx, [
-          { workspaceId: actor.workspaceId, type: "channel.updated", channelId: id, data: { channelId: id, ...input, ...(name ? { name } : {}) } },
+          {
+            workspaceId: actor.workspaceId,
+            type: "channel.updated",
+            channelId: id,
+            data: { channelId: id, ...input, ...(name ? { name } : {}) },
+          },
         ]);
       })
       .catch((err: unknown) => {
@@ -151,19 +201,31 @@ export class ChannelsService {
       const didChange = await setChannelArchived(tx, id, archived);
       if (didChange) {
         await appendEvents(tx, [
-          { workspaceId: actor.workspaceId, type: archived ? "channel.archived" : "channel.unarchived", channelId: id, data: { channelId: id } },
+          {
+            workspaceId: actor.workspaceId,
+            type: archived ? "channel.archived" : "channel.unarchived",
+            channelId: id,
+            data: { channelId: id },
+          },
         ]);
       }
       return didChange;
     });
     if (!changed) {
-      throw new ResourceConflictException(`Channel ${id} is already ${archived ? "archived" : "active"}.`);
+      throw new ResourceConflictException(
+        `Channel ${id} is already ${archived ? "archived" : "active"}.`,
+      );
     }
     this.relay.kick();
     return this.viewerChannel(actor, id);
   }
 
-  async listMembers(actor: WorkspaceActor, id: string, page: number, perPage: number): Promise<{ items: ChannelMember[]; total: number }> {
+  async listMembers(
+    actor: WorkspaceActor,
+    id: string,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: ChannelMember[]; total: number }> {
     await this.access.readable(actor, id);
     return listChannelMembers(this.db, id, page, perPage);
   }
@@ -172,10 +234,16 @@ export class ChannelsService {
    * Joining yourself works for any public channel you can see; adding someone else
    * requires being in the channel already. dm membership is fixed.
    */
-  async addMember(actor: WorkspaceActor, channelId: string, memberId: string): Promise<ChannelMember> {
+  async addMember(
+    actor: WorkspaceActor,
+    channelId: string,
+    memberId: string,
+  ): Promise<ChannelMember> {
     const { channel, isMember } = await this.access.writable(actor, channelId);
     if (channel.type === "dm" || channel.type === "group_dm") {
-      throw new ResourceConflictException("Direct message membership is fixed — open a new conversation instead.");
+      throw new ResourceConflictException(
+        "Direct message membership is fixed — open a new conversation instead.",
+      );
     }
     const self = memberId === actor.member.id;
     if (!self && !isMember) {
@@ -190,14 +258,20 @@ export class ChannelsService {
       const added = await addChannelMembers(tx, channelId, actor.workspaceId, [memberId]);
       if (added.length) {
         await appendEvents(tx, [
-          { workspaceId: actor.workspaceId, type: "channel.member.joined", channelId, data: { channelId, memberId, addedBy: actor.member.id } },
+          {
+            workspaceId: actor.workspaceId,
+            type: "channel.member.joined",
+            channelId,
+            data: { channelId, memberId, addedBy: actor.member.id },
+          },
         ]);
       }
     });
     this.relay.kick();
 
     const membership = await findChannelMember(this.db, channelId, memberId);
-    if (!membership) throw new NotFoundException(`Member ${memberId} is not in channel ${channelId}`);
+    if (!membership)
+      throw new NotFoundException(`Member ${memberId} is not in channel ${channelId}`);
     return membership;
   }
 
@@ -216,7 +290,12 @@ export class ChannelsService {
       const didRemove = await removeChannelMember(tx, channelId, memberId);
       if (didRemove) {
         await appendEvents(tx, [
-          { workspaceId: actor.workspaceId, type: "channel.member.left", channelId, data: { channelId, memberId, removedBy: actor.member.id } },
+          {
+            workspaceId: actor.workspaceId,
+            type: "channel.member.left",
+            channelId,
+            data: { channelId, memberId, removedBy: actor.member.id },
+          },
         ]);
       }
       return didRemove;
@@ -227,7 +306,11 @@ export class ChannelsService {
     this.relay.kick();
   }
 
-  async markRead(actor: WorkspaceActor, channelId: string, seq: number | undefined): Promise<ChannelMember> {
+  async markRead(
+    actor: WorkspaceActor,
+    channelId: string,
+    seq: number | undefined,
+  ): Promise<ChannelMember> {
     await this.access.readable(actor, channelId);
     const membership = await markChannelRead(this.db, channelId, actor.member.id, seq ?? null);
     if (!membership) {

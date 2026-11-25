@@ -60,7 +60,8 @@ export class UpdateOrgUiConfigRequestDto implements UpdateOrgUiConfigRequest {
   @ApiProperty({
     type: "object",
     additionalProperties: true,
-    description: "Deep-partial UiConfig override, validated against @wire/ui-config's uiConfigOverrideSchema.",
+    description:
+      "Deep-partial UiConfig override, validated against @wire/ui-config's uiConfigOverrideSchema.",
     example: { theme: { colors: { primary: { light: "#2563eb", dark: "#60a5fa" } } } },
   })
   @IsObject()
@@ -75,7 +76,8 @@ export class UpdateUserUiConfigRequestDto implements UpdateUserUiConfigRequest {
   @ApiProperty({
     type: "object",
     additionalProperties: true,
-    description: "Deep-partial UiConfig override, validated against @wire/ui-config's uiConfigOverrideSchema.",
+    description:
+      "Deep-partial UiConfig override, validated against @wire/ui-config's uiConfigOverrideSchema.",
     example: { theme: { mode: "dark" } },
   })
   @IsObject()
@@ -83,10 +85,17 @@ export class UpdateUserUiConfigRequestDto implements UpdateUserUiConfigRequest {
 }
 
 export class ColorModePairDto implements ColorModePair {
-  @ApiProperty({ example: "#151514", description: "Any valid CSS color (hex, rgb(), oklch(), ...)." })
+  @ApiProperty({
+    example: "#151514",
+    description: "Any valid CSS color (hex, rgb(), oklch(), ...).",
+  })
   light!: string;
 
-  @ApiProperty({ required: false, example: "#ecebe8", description: "Falls back to `light` when unset." })
+  @ApiProperty({
+    required: false,
+    example: "#ecebe8",
+    description: "Falls back to `light` when unset.",
+  })
   dark?: string;
 }
 
@@ -204,7 +213,12 @@ export class TypographyDto implements Typography {
   })
   display?: FontSource;
 
-  @ApiProperty({ minimum: 10, maximum: 24, example: 16, description: "Base document font size in px." })
+  @ApiProperty({
+    minimum: 10,
+    maximum: 24,
+    example: 16,
+    description: "Base document font size in px.",
+  })
   baseSizePx!: number;
 
   @ApiProperty({ enum: ["compact", "comfortable", "spacious"], example: "comfortable" })
@@ -282,13 +296,19 @@ export class BrandingDto implements Branding {
 }
 
 export class MotionDto implements Motion {
-  @ApiProperty({ example: true, description: "Global kill switch, respected even if a layout requests animation." })
+  @ApiProperty({
+    example: true,
+    description: "Global kill switch, respected even if a layout requests animation.",
+  })
   enabled!: boolean;
 
   @ApiProperty({ enum: ["slower", "normal", "faster"], example: "normal" })
   speed!: "slower" | "normal" | "faster";
 
-  @ApiProperty({ example: true, description: "Honor OS-level prefers-reduced-motion by forcing `enabled: false`." })
+  @ApiProperty({
+    example: true,
+    description: "Honor OS-level prefers-reduced-motion by forcing `enabled: false`.",
+  })
   respectReducedMotion!: boolean;
 }
 
@@ -301,14 +321,18 @@ export class SlotConfigDto implements SlotConfig {
   })
   placement!: SlotPlacement;
 
-  @ApiProperty({ example: "default", description: "Selects among the component variants the web app registers for this slot id." })
+  @ApiProperty({
+    example: "default",
+    description: "Selects among the component variants the web app registers for this slot id.",
+  })
   variant!: string;
 
   @ApiProperty({
     type: "object",
     additionalProperties: true,
     example: {},
-    description: "Slot-local style overrides; intentionally loose, see @wire/ui-config's extensions.ts.",
+    description:
+      "Slot-local style overrides; intentionally loose, see @wire/ui-config's extensions.ts.",
   })
   props!: Record<string, unknown>;
 }
@@ -320,7 +344,10 @@ export class LayoutDto implements Layout {
   @ApiProperty({ example: "Default" })
   name!: string;
 
-  @ApiProperty({ required: false, example: "Standard three-pane layout: nav rail, channel sidebar, main content." })
+  @ApiProperty({
+    required: false,
+    example: "Standard three-pane layout: nav rail, channel sidebar, main content.",
+  })
   description?: string;
 
   @ApiProperty({
@@ -336,7 +363,10 @@ export class LayoutDto implements Layout {
 }
 
 export class UiConfigDto implements UiConfig {
-  @ApiProperty({ example: 1, description: "Bumped on breaking shape changes; see @wire/ui-config's schema.ts." })
+  @ApiProperty({
+    example: 1,
+    description: "Bumped on breaking shape changes; see @wire/ui-config's schema.ts.",
+  })
   schemaVersion!: 1;
 
   @ApiProperty({ type: () => ThemeDto })
@@ -358,7 +388,8 @@ export class UiConfigDto implements UiConfig {
     type: "object",
     additionalProperties: true,
     example: {},
-    description: "Forward-compatibility staging area for fields not yet promoted to the typed schema, see @wire/ui-config's extensions.ts.",
+    description:
+      "Forward-compatibility staging area for fields not yet promoted to the typed schema, see @wire/ui-config's extensions.ts.",
   })
   extensions!: Record<string, unknown>;
 }
@@ -377,7 +408,10 @@ export class UiConfigResourceDto implements UiConfigResource {
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })
   workspaceId!: string;
 
-  @ApiProperty({ type: () => UiConfigDto, description: "Fully resolved UiConfig (base + org + user merged, locks applied)." })
+  @ApiProperty({
+    type: () => UiConfigDto,
+    description: "Fully resolved UiConfig (base + org + user merged, locks applied).",
+  })
   resolved!: UiConfigResource["resolved"];
 
   @ApiProperty({ type: [String] })

@@ -19,8 +19,18 @@ export class WorkspacesService {
   ) {}
 
   /** Workspaces the caller belongs to; pending invites for their email are claimed first. */
-  async list(actor: RequestActor, page: number, perPage: number): Promise<{ items: Workspace[]; total: number }> {
-    if (this.members.canClaim({ id: actor.userId, email: actor.email, emailVerified: actor.emailVerified })) {
+  async list(
+    actor: RequestActor,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: Workspace[]; total: number }> {
+    if (
+      this.members.canClaim({
+        id: actor.userId,
+        email: actor.email,
+        emailVerified: actor.emailVerified,
+      })
+    ) {
       const claimed = await claimInvitesByEmail(this.db, actor.userId, actor.email);
       await Promise.all(claimed.map((m) => this.members.invalidate(m.workspaceId, actor.userId)));
     }

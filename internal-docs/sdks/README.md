@@ -2,16 +2,16 @@
 
 ## Why this is its own concern
 
-`api/README.md` lists "recommended generators" (OpenAPI Generator, Speakeasy, Stainless) as a suggestion for *downstream consumers* to run themselves. That's insufficient for a PLG dev-first GTM motion ([gtm/icp-wedge.md](../gtm/icp-wedge.md)) — `npm install @wire/sdk` needs to be something Wire ships and owns, not something every integrator regenerates for themselves. A generic "bring your own generator" story is friction exactly at the top of the funnel this product is betting on.
+`api/README.md` lists "recommended generators" (OpenAPI Generator, Speakeasy, Stainless) as a suggestion for _downstream consumers_ to run themselves. That's insufficient for a PLG dev-first GTM motion ([gtm/icp-wedge.md](../gtm/icp-wedge.md)) — `npm install @wire/sdk` needs to be something Wire ships and owns, not something every integrator regenerates for themselves. A generic "bring your own generator" story is friction exactly at the top of the funnel this product is betting on.
 
 ## What gets generated vs. hand-written
 
-| Layer | Generated | Hand-written |
-|-------|-----------|----------------|
-| Types (request/response shapes, enums) | Yes, from `api/openapi.yaml` → `@wire/types` ([stack/monorepo-layout.md](../stack/monorepo-layout.md)) | — |
-| HTTP client (fetch wrapper, auth header injection, pagination helpers) | Base client generated | Idempotency-key helper, cursor-pagination iterator (`for await` ergonomics), retry/backoff — these are worth hand-tuning since generated clients are usually mediocre at exactly these three things |
-| Realtime (SSE/WebSocket per `api/events-webhooks.md`) | No — most OpenAPI generators don't model streaming well | Hand-written subscription helper per language |
-| MCP server | N/A — `mcp/mcp.md` tools are a thin adapter over the same OpenAPI operations, generated separately per that doc's existing CI-diff guarantee | — |
+| Layer                                                                  | Generated                                                                                                                                    | Hand-written                                                                                                                                                                                        |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Types (request/response shapes, enums)                                 | Yes, from `api/openapi.yaml` → `@wire/types` ([stack/monorepo-layout.md](../stack/monorepo-layout.md))                                       | —                                                                                                                                                                                                   |
+| HTTP client (fetch wrapper, auth header injection, pagination helpers) | Base client generated                                                                                                                        | Idempotency-key helper, cursor-pagination iterator (`for await` ergonomics), retry/backoff — these are worth hand-tuning since generated clients are usually mediocre at exactly these three things |
+| Realtime (SSE/WebSocket per `api/events-webhooks.md`)                  | No — most OpenAPI generators don't model streaming well                                                                                      | Hand-written subscription helper per language                                                                                                                                                       |
+| MCP server                                                             | N/A — `mcp/mcp.md` tools are a thin adapter over the same OpenAPI operations, generated separately per that doc's existing CI-diff guarantee | —                                                                                                                                                                                                   |
 
 ## Target languages, in priority order
 

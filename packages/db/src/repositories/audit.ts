@@ -72,7 +72,10 @@ export async function listAuditEvents(
       `select * from audit_events where workspace_id = $1 order by created_at desc, id desc limit $2 offset $3`,
       [workspaceId, perPage, (page - 1) * perPage],
     ),
-    db.query<{ total: number }>(`select count(*)::int as total from audit_events where workspace_id = $1`, [workspaceId]),
+    db.query<{ total: number }>(
+      `select count(*)::int as total from audit_events where workspace_id = $1`,
+      [workspaceId],
+    ),
   ]);
   return { items: rows.rows.map(toAuditEvent), total: count.rows[0]?.total ?? 0 };
 }

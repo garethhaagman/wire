@@ -76,7 +76,13 @@ export async function markEventsPublished(tx: Queryable, seqs: number[]): Promis
  */
 export async function listEventsAfter(
   db: Queryable,
-  input: { workspaceId: string; afterSeq: number; limit: number; viewerMemberId: string; viewerIsGuest: boolean },
+  input: {
+    workspaceId: string;
+    afterSeq: number;
+    limit: number;
+    viewerMemberId: string;
+    viewerIsGuest: boolean;
+  },
 ): Promise<{ items: WireEvent[]; hasMore: boolean }> {
   const { rows } = await db.query<EventRow>(
     `select e.seq, e.id, e.workspace_id, e.type, e.channel_id, e.data, e.created_at from events e
@@ -94,7 +100,11 @@ export async function listEventsAfter(
 }
 
 /** Batched retention delete so pruning never holds a long lock on the outbox. */
-export async function pruneEvents(db: Queryable, olderThanSeconds: number, batchSize: number): Promise<number> {
+export async function pruneEvents(
+  db: Queryable,
+  olderThanSeconds: number,
+  batchSize: number,
+): Promise<number> {
   const { rowCount } = await db.query(
     `delete from events where seq in (
        select seq from events

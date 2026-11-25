@@ -21,7 +21,9 @@ async function main(): Promise<void> {
   const db = new Database({ url: env.DATABASE_URL, poolMax: 2 });
 
   try {
-    const existing = await db.query<{ id: string }>(`select id from "user" where email = $1`, [DEV_USER.email]);
+    const existing = await db.query<{ id: string }>(`select id from "user" where email = $1`, [
+      DEV_USER.email,
+    ]);
     let userId = existing.rows[0]?.id;
     if (userId) {
       console.warn(`user       ${DEV_USER.email} (exists)`);
@@ -41,10 +43,14 @@ async function main(): Promise<void> {
     if (!workspaceId) {
       const owner = { userId, email: DEV_USER.email, displayName: DEV_USER.name };
       // org_id is derived from the creating user's id (see WorkspacesService.create).
-      const created = await db.tx((tx) => insertWorkspace(tx, { orgId: userId, ...DEV_WORKSPACE, owner }));
+      const created = await db.tx((tx) =>
+        insertWorkspace(tx, { orgId: userId, ...DEV_WORKSPACE, owner }),
+      );
       workspaceId = created.workspace.id;
     }
-    console.warn(`workspace  ${DEV_WORKSPACE.name} ${workspaceId} (${found.rows[0] ? "exists" : "created"})`);
+    console.warn(
+      `workspace  ${DEV_WORKSPACE.name} ${workspaceId} (${found.rows[0] ? "exists" : "created"})`,
+    );
     console.warn(`\nsign in with ${DEV_USER.email} / ${DEV_USER.password}`);
   } finally {
     await db.close();

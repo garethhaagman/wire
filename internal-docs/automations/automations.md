@@ -15,15 +15,15 @@ Automation (version N)
 
 ## Triggers
 
-| Trigger type | Source event |
-|--------------|----------------|
-| `message.created` | New message in channel(s) matching filter |
-| `reaction.added` | Specific emoji on pattern |
-| `schedule.cron` | Cron with workspace timezone |
-| `agent.run.failed` | Reliability workflows |
-| `file.uploaded` | MIME / size filters |
-| `webhook.received` | Inbound signed URL per automation |
-| `manual` | `POST /v1/automations/{id}/execute` |
+| Trigger type       | Source event                              |
+| ------------------ | ----------------------------------------- |
+| `message.created`  | New message in channel(s) matching filter |
+| `reaction.added`   | Specific emoji on pattern                 |
+| `schedule.cron`    | Cron with workspace timezone              |
+| `agent.run.failed` | Reliability workflows                     |
+| `file.uploaded`    | MIME / size filters                       |
+| `webhook.received` | Inbound signed URL per automation         |
+| `manual`           | `POST /v1/automations/{id}/execute`       |
 
 ## Conditions
 
@@ -31,15 +31,15 @@ Evaluate on event payload + lightweight workspace queries (e.g. "author is not a
 
 ## Actions
 
-| Action | Behavior |
-|--------|----------|
-| `post_message` | Post to channel/thread with templating |
-| `invoke_agent` | Start agent run with mapped context |
-| `http.request` | Signed outbound webhook (retries, idempotency key) |
-| `set_channel_topic` | Metadata update |
-| `add_reaction` | Signal or workflow marker |
-| `delay` | Wait N seconds (max 7 days) |
-| `branch` | Parallel or switch on condition |
+| Action              | Behavior                                           |
+| ------------------- | -------------------------------------------------- |
+| `post_message`      | Post to channel/thread with templating             |
+| `invoke_agent`      | Start agent run with mapped context                |
+| `http.request`      | Signed outbound webhook (retries, idempotency key) |
+| `set_channel_topic` | Metadata update                                    |
+| `add_reaction`      | Signal or workflow marker                          |
+| `delay`             | Wait N seconds (max 7 days)                        |
+| `branch`            | Parallel or switch on condition                    |
 
 Templating uses `{{event.*}}` and `{{workspace.*}}` with strict escaping.
 

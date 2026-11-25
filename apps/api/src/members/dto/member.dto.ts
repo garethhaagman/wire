@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { ArrayMaxSize, IsArray, IsEmail, IsIn, IsOptional, IsString, Length } from "class-validator";
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsEmail,
+  IsIn,
+  IsOptional,
+  IsString,
+  Length,
+} from "class-validator";
 import type {
   CreateMemberRequest,
   Member,
@@ -20,7 +28,12 @@ export class MemberDto implements Member {
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })
   workspaceId!: string;
 
-  @ApiProperty({ nullable: true, type: String, example: "usr_01jd5x0k8f3v8q2m7n4r6t9w1y", description: "Null until the invite is claimed" })
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    example: "usr_01jd5x0k8f3v8q2m7n4r6t9w1y",
+    description: "Null until the invite is claimed",
+  })
   userId!: string | null;
 
   @ApiProperty({ example: "Jordan Lee" })

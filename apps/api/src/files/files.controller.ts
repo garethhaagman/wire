@@ -1,5 +1,19 @@
 import { createReadStream } from "node:fs";
-import { Body, Controller, Get, HttpCode, HttpStatus, Inject, NotFoundException, Param, Post, Put, Query, Req, Res } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  NotFoundException,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+  Res,
+} from "@nestjs/common";
 import { ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import type { Request, Response } from "express";
 import type { ApiEnv } from "@wire/config";
@@ -14,7 +28,12 @@ import { RequirePermission } from "../permissions/require-permission.decorator.j
 import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
 import { FilesService } from "./files.service.js";
 import { LocalDiskAdapter } from "./storage/local-disk-adapter.js";
-import { CreateUploadRequestDto, CreateUploadResponseDto, DownloadUrlResponseDto, FileDto } from "./dto/file.dto.js";
+import {
+  CreateUploadRequestDto,
+  CreateUploadResponseDto,
+  DownloadUrlResponseDto,
+  FileDto,
+} from "./dto/file.dto.js";
 
 /**
  * Signed-upload-URL flow (see files.service.ts). The `_local-upload` routes only
@@ -49,7 +68,10 @@ export class FilesController {
   @WorkspaceScope({ from: "bodyChannel", field: "channelId" })
   @RequirePermission("create", "File")
   @ApiCreatedResponse({ type: CreateUploadResponseDto })
-  createUploadRequest(@CurrentActor() actor: WorkspaceActor, @Body() body: CreateUploadRequestDto): Promise<CreateUploadResponse> {
+  createUploadRequest(
+    @CurrentActor() actor: WorkspaceActor,
+    @Body() body: CreateUploadRequestDto,
+  ): Promise<CreateUploadResponse> {
     return this.files.requestUpload(actor, body);
   }
 
@@ -57,7 +79,10 @@ export class FilesController {
   @WorkspaceScope({ from: "file", param: "id" })
   @RequirePermission("create", "File")
   @ApiOkResponse({ type: FileDto })
-  createUploadConfirmation(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<WireFile> {
+  createUploadConfirmation(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("id") id: string,
+  ): Promise<WireFile> {
     return this.files.confirmUpload(actor, id);
   }
 
@@ -65,7 +90,10 @@ export class FilesController {
   @WorkspaceScope({ from: "file", param: "id" })
   @RequirePermission("read", "File")
   @ApiOkResponse({ type: DownloadUrlResponseDto })
-  getDownloadUrl(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<DownloadUrlResponse> {
+  getDownloadUrl(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("id") id: string,
+  ): Promise<DownloadUrlResponse> {
     return this.files.getDownloadUrl(actor, id);
   }
 
@@ -88,7 +116,11 @@ export class FilesController {
   @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })
-  async setLocalUpload(@Param("key") key: string, @Query("token") token: string | undefined, @Req() req: Request): Promise<null> {
+  async setLocalUpload(
+    @Param("key") key: string,
+    @Query("token") token: string | undefined,
+    @Req() req: Request,
+  ): Promise<null> {
     if (!this.localDisk.verifyToken(key, token)) {
       throw new NotFoundException("Invalid or expired upload URL.");
     }
@@ -100,7 +132,11 @@ export class FilesController {
   @Get("files/_local-upload/:key")
   @Public()
   @ApiOkResponse({ description: "application/octet-stream" })
-  getLocalDownload(@Param("key") key: string, @Query("token") token: string | undefined, @Res() res: Response): void {
+  getLocalDownload(
+    @Param("key") key: string,
+    @Query("token") token: string | undefined,
+    @Res() res: Response,
+  ): void {
     if (!this.localDisk.verifyToken(key, token)) {
       throw new NotFoundException("Invalid or expired download URL.");
     }

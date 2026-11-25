@@ -4,7 +4,7 @@ Ranked by expected leverage for the dev-first PLG wedge ([icp-wedge.md](./icp-we
 
 ## 1. MCP server as the distribution unit
 
-The single highest-leverage channel available, because it's a product capability that *is* a distribution channel: `npx @wire/mcp-server` installs into Claude Desktop, Cursor, or any MCP host with no Wire-specific onboarding flow beyond auth (`mcp/README.md`). Concretely:
+The single highest-leverage channel available, because it's a product capability that _is_ a distribution channel: `npx @wire/mcp-server` installs into Claude Desktop, Cursor, or any MCP host with no Wire-specific onboarding flow beyond auth (`mcp/README.md`). Concretely:
 
 - List on MCP server directories/registries as they mature as a discovery surface.
 - Ship install snippets for each major host (Claude Desktop, Cursor, Claude Code) in `mcp/README.md` and the public docs site — currently only a generic pattern is documented; host-specific copy-paste configs convert better than generic instructions.

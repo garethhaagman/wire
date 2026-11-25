@@ -6,20 +6,20 @@ Use JSON numbers by default. Use JSON strings only when the value requires exact
 
 ## When to use each type
 
-| Data type / use case | Must use |
-|------------------------|----------|
-| Integers (`2`, `100`, `5000`) | Number |
-| Ordinary decimals (`2.2`, `0.002`) | Number |
-| Percentages and ratios | Number |
-| Measurements and quantities | Number |
-| Ratings and scores | Number |
-| Latitude and longitude | Number |
-| Integers within ±(2⁵³ − 1) | Number |
-| Integers outside ±(2⁵³ − 1) | String |
-| High-precision decimals requiring exact preservation | String |
-| Financial amounts requiring exact decimal representation | String, or integer minor units |
-| Identifiers, reference numbers, IDs | **String** — always, even if the ID is all digits |
-| Phone numbers, postcodes, account numbers | String |
+| Data type / use case                                     | Must use                                          |
+| -------------------------------------------------------- | ------------------------------------------------- |
+| Integers (`2`, `100`, `5000`)                            | Number                                            |
+| Ordinary decimals (`2.2`, `0.002`)                       | Number                                            |
+| Percentages and ratios                                   | Number                                            |
+| Measurements and quantities                              | Number                                            |
+| Ratings and scores                                       | Number                                            |
+| Latitude and longitude                                   | Number                                            |
+| Integers within ±(2⁵³ − 1)                               | Number                                            |
+| Integers outside ±(2⁵³ − 1)                              | String                                            |
+| High-precision decimals requiring exact preservation     | String                                            |
+| Financial amounts requiring exact decimal representation | String, or integer minor units                    |
+| Identifiers, reference numbers, IDs                      | **String** — always, even if the ID is all digits |
+| Phone numbers, postcodes, account numbers                | String                                            |
 
 The ±(2⁵³ − 1) boundary is the JavaScript/IEEE 754 safe-integer limit, not a JSON-spec restriction — RFC 8259 and RFC 7493 (I-JSON) call it out as the conservative, interoperable choice for exactly this reason: any client parsing with a double-precision float (JS, and many JSON parsers generally) silently loses precision past that point.
 

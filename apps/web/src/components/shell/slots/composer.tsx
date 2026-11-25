@@ -32,7 +32,10 @@ export function ComposerCompact(_props: SlotProps): React.JSX.Element {
         placeholder="Message..."
         className="flex-1 rounded border border-border bg-card px-2 py-1 text-xs text-foreground outline-none focus:ring-1 focus:ring-ring"
       />
-      <button type="button" className="flex h-6 w-6 items-center justify-center rounded bg-primary text-primary-foreground">
+      <button
+        type="button"
+        className="flex h-6 w-6 items-center justify-center rounded bg-primary text-primary-foreground"
+      >
         <Icon name="send" className="h-3 w-3" />
       </button>
     </div>

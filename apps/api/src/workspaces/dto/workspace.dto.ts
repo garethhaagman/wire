@@ -32,7 +32,9 @@ export class CreateWorkspaceRequestDto implements CreateWorkspaceRequest {
 
   @ApiProperty({ example: "us" })
   @IsString()
-  @Matches(/^[a-z]{2}$/, { message: "dataRegion must be a 2-letter region code, e.g. 'us' or 'eu'" })
+  @Matches(/^[a-z]{2}$/, {
+    message: "dataRegion must be a 2-letter region code, e.g. 'us' or 'eu'",
+  })
   dataRegion!: string;
 }
 

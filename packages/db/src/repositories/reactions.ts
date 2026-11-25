@@ -117,10 +117,14 @@ export async function insertPin(
   return rows[0] ? toPin(rows[0]) : null;
 }
 
-export async function deletePin(db: Queryable, channelId: string, pinId: string): Promise<Pin | null> {
-  const { rows } = await db.query<PinRow>(`delete from pins where channel_id = $1 and id = $2 returning *`, [
-    channelId,
-    pinId,
-  ]);
+export async function deletePin(
+  db: Queryable,
+  channelId: string,
+  pinId: string,
+): Promise<Pin | null> {
+  const { rows } = await db.query<PinRow>(
+    `delete from pins where channel_id = $1 and id = $2 returning *`,
+    [channelId, pinId],
+  );
   return rows[0] ? toPin(rows[0]) : null;
 }

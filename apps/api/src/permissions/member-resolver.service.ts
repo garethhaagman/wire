@@ -63,10 +63,19 @@ export class MemberResolverService {
       [member = null] = await claimInvitesByEmail(this.db, user.id, user.email, workspaceId);
     }
 
-    const resolved = member ? { id: member.id, role: member.role, displayName: member.displayName } : null;
+    const resolved = member
+      ? { id: member.id, role: member.role, displayName: member.displayName }
+      : null;
     await this.redis
-      .set(key, resolved ? JSON.stringify(resolved) : NONE, "EX", resolved ? POSITIVE_TTL_SECONDS : NEGATIVE_TTL_SECONDS)
-      .catch((err: Error) => warnRedisFailure(this.redis, this.logger, "member cache write failed", err));
+      .set(
+        key,
+        resolved ? JSON.stringify(resolved) : NONE,
+        "EX",
+        resolved ? POSITIVE_TTL_SECONDS : NEGATIVE_TTL_SECONDS,
+      )
+      .catch((err: Error) =>
+        warnRedisFailure(this.redis, this.logger, "member cache write failed", err),
+      );
     return resolved;
   }
 
@@ -74,6 +83,8 @@ export class MemberResolverService {
     if (!userId) return;
     await this.redis
       .del(cacheKey(workspaceId, userId))
-      .catch((err: Error) => warnRedisFailure(this.redis, this.logger, "member cache invalidate failed", err));
+      .catch((err: Error) =>
+        warnRedisFailure(this.redis, this.logger, "member cache invalidate failed", err),
+      );
   }
 }

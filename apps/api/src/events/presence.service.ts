@@ -63,17 +63,37 @@ export class PresenceService {
   }
 
   async listActive(workspaceId: string): Promise<PresenceEntry[]> {
-    const raw = await this.redis.zrangebyscore(presenceKey(workspaceId), Date.now() - ACTIVE_WINDOW_MS, "+inf", "WITHSCORES");
+    const raw = await this.redis.zrangebyscore(
+      presenceKey(workspaceId),
+      Date.now() - ACTIVE_WINDOW_MS,
+      "+inf",
+      "WITHSCORES",
+    );
     const entries: PresenceEntry[] = [];
     for (let i = 0; i < raw.length; i += 2) {
-      entries.push({ memberId: raw[i]!, status: "active", lastSeenAt: new Date(Number(raw[i + 1])).toISOString() });
+      entries.push({
+        memberId: raw[i]!,
+        status: "active",
+        lastSeenAt: new Date(Number(raw[i + 1])).toISOString(),
+      });
     }
     return entries;
   }
 
   /** Throttled per member+channel so a fast typist produces one signal every few seconds. */
-  async typing(workspaceId: string, channelId: string, memberId: string, threadRootId: string | null): Promise<void> {
-    const acquired = await this.redis.set(`wire:typing:${channelId}:${memberId}`, "1", "PX", TYPING_THROTTLE_MS, "NX");
+  async typing(
+    workspaceId: string,
+    channelId: string,
+    memberId: string,
+    threadRootId: string | null,
+  ): Promise<void> {
+    const acquired = await this.redis.set(
+      `wire:typing:${channelId}:${memberId}`,
+      "1",
+      "PX",
+      TYPING_THROTTLE_MS,
+      "NX",
+    );
     if (acquired !== "OK") return;
     await this.publish({
       kind: "ephemeral",

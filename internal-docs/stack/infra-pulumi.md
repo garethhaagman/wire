@@ -33,7 +33,7 @@ Pulumi state stored in the **self-hosted Postgres instance** (`pulumi login post
 
 ## Deployment target
 
-Default target is **Docker Compose for single-node / small deployments**, with a **Pulumi Kubernetes provider path** for customers who need multi-node scaling or already run k8s. Both consume the *same* container images — Pulumi's job is provisioning compute, networking, secrets, and the Postgres/object-store/queue substrate, then handing container specs to whichever runtime (`docker compose` or a k8s `Deployment`) the target stack selects. Concretely:
+Default target is **Docker Compose for single-node / small deployments**, with a **Pulumi Kubernetes provider path** for customers who need multi-node scaling or already run k8s. Both consume the _same_ container images — Pulumi's job is provisioning compute, networking, secrets, and the Postgres/object-store/queue substrate, then handing container specs to whichever runtime (`docker compose` or a k8s `Deployment`) the target stack selects. Concretely:
 
 - `components/apiService.ts` etc. take a `runtime: "compose" | "kubernetes"` stack config and branch internally — same image reference, same env contract, different orchestration resource.
 - Start every new customer on `compose` unless they explicitly need k8s (multi-node HA, existing k8s platform team). This matches the "simplicity first" bias for an early-stage self-hosted product — don't make every customer operate a control plane to run three containers.
@@ -48,4 +48,4 @@ Default target is **Docker Compose for single-node / small deployments**, with a
 
 ## Multi-tenancy note
 
-For the hosted-by-Wire offering (if one exists alongside self-hosted — see [pricing/packaging.md](../pricing/packaging.md)), each workspace is a row, not a separate stack — Pulumi provisions the *platform*, not per-customer infrastructure. Self-hosting customers get their own full Pulumi stack per [self-hosting.md](./self-hosting.md). Don't conflate the two deployment models when sizing `infra/` components.
+For the hosted-by-Wire offering (if one exists alongside self-hosted — see [pricing/packaging.md](../pricing/packaging.md)), each workspace is a row, not a separate stack — Pulumi provisions the _platform_, not per-customer infrastructure. Self-hosting customers get their own full Pulumi stack per [self-hosting.md](./self-hosting.md). Don't conflate the two deployment models when sizing `infra/` components.

@@ -1,4 +1,11 @@
-import { ForbiddenException, HttpStatus, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import {
   addChannelMembers,
   appendEvents,
@@ -33,7 +40,10 @@ import { isAdmin, type WorkspaceActor } from "../permissions/actor.js";
 
 /** Workspace names are user-controlled; escape before interpolating into an HTML email body. */
 function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
+  return value.replace(
+    /[&<>"']/g,
+    (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!,
+  );
 }
 import { MemberResolverService } from "../permissions/member-resolver.service.js";
 
@@ -48,7 +58,12 @@ export class MembersService {
     private readonly relay: OutboxRelayService,
   ) {}
 
-  list(actor: WorkspaceActor, page: number, perPage: number, search?: string): Promise<{ items: Member[]; total: number }> {
+  list(
+    actor: WorkspaceActor,
+    page: number,
+    perPage: number,
+    search?: string,
+  ): Promise<{ items: Member[]; total: number }> {
     return listMembers(this.db, actor.workspaceId, { page, perPage, search });
   }
 
@@ -73,7 +88,10 @@ export class MembersService {
 
     const user = await findUserByEmail(this.db, input.email);
     const userId =
-      user && this.resolver.canClaim({ id: user.id, email: input.email, emailVerified: user.emailVerified }) ? user.id : null;
+      user &&
+      this.resolver.canClaim({ id: user.id, email: input.email, emailVerified: user.emailVerified })
+        ? user.id
+        : null;
 
     const member = await this.db
       .tx(async (tx) => {
@@ -87,7 +105,12 @@ export class MembersService {
         if (!created) return null;
 
         const events: NewEvent[] = [
-          { workspaceId: actor.workspaceId, type: "member.joined", channelId: null, data: { member: created } },
+          {
+            workspaceId: actor.workspaceId,
+            type: "member.joined",
+            channelId: null,
+            data: { member: created },
+          },
         ];
         for (const channelId of await findDefaultChannelIds(tx, actor.workspaceId)) {
           const joined = await addChannelMembers(tx, channelId, actor.workspaceId, [created.id]);
@@ -148,7 +171,11 @@ export class MembersService {
   async update(actor: WorkspaceActor, id: string, input: UpdateMemberRequest): Promise<Member> {
     const self = id === actor.member.id;
     if (!isAdmin(actor) && (!self || input.role !== undefined)) {
-      throw new ApiException("PERMISSION_DENIED", "Members can only update their own display name.", HttpStatus.FORBIDDEN);
+      throw new ApiException(
+        "PERMISSION_DENIED",
+        "Members can only update their own display name.",
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     const member = await this.db.tx(async (tx) => {
@@ -171,7 +198,12 @@ export class MembersService {
       const updated = await updateMember(tx, actor.workspaceId, id, input);
       if (updated) {
         await appendEvents(tx, [
-          { workspaceId: actor.workspaceId, type: "member.updated", channelId: null, data: { member: updated } },
+          {
+            workspaceId: actor.workspaceId,
+            type: "member.updated",
+            channelId: null,
+            data: { member: updated },
+          },
         ]);
       }
       return updated;
@@ -190,15 +222,22 @@ export class MembersService {
       const target = await findMember(tx, actor.workspaceId, id);
       if (!target) return null;
       if (target.role === "owner") {
-        if (actor.member.role !== "owner") throw new ForbiddenException("Only an owner can remove an owner.");
+        if (actor.member.role !== "owner")
+          throw new ForbiddenException("Only an owner can remove an owner.");
         const owners = await lockActiveOwnerIds(tx, actor.workspaceId);
-        if (owners.length <= 1) throw new ResourceConflictException("A workspace must keep at least one owner.");
+        if (owners.length <= 1)
+          throw new ResourceConflictException("A workspace must keep at least one owner.");
       }
 
       const member = await deactivateMember(tx, actor.workspaceId, id);
       if (member) {
         await appendEvents(tx, [
-          { workspaceId: actor.workspaceId, type: "member.removed", channelId: null, data: { memberId: member.id } },
+          {
+            workspaceId: actor.workspaceId,
+            type: "member.removed",
+            channelId: null,
+            data: { memberId: member.id },
+          },
         ]);
       }
       return member;
@@ -215,7 +254,10 @@ export class MembersService {
     return getPreferences(this.db, actor.member.id);
   }
 
-  updatePreferences(actor: WorkspaceActor, input: UpdateMemberPreferencesRequest): Promise<MemberPreferences> {
+  updatePreferences(
+    actor: WorkspaceActor,
+    input: UpdateMemberPreferencesRequest,
+  ): Promise<MemberPreferences> {
     const patch: Partial<MemberPreferences> = {};
     if (input.starredChannelIds) patch.starredChannelIds = [...new Set(input.starredChannelIds)];
     if (input.mutedChannelIds) patch.mutedChannelIds = [...new Set(input.mutedChannelIds)];

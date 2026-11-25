@@ -2,13 +2,13 @@
 
 ## What's already meterable in the spec (no new instrumentation needed)
 
-| Signal | Source | Doc |
-|--------|--------|-----|
-| Agent run count, duration, tool calls | `AgentRunStep` latency/token/cost fields | `product/03-agents.md`, `harnesses/harnesses.md` § Observability |
-| Token usage, estimated cost per step | `GET /v1/agent-runs/{id}/trace` | `harnesses/harnesses.md` |
-| Automation executions | `execution_id` per run, rate-limited at 1000/min/workspace | `automations/automations.md` |
-| Storage | Files + search chunks per workspace | `data-model/data-model.md` |
-| Seats | Active (non-deactivated, claimed) members per workspace | `product/02-core-concepts.md`, `import/workspace-import.md` |
+| Signal                                | Source                                                     | Doc                                                              |
+| ------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- |
+| Agent run count, duration, tool calls | `AgentRunStep` latency/token/cost fields                   | `product/03-agents.md`, `harnesses/harnesses.md` § Observability |
+| Token usage, estimated cost per step  | `GET /v1/agent-runs/{id}/trace`                            | `harnesses/harnesses.md`                                         |
+| Automation executions                 | `execution_id` per run, rate-limited at 1000/min/workspace | `automations/automations.md`                                     |
+| Storage                               | Files + search chunks per workspace                        | `data-model/data-model.md`                                       |
+| Seats                                 | Active (non-deactivated, claimed) members per workspace    | `product/02-core-concepts.md`, `import/workspace-import.md`      |
 
 Billing is a **read model over existing audit/trace data**, not a parallel tracking system — this keeps the metering pipeline honest (what's billed is what's auditable) and avoids double-instrumenting.
 

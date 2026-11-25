@@ -21,7 +21,10 @@ interface SearchInput {
 export class SearchService {
   constructor(@Inject(Database) private readonly db: Database) {}
 
-  async search(actor: RequestActor, input: SearchInput): Promise<{ items: SearchResult[]; total: number }> {
+  async search(
+    actor: RequestActor,
+    input: SearchInput,
+  ): Promise<{ items: SearchResult[]; total: number }> {
     const scope = await this.scopeFor(actor);
     if (scope.memberIds.length === 0) return { items: [], total: 0 };
     return searchMessages(this.db.reader, scope, {

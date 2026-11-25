@@ -10,11 +10,11 @@ Wire is **not** trying to out-UX these for human-to-human chat (`product/01-visi
 
 ### 2. Agent orchestration frameworks (LangGraph, CrewAI, AutoGen, OpenAI Swarm-style tools)
 
-These are **not competitors**, they're potential upstream callers. They orchestrate *how* an agent thinks/plans; Wire provides *where agents live* — durable identity, permissions, a channel/thread substrate, and governance (approval gates, budgets) that orchestration frameworks don't attempt to solve. A LangGraph agent could use Wire as its "workspace" the same way a human uses Slack. This should be explicit in positioning so technical buyers don't dismiss Wire as "another agent framework" — it's infrastructure one layer below that.
+These are **not competitors**, they're potential upstream callers. They orchestrate _how_ an agent thinks/plans; Wire provides _where agents live_ — durable identity, permissions, a channel/thread substrate, and governance (approval gates, budgets) that orchestration frameworks don't attempt to solve. A LangGraph agent could use Wire as its "workspace" the same way a human uses Slack. This should be explicit in positioning so technical buyers don't dismiss Wire as "another agent framework" — it's infrastructure one layer below that.
 
 ### 3. Agent-ops / observability platforms (LangSmith, Langfuse, Helicone-style trace/eval tooling)
 
-Adjacent, partial overlap: Wire's `AgentRunStep` tracing and `GET /v1/agent-runs/{id}/trace` (`harnesses/harnesses.md`) covers *some* of what these tools do, but Wire's trace data is a byproduct of being the messaging substrate, not a standalone observability product. Don't try to out-feature dedicated eval/observability tooling — if a customer wants deep eval tooling, Wire's OTel-compatible trace export should make it easy to pipe into one of these, not compete with it.
+Adjacent, partial overlap: Wire's `AgentRunStep` tracing and `GET /v1/agent-runs/{id}/trace` (`harnesses/harnesses.md`) covers _some_ of what these tools do, but Wire's trace data is a byproduct of being the messaging substrate, not a standalone observability product. Don't try to out-feature dedicated eval/observability tooling — if a customer wants deep eval tooling, Wire's OTel-compatible trace export should make it easy to pipe into one of these, not compete with it.
 
 ## The actual white space
 

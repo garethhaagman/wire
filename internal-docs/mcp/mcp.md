@@ -6,11 +6,11 @@ The **Wire MCP server** is a thin, typed adapter over the same REST API defined 
 
 ## Deployment modes
 
-| Mode | Auth | Typical use |
-|------|------|-------------|
-| `stdio` | Local OAuth device flow or env `WIRE_TOKEN` | Developer machine |
-| `streamable-http` | Bearer token per connection | Shared team gateway |
-| `sidecar` | mTLS to Wire API gateway | Enterprise |
+| Mode              | Auth                                        | Typical use         |
+| ----------------- | ------------------------------------------- | ------------------- |
+| `stdio`           | Local OAuth device flow or env `WIRE_TOKEN` | Developer machine   |
+| `streamable-http` | Bearer token per connection                 | Shared team gateway |
+| `sidecar`         | mTLS to Wire API gateway                    | Enterprise          |
 
 ## Server metadata
 
@@ -25,41 +25,41 @@ The **Wire MCP server** is a thin, typed adapter over the same REST API defined 
 
 ## Tools (canonical set)
 
-| Tool | Maps to API |
-|------|-------------|
-| `list_channels` | `GET /v1/channels` |
-| `get_channel_history` | `GET /v1/channels/{id}/messages` |
-| `post_message` | `POST /v1/channels/{id}/messages` |
-| `reply_in_thread` | `POST /v1/threads/{id}/messages` |
-| `search_hybrid` | `POST /v1/search/hybrid` |
-| `create_context_pack` | `POST /v1/context-packs` |
-| `list_agents` | `GET /v1/agents` |
-| `run_agent` | `POST /v1/agent-runs` |
-| `get_agent_run` | `GET /v1/agent-runs/{id}` |
-| `list_automations` | `GET /v1/automations` |
-| `trigger_automation` | `POST /v1/automations/{id}/execute` |
+| Tool                  | Maps to API                         |
+| --------------------- | ----------------------------------- |
+| `list_channels`       | `GET /v1/channels`                  |
+| `get_channel_history` | `GET /v1/channels/{id}/messages`    |
+| `post_message`        | `POST /v1/channels/{id}/messages`   |
+| `reply_in_thread`     | `POST /v1/threads/{id}/messages`    |
+| `search_hybrid`       | `POST /v1/search/hybrid`            |
+| `create_context_pack` | `POST /v1/context-packs`            |
+| `list_agents`         | `GET /v1/agents`                    |
+| `run_agent`           | `POST /v1/agent-runs`               |
+| `get_agent_run`       | `GET /v1/agent-runs/{id}`           |
+| `list_automations`    | `GET /v1/automations`               |
+| `trigger_automation`  | `POST /v1/automations/{id}/execute` |
 
 Tool descriptions embed **required scopes** (e.g. `messages:write`, `agents:invoke`).
 
 ## Resources
 
-| URI template | Content |
-|--------------|---------|
-| `wire://workspace/{ws_id}` | Workspace summary JSON |
-| `wire://channel/{ch_id}` | Channel metadata + recent 20 messages |
-| `wire://message/{msg_id}` | Full message + thread head |
-| `wire://agent/{agt_id}` | Agent config (secrets redacted) |
-| `wire://context-pack/{ctx_id}` | Pack for prompt injection |
+| URI template                   | Content                               |
+| ------------------------------ | ------------------------------------- |
+| `wire://workspace/{ws_id}`     | Workspace summary JSON                |
+| `wire://channel/{ch_id}`       | Channel metadata + recent 20 messages |
+| `wire://message/{msg_id}`      | Full message + thread head            |
+| `wire://agent/{agt_id}`        | Agent config (secrets redacted)       |
+| `wire://context-pack/{ctx_id}` | Pack for prompt injection             |
 
 Resources refresh on subscription when webhooks are configured; otherwise ETag polling.
 
 ## Prompts
 
-| Prompt | Purpose |
-|--------|---------|
-| `wire_summarize_thread` | Args: `thread_id`, optional tone |
-| `wire_draft_reply` | Args: `message_id`, constraints |
-| `wire_triage_channel` | Args: `channel_id`, since timestamp |
+| Prompt                  | Purpose                             |
+| ----------------------- | ----------------------------------- |
+| `wire_summarize_thread` | Args: `thread_id`, optional tone    |
+| `wire_draft_reply`      | Args: `message_id`, constraints     |
+| `wire_triage_channel`   | Args: `channel_id`, since timestamp |
 
 Prompts fetch live data via tools internally; hosts may override model.
 

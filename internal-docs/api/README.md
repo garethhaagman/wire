@@ -19,19 +19,19 @@ https://api.wire.example/v1
 
 ## Documentation map
 
-| Doc | Contents |
-|-----|----------|
-| [versioning.md](./versioning.md) | URL major versions, experimental/beta lifecycle, deprecation and sunset |
-| [naming-and-verbs.md](./naming-and-verbs.md) | Resource naming, HTTP verb semantics |
-| [responses.md](./responses.md) | The universal response envelope |
-| [errors.md](./errors.md) | Stable machine-readable error codes |
-| [headers.md](./headers.md) | Request/response headers, rate limiting, deprecation signals |
-| [pagination.md](./pagination.md) | Shared pagination, filtering, and sorting contract |
-| [numeric-data.md](./numeric-data.md) | Number vs. string conventions, safe integers, money fields |
-| [sdk-architecture.md](./sdk-architecture.md) | Why one generic handler is enough for every endpoint |
-| [auth-tenancy.md](./auth-tenancy.md) | Auth, RBAC, org/workspace boundaries |
-| [events-webhooks.md](./events-webhooks.md) | Realtime and async integration |
-| `openapi.yaml` | **Generated OpenAPI 3.0 spec** — the canonical machine-readable contract |
+| Doc                                          | Contents                                                                 |
+| -------------------------------------------- | ------------------------------------------------------------------------ |
+| [versioning.md](./versioning.md)             | URL major versions, experimental/beta lifecycle, deprecation and sunset  |
+| [naming-and-verbs.md](./naming-and-verbs.md) | Resource naming, HTTP verb semantics                                     |
+| [responses.md](./responses.md)               | The universal response envelope                                          |
+| [errors.md](./errors.md)                     | Stable machine-readable error codes                                      |
+| [headers.md](./headers.md)                   | Request/response headers, rate limiting, deprecation signals             |
+| [pagination.md](./pagination.md)             | Shared pagination, filtering, and sorting contract                       |
+| [numeric-data.md](./numeric-data.md)         | Number vs. string conventions, safe integers, money fields               |
+| [sdk-architecture.md](./sdk-architecture.md) | Why one generic handler is enough for every endpoint                     |
+| [auth-tenancy.md](./auth-tenancy.md)         | Auth, RBAC, org/workspace boundaries                                     |
+| [events-webhooks.md](./events-webhooks.md)   | Realtime and async integration                                           |
+| `openapi.yaml`                               | **Generated OpenAPI 3.0 spec** — the canonical machine-readable contract |
 
 ## Authentication
 

@@ -4,16 +4,16 @@ SDKs must never parse human-readable error messages to decide behavior. `error.c
 
 ## Codes
 
-| Code | Meaning | Typical status |
-|------|---------|------------------|
-| `VALIDATION_ERROR` | Invalid request fields | 400 / 422 |
-| `AUTHENTICATION_ERROR` | Authentication failed | 401 |
-| `PERMISSION_DENIED` | Insufficient permissions | 403 |
-| `RESOURCE_NOT_FOUND` | Resource doesn't exist | 404 |
-| `RESOURCE_CONFLICT` | Conflicting operation | 409 |
-| `RATE_LIMIT_EXCEEDED` | Rate limit reached | 429 |
-| `INTERNAL_ERROR` | Unexpected server error | 500 |
-| `SERVICE_UNAVAILABLE` | Service unavailable | 503 |
+| Code                   | Meaning                  | Typical status |
+| ---------------------- | ------------------------ | -------------- |
+| `VALIDATION_ERROR`     | Invalid request fields   | 400 / 422      |
+| `AUTHENTICATION_ERROR` | Authentication failed    | 401            |
+| `PERMISSION_DENIED`    | Insufficient permissions | 403            |
+| `RESOURCE_NOT_FOUND`   | Resource doesn't exist   | 404            |
+| `RESOURCE_CONFLICT`    | Conflicting operation    | 409            |
+| `RATE_LIMIT_EXCEEDED`  | Rate limit reached       | 429            |
+| `INTERNAL_ERROR`       | Unexpected server error  | 500            |
+| `SERVICE_UNAVAILABLE`  | Service unavailable      | 503            |
 
 Defined as `ApiErrorCode` in `@wire/types` (`packages/types/src/envelope.ts`) — adding a new code is a type change reviewers should treat as deliberate, not incidental.
 

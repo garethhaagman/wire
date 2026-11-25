@@ -1,5 +1,13 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { appendEvents, Database, findAgent, insertAgent, isUniqueViolation, listAgents, updateAgent } from "@wire/db";
+import {
+  appendEvents,
+  Database,
+  findAgent,
+  insertAgent,
+  isUniqueViolation,
+  listAgents,
+  updateAgent,
+} from "@wire/db";
 import type { Agent, CreateAgentRequest, UpdateAgentRequest } from "@wire/types";
 import { ResourceConflictException } from "../common/errors/api-exception.js";
 import { OutboxRelayService } from "../events/outbox-relay.service.js";
@@ -16,7 +24,11 @@ export class AgentsService {
     private readonly relay: OutboxRelayService,
   ) {}
 
-  list(actor: WorkspaceActor, page: number, perPage: number): Promise<{ items: Agent[]; total: number }> {
+  list(
+    actor: WorkspaceActor,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: Agent[]; total: number }> {
     return listAgents(this.db, actor.workspaceId, page, perPage);
   }
 
@@ -31,13 +43,26 @@ export class AgentsService {
   async create(actor: WorkspaceActor, input: CreateAgentRequest): Promise<Agent> {
     const agent = await this.db
       .tx(async (tx) => {
-        const created = await insertAgent(tx, { workspaceId: actor.workspaceId, handle: input.handle, harnessId: input.harnessId });
-        await appendEvents(tx, [{ workspaceId: actor.workspaceId, type: "agent.created", channelId: null, data: { agent: created } }]);
+        const created = await insertAgent(tx, {
+          workspaceId: actor.workspaceId,
+          handle: input.handle,
+          harnessId: input.harnessId,
+        });
+        await appendEvents(tx, [
+          {
+            workspaceId: actor.workspaceId,
+            type: "agent.created",
+            channelId: null,
+            data: { agent: created },
+          },
+        ]);
         return created;
       })
       .catch((err: unknown) => {
         if (isUniqueViolation(err, "UQ_agents_workspace_handle")) {
-          throw new ResourceConflictException(`An agent with handle @${input.handle} already exists.`);
+          throw new ResourceConflictException(
+            `An agent with handle @${input.handle} already exists.`,
+          );
         }
         throw err;
       });
@@ -54,11 +79,22 @@ export class AgentsService {
     await this.write(actor, id, { status: "deleted" });
   }
 
-  private async write(actor: WorkspaceActor, id: string, patch: { harnessId?: string; status?: Agent["status"] }): Promise<Agent> {
+  private async write(
+    actor: WorkspaceActor,
+    id: string,
+    patch: { harnessId?: string; status?: Agent["status"] },
+  ): Promise<Agent> {
     const agent = await this.db.tx(async (tx) => {
       const updated = await updateAgent(tx, actor.workspaceId, id, patch);
       if (updated) {
-        await appendEvents(tx, [{ workspaceId: actor.workspaceId, type: "agent.updated", channelId: null, data: { agent: updated } }]);
+        await appendEvents(tx, [
+          {
+            workspaceId: actor.workspaceId,
+            type: "agent.updated",
+            channelId: null,
+            data: { agent: updated },
+          },
+        ]);
       }
       return updated;
     });

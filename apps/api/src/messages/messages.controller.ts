@@ -1,7 +1,29 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseInterceptors } from "@nestjs/common";
-import { ApiCookieAuth, ApiCreatedResponse, ApiHeader, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseInterceptors,
+} from "@nestjs/common";
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiHeader,
+  ApiOkResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Message } from "@wire/types";
-import { CursorPaginatedResult, CursorQueryDto, resolveCursor } from "../common/dto/cursor-paginated-result.js";
+import {
+  CursorPaginatedResult,
+  CursorQueryDto,
+  resolveCursor,
+} from "../common/dto/cursor-paginated-result.js";
 import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor.js";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
@@ -28,7 +50,12 @@ export class MessagesController {
     @Param("channelId") channelId: string,
     @Query() query: CursorQueryDto,
   ): Promise<CursorPaginatedResult<Message>> {
-    const { items, cursor } = await this.messages.list(actor, channelId, resolveCursor(query), query.per_page ?? 50);
+    const { items, cursor } = await this.messages.list(
+      actor,
+      channelId,
+      resolveCursor(query),
+      query.per_page ?? 50,
+    );
     return new CursorPaginatedResult(items, cursor);
   }
 
@@ -57,7 +84,11 @@ export class MessagesController {
     @Param("channelId") channelId: string,
     @Body() body: CreateMessageRequestDto,
   ): Promise<Message> {
-    return this.messages.post(actor, { channelId, body: body.body, threadRootId: body.threadRootId });
+    return this.messages.post(actor, {
+      channelId,
+      body: body.body,
+      threadRootId: body.threadRootId,
+    });
   }
 
   @Patch(":id")

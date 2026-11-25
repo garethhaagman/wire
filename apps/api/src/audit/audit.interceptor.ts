@@ -1,4 +1,9 @@
-import { type CallHandler, type ExecutionContext, Injectable, type NestInterceptor } from "@nestjs/common";
+import {
+  type CallHandler,
+  type ExecutionContext,
+  Injectable,
+  type NestInterceptor,
+} from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { type Observable, tap } from "rxjs";
 import type { AuthedRequest } from "../auth/session.guard.js";
@@ -49,7 +54,8 @@ export class AuditInterceptor implements NestInterceptor {
 }
 
 function resourceIdOf(body: unknown, params: Record<string, string | string[]>): string | null {
-  if (body && typeof body === "object" && "id" in body && typeof body.id === "string") return body.id;
+  if (body && typeof body === "object" && "id" in body && typeof body.id === "string")
+    return body.id;
   const last = Object.values(params).at(-1);
   return typeof last === "string" ? last : null;
 }

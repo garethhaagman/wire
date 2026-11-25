@@ -12,7 +12,9 @@ export class WebhookDeliveryError extends Error {}
  */
 export async function assertPublicHost(hostname: string): Promise<void> {
   const host = hostname.replace(/^\[|\]$/g, "");
-  const addresses = isIP(host) ? [host] : (await lookup(host, { all: true, verbatim: true })).map((a) => a.address);
+  const addresses = isIP(host)
+    ? [host]
+    : (await lookup(host, { all: true, verbatim: true })).map((a) => a.address);
   for (const address of addresses) {
     if (isPrivateAddress(address)) {
       throw new WebhookDeliveryError(`${hostname} resolves to a non-public address`);

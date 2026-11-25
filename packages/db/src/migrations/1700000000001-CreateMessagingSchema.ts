@@ -35,12 +35,18 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
         "updated_at" timestamptz not null default now()
       )
     `);
-    await queryRunner.query(`create unique index "UQ_members_workspace_email" on "members" ("workspace_id", lower("email"))`);
+    await queryRunner.query(
+      `create unique index "UQ_members_workspace_email" on "members" ("workspace_id", lower("email"))`,
+    );
     await queryRunner.query(
       `create unique index "UQ_members_workspace_user" on "members" ("workspace_id", "user_id") where "user_id" is not null`,
     );
-    await queryRunner.query(`create index "IDX_members_user" on "members" ("user_id") where "user_id" is not null`);
-    await queryRunner.query(`create index "IDX_members_unclaimed_email" on "members" (lower("email")) where "user_id" is null`);
+    await queryRunner.query(
+      `create index "IDX_members_user" on "members" ("user_id") where "user_id" is not null`,
+    );
+    await queryRunner.query(
+      `create index "IDX_members_unclaimed_email" on "members" (lower("email")) where "user_id" is null`,
+    );
 
     await queryRunner.query(`
       create table "channels" (
@@ -66,7 +72,9 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
     await queryRunner.query(
       `create unique index "UQ_channels_workspace_dm_key" on "channels" ("workspace_id", "dm_key") where "dm_key" is not null`,
     );
-    await queryRunner.query(`create index "IDX_channels_workspace_type" on "channels" ("workspace_id", "type")`);
+    await queryRunner.query(
+      `create index "IDX_channels_workspace_type" on "channels" ("workspace_id", "type")`,
+    );
 
     await queryRunner.query(`
       create table "channel_members" (
@@ -78,7 +86,9 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
         primary key ("channel_id", "member_id")
       )
     `);
-    await queryRunner.query(`create index "IDX_channel_members_member" on "channel_members" ("member_id")`);
+    await queryRunner.query(
+      `create index "IDX_channel_members_member" on "channel_members" ("member_id")`,
+    );
 
     await queryRunner.query(`
       create table "messages" (
@@ -112,7 +122,9 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
     await queryRunner.query(
       `create index "IDX_messages_thread" on "messages" ("thread_root_id", "seq") where "thread_root_id" is not null`,
     );
-    await queryRunner.query(`create index "IDX_messages_search" on "messages" using gin ("search_vector")`);
+    await queryRunner.query(
+      `create index "IDX_messages_search" on "messages" using gin ("search_vector")`,
+    );
 
     await queryRunner.query(`
       create table "message_revisions" (
@@ -134,7 +146,9 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
         primary key ("thread_root_id", "member_id")
       )
     `);
-    await queryRunner.query(`create index "IDX_thread_participants_member" on "thread_participants" ("member_id")`);
+    await queryRunner.query(
+      `create index "IDX_thread_participants_member" on "thread_participants" ("member_id")`,
+    );
 
     await queryRunner.query(`
       create table "reactions" (
@@ -170,7 +184,9 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
         constraint "UQ_bookmarks_member_message" unique ("member_id", "message_id")
       )
     `);
-    await queryRunner.query(`create index "IDX_bookmarks_member_created" on "bookmarks" ("member_id", "created_at" desc)`);
+    await queryRunner.query(
+      `create index "IDX_bookmarks_member_created" on "bookmarks" ("member_id", "created_at" desc)`,
+    );
 
     await queryRunner.query(`
       create table "agents" (
@@ -201,7 +217,9 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
         "created_at" timestamptz not null default now()
       )
     `);
-    await queryRunner.query(`create index "IDX_files_channel_created" on "files" ("channel_id", "created_at" desc)`);
+    await queryRunner.query(
+      `create index "IDX_files_channel_created" on "files" ("channel_id", "created_at" desc)`,
+    );
 
     await queryRunner.query(`
       create table "webhook_endpoints" (
@@ -215,7 +233,9 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
         "updated_at" timestamptz not null default now()
       )
     `);
-    await queryRunner.query(`create index "IDX_webhook_endpoints_workspace" on "webhook_endpoints" ("workspace_id")`);
+    await queryRunner.query(
+      `create index "IDX_webhook_endpoints_workspace" on "webhook_endpoints" ("workspace_id")`,
+    );
 
     // Transactional outbox: written in the same transaction as the mutation it
     // describes, published to Redis + fanned out to webhook deliveries by the relay.
@@ -231,8 +251,12 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
         "published_at" timestamptz
       )
     `);
-    await queryRunner.query(`create index "IDX_events_unpublished" on "events" ("seq") where "published_at" is null`);
-    await queryRunner.query(`create index "IDX_events_workspace_seq" on "events" ("workspace_id", "seq")`);
+    await queryRunner.query(
+      `create index "IDX_events_unpublished" on "events" ("seq") where "published_at" is null`,
+    );
+    await queryRunner.query(
+      `create index "IDX_events_workspace_seq" on "events" ("workspace_id", "seq")`,
+    );
 
     await queryRunner.query(`
       create table "webhook_deliveries" (
@@ -269,7 +293,9 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
         "created_at" timestamptz not null default now()
       )
     `);
-    await queryRunner.query(`create index "IDX_audit_events_workspace_created" on "audit_events" ("workspace_id", "created_at" desc)`);
+    await queryRunner.query(
+      `create index "IDX_audit_events_workspace_created" on "audit_events" ("workspace_id", "created_at" desc)`,
+    );
 
     // Backfill: workspaces created before members existed get their creator (org_id
     // is the creating user's id in the skeleton tenancy model) as owner. Guarded

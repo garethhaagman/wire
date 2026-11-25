@@ -17,13 +17,13 @@ Organization (billing, SSO)
 
 ## Machine authentication
 
-| Credential | Scope |
-|------------|--------|
-| Workspace API key (`wire_sk_...`) | Static scopes, rotatable |
-| Org API key | Cross-workspace admin APIs only |
-| Agent token (`wire_at_...`) | Agent permission set only |
-| Automation token (`wire_au_...`) | Single automation + actions |
-| MCP delegation token | Short-lived, tool-scoped |
+| Credential                        | Scope                           |
+| --------------------------------- | ------------------------------- |
+| Workspace API key (`wire_sk_...`) | Static scopes, rotatable        |
+| Org API key                       | Cross-workspace admin APIs only |
+| Agent token (`wire_at_...`)       | Agent permission set only       |
+| Automation token (`wire_au_...`)  | Single automation + actions     |
+| MCP delegation token              | Short-lived, tool-scoped        |
 
 Never return full API keys after creation—show once.
 
@@ -54,12 +54,12 @@ Fine-grained channel ACLs intersect with scopes: lacking `channel:ch_xyz:read` d
 
 ## RBAC roles (workspace)
 
-| Role | Capabilities |
-|------|----------------|
-| `owner` | Delete workspace, billing |
-| `admin` | Members, agents, policies |
-| `member` | Default participate |
-| `guest` | Limited channels |
+| Role               | Capabilities                      |
+| ------------------ | --------------------------------- |
+| `owner`            | Delete workspace, billing         |
+| `admin`            | Members, agents, policies         |
+| `member`           | Default participate               |
+| `guest`            | Limited channels                  |
 | `agent_supervisor` | Approve runs, publish automations |
 
 Agents never receive `owner`; maximum is configured per `permission_set`.

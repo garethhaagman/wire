@@ -44,7 +44,9 @@ export function createAuth(env: ApiEnv, pool: Pool, redis?: Redis) {
               }
             },
             set: async (key: string, value: string, ttl?: number) => {
-              const write = ttl ? redis.set(`wire:auth:${key}`, value, "EX", ttl) : redis.set(`wire:auth:${key}`, value);
+              const write = ttl
+                ? redis.set(`wire:auth:${key}`, value, "EX", ttl)
+                : redis.set(`wire:auth:${key}`, value);
               await write.catch(() => null);
             },
             delete: async (key: string) => {

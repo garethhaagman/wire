@@ -68,7 +68,10 @@ export class RealtimeService implements OnApplicationShutdown {
   private readonly logger = new Logger(RealtimeService.name);
   private readonly byWorkspace = new Map<string, Set<Connection>>();
   private readonly channelTypes = new LruCache<string, Channel["type"]>(100_000);
-  private readonly channelMembers = new Map<string, { members: Promise<Set<string>>; expiresAt: number }>();
+  private readonly channelMembers = new Map<
+    string,
+    { members: Promise<Set<string>>; expiresAt: number }
+  >();
   private subscriber: Redis | null = null;
 
   constructor(
@@ -83,7 +86,11 @@ export class RealtimeService implements OnApplicationShutdown {
    * accepted the upgrade). Replays from `filters.afterSeq` if set, then
    * leaves the connection attached until `close()` is called.
    */
-  async attachSink(actor: WorkspaceActor, sink: StreamSink, filters: StreamFilters): Promise<{ close: () => void }> {
+  async attachSink(
+    actor: WorkspaceActor,
+    sink: StreamSink,
+    filters: StreamFilters,
+  ): Promise<{ close: () => void }> {
     const conn: Connection = {
       id: randomUUID(),
       workspaceId: actor.workspaceId,
@@ -151,7 +158,9 @@ export class RealtimeService implements OnApplicationShutdown {
     // was accepted, so a rejected one would be lost for good after a reconnect.
     const subscriber = this.redis.duplicate({ lazyConnect: false, enableOfflineQueue: true });
     subscriber.on("message", (_channel: string, payload: string) => {
-      void this.onMessage(payload).catch((err: Error) => this.logger.warn(`dispatch failed: ${err.message}`));
+      void this.onMessage(payload).catch((err: Error) =>
+        this.logger.warn(`dispatch failed: ${err.message}`),
+      );
     });
     let down = false;
     subscriber.on("error", (err: Error) => {
@@ -173,9 +182,13 @@ export class RealtimeService implements OnApplicationShutdown {
     }
 
     const event = envelope.event;
-    if (event.channelId && MEMBERSHIP_EVENTS.has(event.type)) this.channelMembers.delete(event.channelId);
+    if (event.channelId && MEMBERSHIP_EVENTS.has(event.type))
+      this.channelMembers.delete(event.channelId);
     if (event.type === "member.removed") {
-      this.disconnectMember(event.workspaceId, String((event.data as { memberId?: string }).memberId));
+      this.disconnectMember(
+        event.workspaceId,
+        String((event.data as { memberId?: string }).memberId),
+      );
     }
 
     const conns = this.byWorkspace.get(event.workspaceId);
@@ -190,7 +203,9 @@ export class RealtimeService implements OnApplicationShutdown {
     }
   }
 
-  private async dispatchEphemeral(envelope: Extract<RealtimeEnvelope, { kind: "ephemeral" }>): Promise<void> {
+  private async dispatchEphemeral(
+    envelope: Extract<RealtimeEnvelope, { kind: "ephemeral" }>,
+  ): Promise<void> {
     const conns = this.byWorkspace.get(envelope.workspaceId);
     if (!conns) return;
     const audience = await this.audienceFor(envelope.channelId, null, conns);
@@ -216,7 +231,10 @@ export class RealtimeService implements OnApplicationShutdown {
     // public channels would otherwise reload huge sets for no benefit.
     const needsMembers = type !== "public" || [...conns].some((c) => c.isGuest);
     const members = needsMembers ? await this.membersOf(channelId) : null;
-    const extra = event?.type === "channel.member.left" ? String((event.data as { memberId?: string }).memberId) : null;
+    const extra =
+      event?.type === "channel.member.left"
+        ? String((event.data as { memberId?: string }).memberId)
+        : null;
     return { type, members, extra };
   }
 
@@ -227,7 +245,8 @@ export class RealtimeService implements OnApplicationShutdown {
     audience: { type: Channel["type"] | null; members: Set<string> | null; extra: string | null },
   ): boolean {
     if (conn.filters.types && !conn.filters.types.has(type)) return false;
-    if (channelId && conn.filters.channelIds && !conn.filters.channelIds.has(channelId)) return false;
+    if (channelId && conn.filters.channelIds && !conn.filters.channelIds.has(channelId))
+      return false;
     if (!channelId) return true;
     if (audience.extra === conn.memberId) return true;
     if (audience.type === "public" && !conn.isGuest) return true;
@@ -295,6 +314,7 @@ export class RealtimeService implements OnApplicationShutdown {
   }
 
   private evictExpired(now: number): void {
-    for (const [key, value] of this.channelMembers) if (value.expiresAt <= now) this.channelMembers.delete(key);
+    for (const [key, value] of this.channelMembers)
+      if (value.expiresAt <= now) this.channelMembers.delete(key);
   }
 }

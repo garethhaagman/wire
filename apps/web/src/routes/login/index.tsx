@@ -22,7 +22,9 @@ export default function LoginRoute(): React.JSX.Element {
   const { data: session } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(() => oauthErrorMessage(searchParams.get("error")));
+  const [error, setError] = useState<string | null>(() =>
+    oauthErrorMessage(searchParams.get("error")),
+  );
   const [submitting, setSubmitting] = useState(false);
 
   if (session?.user) return <Navigate to="/workspaces" replace />;
@@ -46,7 +48,10 @@ export default function LoginRoute(): React.JSX.Element {
       description={
         <>
           Don&apos;t have an account?{" "}
-          <Link to="/signup" className="font-medium text-foreground underline-offset-4 hover:underline">
+          <Link
+            to="/signup"
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+          >
             Sign up
           </Link>
         </>
@@ -81,7 +86,10 @@ export default function LoginRoute(): React.JSX.Element {
         </div>
 
         {error ? (
-          <p role="alert" className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          <p
+            role="alert"
+            className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+          >
             {error}
           </p>
         ) : null}

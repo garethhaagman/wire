@@ -4,12 +4,12 @@ After Slack import, humans exist as **unclaimed** members with email and display
 
 ## States
 
-| `claim_status` | Meaning |
-|----------------|---------|
-| `unclaimed` | Imported only; cannot post as human until claimed |
-| `pending_invite` | Claim email sent |
-| `claimed` | Auth identity linked |
-| `merged` | Combined with existing member |
+| `claim_status`   | Meaning                                           |
+| ---------------- | ------------------------------------------------- |
+| `unclaimed`      | Imported only; cannot post as human until claimed |
+| `pending_invite` | Claim email sent                                  |
+| `claimed`        | Auth identity linked                              |
+| `merged`         | Combined with existing member                     |
 
 ## Claim triggers
 
@@ -19,11 +19,11 @@ After Slack import, humans exist as **unclaimed** members with email and display
 
 ## Conflicts
 
-| Situation | Resolution |
-|-----------|------------|
+| Situation                          | Resolution                                             |
+| ---------------------------------- | ------------------------------------------------------ |
 | Email already claimed in workspace | `import.report` warning; admin picks `skip` or `merge` |
-| Same person two Slack ids | Admin merge via `POST /members/merge` |
-| Bot mistaken for human | Reclassify → agent stub |
+| Same person two Slack ids          | Admin merge via `POST /members/merge`                  |
+| Bot mistaken for human             | Reclassify → agent stub                                |
 
 ## API
 

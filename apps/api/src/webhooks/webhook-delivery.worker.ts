@@ -1,7 +1,20 @@
 import { createHmac } from "node:crypto";
-import { Inject, Injectable, Logger, type OnApplicationBootstrap, type OnApplicationShutdown } from "@nestjs/common";
+import {
+  Inject,
+  Injectable,
+  Logger,
+  type OnApplicationBootstrap,
+  type OnApplicationShutdown,
+} from "@nestjs/common";
 import type { ApiEnv } from "@wire/config";
-import { claimDueDeliveries, completeDelivery, Database, failDelivery, pruneDeliveries, type ClaimedDelivery } from "@wire/db";
+import {
+  claimDueDeliveries,
+  completeDelivery,
+  Database,
+  failDelivery,
+  pruneDeliveries,
+  type ClaimedDelivery,
+} from "@wire/db";
 import { RepeatErrorLogger } from "../common/logging/repeat-error-logger.js";
 import { API_ENV } from "../config/env.provider.js";
 import { assertPublicHost, WebhookDeliveryError } from "./url-safety.js";
@@ -111,13 +124,18 @@ export class WebhookDeliveryWorker implements OnApplicationBootstrap, OnApplicat
         statusCode,
         error: (err as Error).message,
         retryInSeconds: this.retryDelay(delivery),
-      }).catch((dbErr: unknown) => this.logger.error(`recording webhook failure: ${(dbErr as Error).message}`));
+      }).catch((dbErr: unknown) =>
+        this.logger.error(`recording webhook failure: ${(dbErr as Error).message}`),
+      );
     }
   }
 
   /** null = give up. Full jitter over 10s * 2^attempt, capped at 6h. */
   private retryDelay(delivery: ClaimedDelivery): number | null {
-    if (delivery.attempts >= MAX_ATTEMPTS || Date.now() - delivery.createdAt.getTime() > GIVE_UP_AFTER_MS) {
+    if (
+      delivery.attempts >= MAX_ATTEMPTS ||
+      Date.now() - delivery.createdAt.getTime() > GIVE_UP_AFTER_MS
+    ) {
       return null;
     }
     const ceiling = Math.min(MAX_BACKOFF_SECONDS, 10 * 2 ** delivery.attempts);
@@ -126,7 +144,10 @@ export class WebhookDeliveryWorker implements OnApplicationBootstrap, OnApplicat
 
   private async prune(): Promise<void> {
     try {
-      while (!this.stopped && (await pruneDeliveries(this.db, DELIVERY_RETENTION_SECONDS, 5000)) > 0) {
+      while (
+        !this.stopped &&
+        (await pruneDeliveries(this.db, DELIVERY_RETENTION_SECONDS, 5000)) > 0
+      ) {
         // keep deleting in bounded batches
       }
     } catch (err) {

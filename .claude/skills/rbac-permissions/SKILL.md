@@ -40,9 +40,9 @@ You want to tighten or loosen who can call a route that already has `@RequirePer
 
 1. **Find the current decorator** on the handler — e.g. `@RequirePermission("read", "AuditEvent")`.
 2. **Decide what's changing**:
-   - *Tightening* (member loses access): remove the corresponding `can(action, subject)` line from the `member` branch in `ability.factory.ts`. The decorator on the controller usually doesn't change — the ability does.
-   - *Loosening* (member gains access): add the `can(action, subject)` line to the `member` branch.
-   - *Changing which subject/action the route itself represents* (rare — usually means the route's semantics changed, not just who can call it): update the decorator's arguments directly.
+   - _Tightening_ (member loses access): remove the corresponding `can(action, subject)` line from the `member` branch in `ability.factory.ts`. The decorator on the controller usually doesn't change — the ability does.
+   - _Loosening_ (member gains access): add the `can(action, subject)` line to the `member` branch.
+   - _Changing which subject/action the route itself represents_ (rare — usually means the route's semantics changed, not just who can call it): update the decorator's arguments directly.
 3. **Never "fix" a permission denial by switching the subject to `"all"` or the action to `"manage"`** on a single route — that's a privilege-escalation shortcut, not a fix. If a route genuinely needs broader access, that's a product decision (see Scenario 3), not a quiet code change.
 4. **Re-verify with a live request**, not just lint/typecheck — permission bugs are behavioral, not structural, and the type system can't catch "member can now do something it shouldn't". Boot the API, sign up two sessions, and hit the route as each role. (See the Verification section below for the exact commands.)
 5. **Update `internal-docs/api/permissions.md`'s matrix table** to match — it's documentation, but it's the thing a future reader trusts; a stale matrix is worse than no matrix.
@@ -51,7 +51,7 @@ You want to tighten or loosen who can call a route that already has `@RequirePer
 
 ## Scenario 3 — Adding a new role or a new permission to the model
 
-This is the scenario that actually changes the *shape* of the permission system, not just one endpoint's requirement.
+This is the scenario that actually changes the _shape_ of the permission system, not just one endpoint's requirement.
 
 ### Adding a new subject (new resource type)
 
@@ -77,7 +77,7 @@ The five actions (`manage | create | read | update | delete`) cover standard CRU
 
 ## Verification — don't skip this
 
-Permission logic is the one category of bug that typechecking, linting, and `knip` will never catch — they verify *shape*, not *who can do what*. After any change in Scenarios 1–3:
+Permission logic is the one category of bug that typechecking, linting, and `knip` will never catch — they verify _shape_, not _who can do what_. After any change in Scenarios 1–3:
 
 ```sh
 # 1. boot with a real Postgres (migrations applied)

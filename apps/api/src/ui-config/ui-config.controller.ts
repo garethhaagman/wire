@@ -4,7 +4,11 @@ import type { UiConfigResource } from "@wire/types";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { UiConfigService } from "./ui-config.service.js";
-import { UiConfigResourceDto, UpdateOrgUiConfigRequestDto, UpdateUserUiConfigRequestDto } from "./dto/ui-config.dto.js";
+import {
+  UiConfigResourceDto,
+  UpdateOrgUiConfigRequestDto,
+  UpdateUserUiConfigRequestDto,
+} from "./dto/ui-config.dto.js";
 
 /**
  * Server-resolved config, per internal-docs/ui/config-schema.md "Resolution

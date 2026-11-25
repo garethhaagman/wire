@@ -8,17 +8,17 @@ Every authenticated endpoint declares the exact CASL `(action, subject)` permiss
 
 ## The pieces
 
-| File | Role |
-|------|------|
-| `apps/api/src/permissions/permission.types.ts` | The action/subject vocabulary (`PermissionAction`, `PermissionSubject`) and the `AppAbility` type |
-| `apps/api/src/permissions/ability.factory.ts` | `defineAbilityFor(role)` — builds a CASL ability via `AbilityBuilder`; this is the one place role→permission composition lives |
-| `apps/api/src/permissions/workspace-scope.decorator.ts` | `@WorkspaceScope(...)` — tells the guard how to get from a route's channel/message/file id back to its workspace. Routes with a `:workspaceId` param need nothing |
-| `apps/api/src/permissions/scope-resolver.service.ts` | Resolves resource → workspace (immutable, so memoized in an in-process LRU) |
-| `apps/api/src/permissions/member-resolver.service.ts` | Resolves the caller's active `Member` in that workspace (Redis-cached, invalidated on member changes); claims a pending email invite on first access |
-| `apps/api/src/permissions/actor.ts` | `@CurrentActor()` / `@CurrentUser()` — the resolved caller (user, member, role) for handlers |
-| `apps/api/src/permissions/require-permission.decorator.ts` | `@RequirePermission(action, subject)` — a `Reflector.createDecorator`-based decorator, the canonical NestJS pattern |
-| `apps/api/src/permissions/permissions.guard.ts` | Global guard — resolves workspace + membership (404 for non-members), derives role, checks the ability, throws `403 PERMISSION_DENIED` on failure |
-| `apps/api/src/auth/public.decorator.ts` | `@Public()` — exempts a route from both `SessionGuard` and `PermissionsGuard` (health checks only, today) |
+| File                                                       | Role                                                                                                                                                              |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/api/src/permissions/permission.types.ts`             | The action/subject vocabulary (`PermissionAction`, `PermissionSubject`) and the `AppAbility` type                                                                 |
+| `apps/api/src/permissions/ability.factory.ts`              | `defineAbilityFor(role)` — builds a CASL ability via `AbilityBuilder`; this is the one place role→permission composition lives                                    |
+| `apps/api/src/permissions/workspace-scope.decorator.ts`    | `@WorkspaceScope(...)` — tells the guard how to get from a route's channel/message/file id back to its workspace. Routes with a `:workspaceId` param need nothing |
+| `apps/api/src/permissions/scope-resolver.service.ts`       | Resolves resource → workspace (immutable, so memoized in an in-process LRU)                                                                                       |
+| `apps/api/src/permissions/member-resolver.service.ts`      | Resolves the caller's active `Member` in that workspace (Redis-cached, invalidated on member changes); claims a pending email invite on first access              |
+| `apps/api/src/permissions/actor.ts`                        | `@CurrentActor()` / `@CurrentUser()` — the resolved caller (user, member, role) for handlers                                                                      |
+| `apps/api/src/permissions/require-permission.decorator.ts` | `@RequirePermission(action, subject)` — a `Reflector.createDecorator`-based decorator, the canonical NestJS pattern                                               |
+| `apps/api/src/permissions/permissions.guard.ts`            | Global guard — resolves workspace + membership (404 for non-members), derives role, checks the ability, throws `403 PERMISSION_DENIED` on failure                 |
+| `apps/api/src/auth/public.decorator.ts`                    | `@Public()` — exempts a route from both `SessionGuard` and `PermissionsGuard` (health checks only, today)                                                         |
 
 ## Actions and subjects
 
@@ -27,9 +27,23 @@ type PermissionAction = "manage" | "create" | "read" | "update" | "delete";
 
 type PermissionSubject =
   | "all" // CASL wildcard — only used by admin's `can("manage", "all")`
-  | "Workspace" | "Member" | "Channel" | "ChannelMember" | "Message" | "Thread"
-  | "Reaction" | "Pin" | "Bookmark" | "Agent" | "File" | "Search"
-  | "WebhookEndpoint" | "AuditEvent" | "UiConfig" | "Event" | "Presence";
+  | "Workspace"
+  | "Member"
+  | "Channel"
+  | "ChannelMember"
+  | "Message"
+  | "Thread"
+  | "Reaction"
+  | "Pin"
+  | "Bookmark"
+  | "Agent"
+  | "File"
+  | "Search"
+  | "WebhookEndpoint"
+  | "AuditEvent"
+  | "UiConfig"
+  | "Event"
+  | "Presence";
 ```
 
 One subject per controller/resource. `manage` is CASL's wildcard action (implies every other action on that subject) — used only in the admin rule.
@@ -38,24 +52,24 @@ One subject per controller/resource. `manage` is CASL's wildcard action (implies
 
 Workspace member roles `owner` and `admin` map to the CASL `admin` role; `member` and `guest` map to `member`.
 
-| Subject | admin | member |
-|---------|-------|--------|
-| Workspace | manage | create, read |
-| Member | manage | read, update — **not** create (inviting is admin-only); the service limits non-admins to their own `displayName` |
-| Channel | manage | create, read, update — archive/unarchive (`delete`) is admin-only; renaming requires channel membership |
-| ChannelMember | manage | create, read, update (own read cursor), delete — removing someone else is admin-only (service rule) |
-| Message | manage | create, read, update, delete — the service limits members to their own messages; admins can delete but never edit others' |
-| Thread | manage | create, read, update (own read cursor) |
-| Reaction | manage | create, read, delete |
-| Pin | manage | create, read, delete |
-| Bookmark | manage | create, read, delete — always the caller's own |
-| Agent | manage | create, read — update/delete (pause, retire) are admin-only |
-| File | manage | create, read |
-| Search | manage | read |
-| Event / Presence | manage | read / create, read |
-| AuditEvent | manage | **read** — explicit product decision, not a default; see below |
-| UiConfig | manage | read, update (own layer) — the org layer (`manage`) is admin-only |
-| WebhookEndpoint | manage | **no permissions at all** — admin-only |
+| Subject          | admin  | member                                                                                                                    |
+| ---------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| Workspace        | manage | create, read                                                                                                              |
+| Member           | manage | read, update — **not** create (inviting is admin-only); the service limits non-admins to their own `displayName`          |
+| Channel          | manage | create, read, update — archive/unarchive (`delete`) is admin-only; renaming requires channel membership                   |
+| ChannelMember    | manage | create, read, update (own read cursor), delete — removing someone else is admin-only (service rule)                       |
+| Message          | manage | create, read, update, delete — the service limits members to their own messages; admins can delete but never edit others' |
+| Thread           | manage | create, read, update (own read cursor)                                                                                    |
+| Reaction         | manage | create, read, delete                                                                                                      |
+| Pin              | manage | create, read, delete                                                                                                      |
+| Bookmark         | manage | create, read, delete — always the caller's own                                                                            |
+| Agent            | manage | create, read — update/delete (pause, retire) are admin-only                                                               |
+| File             | manage | create, read                                                                                                              |
+| Search           | manage | read                                                                                                                      |
+| Event / Presence | manage | read / create, read                                                                                                       |
+| AuditEvent       | manage | **read** — explicit product decision, not a default; see below                                                            |
+| UiConfig         | manage | read, update (own layer) — the org layer (`manage`) is admin-only                                                         |
+| WebhookEndpoint  | manage | **no permissions at all** — admin-only                                                                                    |
 
 `admin`'s single `can("manage", "all")` rule covers every subject; `member`'s rules are listed explicitly in `ability.factory.ts` — there is no implicit grant.
 

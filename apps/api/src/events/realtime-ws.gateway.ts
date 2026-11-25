@@ -66,7 +66,8 @@ export class RealtimeWsGateway implements OnGatewayConnection, OnGatewayDisconne
       const types = toStringArray(query.types);
       const channelIds = toStringArray(query.channel_ids);
       const afterSeqRaw = Array.isArray(query.after_seq) ? query.after_seq[0] : query.after_seq;
-      const afterSeq = afterSeqRaw !== undefined && /^\d+$/.test(afterSeqRaw) ? Number(afterSeqRaw) : null;
+      const afterSeq =
+        afterSeqRaw !== undefined && /^\d+$/.test(afterSeqRaw) ? Number(afterSeqRaw) : null;
 
       const sink = new WsSink(client);
       const { close } = await this.realtime.attachSink(actor, sink, {

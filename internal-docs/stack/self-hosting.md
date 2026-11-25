@@ -2,15 +2,15 @@
 
 ## What "no managed services" actually commits to
 
-| Concern | Managed-service default (rejected) | Wire's self-hosted substitute |
-|---------|--------------------------------------|-------------------------------|
-| Relational + vector + search DB | RDS/Cloud SQL + Pinecone/Weaviate | Single **Postgres** container (`pgvector` + `tsvector`), [architecture.md](./architecture.md) |
-| Object storage | S3/GCS | **MinIO** or **Garage** (S3-compatible) |
-| Queue | SQS/Managed Kafka/Cloud Tasks | Postgres-backed job table, promotable to **NATS** |
-| Cache / pub/sub | ElastiCache/Memorystore | Single **Redis** container — reconstructible state only, no persistence or backups required |
-| TLS/certs | ACM | **Caddy** or cert-manager + self-hosted ACME (Let's Encrypt is fine — it's a protocol, not a managed compute service) |
-| Secrets | Cloud KMS/Secrets Manager | **age**-encrypted Pulumi secrets or self-hosted **Vault** |
-| Observability | Datadog/Cloud-native APM | Self-hosted **Grafana + Loki + Tempo** (or just structured JSON logs + Postgres-queryable traces for the smallest deployments) |
+| Concern                         | Managed-service default (rejected) | Wire's self-hosted substitute                                                                                                  |
+| ------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Relational + vector + search DB | RDS/Cloud SQL + Pinecone/Weaviate  | Single **Postgres** container (`pgvector` + `tsvector`), [architecture.md](./architecture.md)                                  |
+| Object storage                  | S3/GCS                             | **MinIO** or **Garage** (S3-compatible)                                                                                        |
+| Queue                           | SQS/Managed Kafka/Cloud Tasks      | Postgres-backed job table, promotable to **NATS**                                                                              |
+| Cache / pub/sub                 | ElastiCache/Memorystore            | Single **Redis** container — reconstructible state only, no persistence or backups required                                    |
+| TLS/certs                       | ACM                                | **Caddy** or cert-manager + self-hosted ACME (Let's Encrypt is fine — it's a protocol, not a managed compute service)          |
+| Secrets                         | Cloud KMS/Secrets Manager          | **age**-encrypted Pulumi secrets or self-hosted **Vault**                                                                      |
+| Observability                   | Datadog/Cloud-native APM           | Self-hosted **Grafana + Loki + Tempo** (or just structured JSON logs + Postgres-queryable traces for the smallest deployments) |
 
 This is a real operational commitment: Wire (the company) or the self-hosting customer now owns backup verification, Postgres major-version upgrades, and incident response for all of the above. That's the trade being made for zero cloud-vendor dependency and a credible on-prem/VPC story — see [architecture.md](./architecture.md) for why that trade matters for the target buyer.
 

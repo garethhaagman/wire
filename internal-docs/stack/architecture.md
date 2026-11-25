@@ -32,14 +32,14 @@ The cost: Wire owns operational concerns (backups, failover, upgrades) that mana
 └─────────────┘
 ```
 
-| Service | Responsibility | Status | Maps to spec |
-|---------|-----------------|--------|--------------|
-| `api` | HTTP + SSE surface, auth, RBAC; with `RUN_WORKERS=true` also runs the outbox relay and webhook delivery | Running | `api/openapi.yaml` |
-| `postgres` | Single system of record: relational + `tsvector` (+ `pgvector` later); also the job queue (`SKIP LOCKED` tables) | Running | `data-model/` |
-| `redis` | Reconstructible state only: session cache, rate limits, idempotency keys, presence, membership cache, realtime pub/sub fan-out. The API fails open if it's down | Running | [data-model/scaling.md](../data-model/scaling.md) |
-| `worker` | Agent runs, automation execution, import pipeline, indexing | Planned | `product/03-agents.md`, `automations/`, `import/` |
-| `mcp-server` | MCP tools/resources/prompts, proxies to `api` | Planned | `mcp/` |
-| `object-store` | File uploads, import zips, exports (self-hosted S3-compatible, e.g. MinIO/Garage) | Planned | `import/`, Files in `data-model/` |
+| Service        | Responsibility                                                                                                                                                  | Status  | Maps to spec                                      |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------- |
+| `api`          | HTTP + SSE surface, auth, RBAC; with `RUN_WORKERS=true` also runs the outbox relay and webhook delivery                                                         | Running | `api/openapi.yaml`                                |
+| `postgres`     | Single system of record: relational + `tsvector` (+ `pgvector` later); also the job queue (`SKIP LOCKED` tables)                                                | Running | `data-model/`                                     |
+| `redis`        | Reconstructible state only: session cache, rate limits, idempotency keys, presence, membership cache, realtime pub/sub fan-out. The API fails open if it's down | Running | [data-model/scaling.md](../data-model/scaling.md) |
+| `worker`       | Agent runs, automation execution, import pipeline, indexing                                                                                                     | Planned | `product/03-agents.md`, `automations/`, `import/` |
+| `mcp-server`   | MCP tools/resources/prompts, proxies to `api`                                                                                                                   | Planned | `mcp/`                                            |
+| `object-store` | File uploads, import zips, exports (self-hosted S3-compatible, e.g. MinIO/Garage)                                                                               | Planned | `import/`, Files in `data-model/`                 |
 
 The queue is **Postgres-backed** (`SKIP LOCKED` job tables — `events` outbox and `webhook_deliveries` today) to avoid a third stateful system; promote to NATS/Redis Streams only if queue depth or latency demands it. Redis is deliberately not a system of record: losing it costs cache warmth and in-flight presence, never data. Scaling details live in [data-model/scaling.md](../data-model/scaling.md).
 

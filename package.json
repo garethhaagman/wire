@@ -25,8 +25,8 @@
     "lint:oxlint": "oxlint",
     "test": "turbo run test",
     "knip": "knip",
-    "format": "prettier --write \"**/*.{ts,tsx,md,json,yml,yaml}\" --ignore-path .gitignore",
-    "format:check": "prettier --check \"**/*.{ts,tsx,md,json,yml,yaml}\" --ignore-path .gitignore",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json,yml,yaml}\" --ignore-path .gitignore --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md,json,yml,yaml}\" --ignore-path .gitignore --ignore-path .prettierignore",
     "doctor": "npx react-doctor@latest"
   },
   "devDependencies": {

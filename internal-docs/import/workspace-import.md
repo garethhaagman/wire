@@ -13,9 +13,9 @@ Imports are **async jobs** with validation, dry-run, progress, error reports, an
 
 ## Supported sources (v0.1)
 
-| `source_format` | Description |
-|-----------------|-------------|
-| `slack_workspace_export_zip` | Standard **Export workspace data** zip (JSON). **Primary.** |
+| `source_format`                      | Description                                                          |
+| ------------------------------------ | -------------------------------------------------------------------- |
+| `slack_workspace_export_zip`         | Standard **Export workspace data** zip (JSON). **Primary.**          |
 | `slack_enterprise_compliance_export` | Enterprise Grid compliance / eDiscovery bulk JSON. **Planned** v0.2. |
 
 Normative field mapping for the zip layout: [import/slack-admin-export.md](../import/slack-admin-export.md).
@@ -26,12 +26,12 @@ Normative field mapping for the zip layout: [import/slack-admin-export.md](../im
 
 All imported content preserves **original timestamps** from the export. Wire never rewrites history to “now” at import time.
 
-| Wire field | Semantics |
-|------------|-----------|
+| Wire field          | Semantics                                                                                       |
+| ------------------- | ----------------------------------------------------------------------------------------------- |
 | `source_created_at` | Timestamp from source (`ts`, `created`, file mtime). **Authoritative for ordering and search.** |
-| `created_at` | Equals `source_created_at` for imported rows (not wall-clock import time). |
-| `imported_at` | When Wire ingested the row (audit only). |
-| `source_edited_at` | From Slack `edited.ts` when present. |
+| `created_at`        | Equals `source_created_at` for imported rows (not wall-clock import time).                      |
+| `imported_at`       | When Wire ingested the row (audit only).                                                        |
+| `source_edited_at`  | From Slack `edited.ts` when present.                                                            |
 
 Rules:
 
@@ -50,13 +50,13 @@ Slack `ts` strings (e.g. `1363085255.000176`) map to RFC3339 UTC with microsecon
 
 From `users.json` (and bot users where configured):
 
-| Slack field | Wire |
-|-------------|------|
-| `id` | `ExternalMapping.source_id` → `member_id` |
-| `profile.email` | `Member.email` (normalized) |
-| `name` / `real_name` | `display_name`, optional `handle` |
-| `is_bot` | `Member` with `member_kind: bot` or map to `Agent` stub |
-| `deleted` | `Member.status: deactivated` (retain messages) |
+| Slack field          | Wire                                                    |
+| -------------------- | ------------------------------------------------------- |
+| `id`                 | `ExternalMapping.source_id` → `member_id`               |
+| `profile.email`      | `Member.email` (normalized)                             |
+| `name` / `real_name` | `display_name`, optional `handle`                       |
+| `is_bot`             | `Member` with `member_kind: bot` or map to `Agent` stub |
+| `deleted`            | `Member.status: deactivated` (retain messages)          |
 
 **Claim flow**
 
@@ -79,16 +79,16 @@ From `users.json` (and bot users where configured):
 upload → validate → plan → ingest → reconcile → index → complete
 ```
 
-| Phase | Actions |
-|-------|---------|
-| **validate** | Zip structure, JSON schema, size caps, malware scan |
-| **plan** | Count users/channels/messages; estimate duration; detect unsupported features |
-| **ingest users** | Members, bots, external mappings |
-| **ingest channels** | public/private/archive state; topics; purposes |
-| **ingest messages** | Per-channel JSON; threads via `thread_ts`; reactions; files |
-| **ingest dms** | `dms.json` + dm conversation folders |
-| **reconcile** | Permalinks, @mentions via mapping table, thread parent links |
-| **index** | Search chunks with `source_created_at`; optional defer embed batch |
+| Phase               | Actions                                                                       |
+| ------------------- | ----------------------------------------------------------------------------- |
+| **validate**        | Zip structure, JSON schema, size caps, malware scan                           |
+| **plan**            | Count users/channels/messages; estimate duration; detect unsupported features |
+| **ingest users**    | Members, bots, external mappings                                              |
+| **ingest channels** | public/private/archive state; topics; purposes                                |
+| **ingest messages** | Per-channel JSON; threads via `thread_ts`; reactions; files                   |
+| **ingest dms**      | `dms.json` + dm conversation folders                                          |
+| **reconcile**       | Permalinks, @mentions via mapping table, thread parent links                  |
+| **index**           | Search chunks with `source_created_at`; optional defer embed batch            |
 
 Re-import: same `source_workspace_key` (Slack team id) with `mode: merge` or `replace_history` (admin-only).
 
@@ -96,15 +96,15 @@ Re-import: same `source_workspace_key` (Slack team id) with `mode: merge` or `re
 
 ## API surface (summary)
 
-| Endpoint | Purpose |
-|----------|---------|
-| `POST /import-uploads` | Multipart or signed URL for export zip |
-| `POST /imports` | Start job (`upload_id`, `source_format`, `options`) |
-| `GET /imports/{id}` | Status, progress, errors |
-| `POST /imports/{id}/validate` | Dry-run only |
+| Endpoint                       | Purpose                                             |
+| ------------------------------ | --------------------------------------------------- |
+| `POST /import-uploads`         | Multipart or signed URL for export zip              |
+| `POST /imports`                | Start job (`upload_id`, `source_format`, `options`) |
+| `GET /imports/{id}`            | Status, progress, errors                            |
+| `POST /imports/{id}/validate`  | Dry-run only                                        |
 | `POST /workspaces/from-import` | **Primary provision**: org + workspace + import job |
-| `GET /imports/{id}/report` | CSV/JSON of failures and warnings |
-| `GET /imports/{id}/mappings` | Slack id → Wire id map (admin) |
+| `GET /imports/{id}/report`     | CSV/JSON of failures and warnings                   |
+| `GET /imports/{id}/mappings`   | Slack id → Wire id map (admin)                      |
 
 OpenAPI is canonical; scopes: `admin:workspace`, `imports:write`, `imports:read`.
 
@@ -112,15 +112,15 @@ OpenAPI is canonical; scopes: `admin:workspace`, `imports:write`, `imports:read`
 
 ## Options (`ImportOptions`)
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `backdate_timestamps` | `true` | Must stay true for Slack export; disables only for tests |
-| `import_files` | `true` | Download file URLs from export metadata when still available |
-| `import_dms` | `true` | Include IM/mpim |
-| `import_private_channels` | `true` | Requires complete export |
-| `map_bots_to_agents` | `false` | Create agent stubs for bot users |
-| `suppress_events` | `true` | No per-message webhooks during ingest |
-| `create_unclaimed_members` | `true` | Primary user capture |
+| Option                     | Default | Description                                                  |
+| -------------------------- | ------- | ------------------------------------------------------------ |
+| `backdate_timestamps`      | `true`  | Must stay true for Slack export; disables only for tests     |
+| `import_files`             | `true`  | Download file URLs from export metadata when still available |
+| `import_dms`               | `true`  | Include IM/mpim                                              |
+| `import_private_channels`  | `true`  | Requires complete export                                     |
+| `map_bots_to_agents`       | `false` | Create agent stubs for bot users                             |
+| `suppress_events`          | `true`  | No per-message webhooks during ingest                        |
+| `create_unclaimed_members` | `true`  | Primary user capture                                         |
 
 ---
 
@@ -135,13 +135,13 @@ OpenAPI is canonical; scopes: `admin:workspace`, `imports:write`, `imports:read`
 
 ## Limitations (v0.1)
 
-| Slack artifact | Wire v0.1 |
-|----------------|-----------|
-| Huddles / clips | Skipped (logged in report) |
-| Canvas | Links preserved; body **planned** v0.2 |
-| Workflow messages | Imported as messages; workflow re-creation N/A |
+| Slack artifact                 | Wire v0.1                                           |
+| ------------------------------ | --------------------------------------------------- |
+| Huddles / clips                | Skipped (logged in report)                          |
+| Canvas                         | Links preserved; body **planned** v0.2              |
+| Workflow messages              | Imported as messages; workflow re-creation N/A      |
 | Live Connect / shared channels | Not in standard export; **planned** enterprise path |
-| Message threads > export depth | All JSON files in export are processed |
+| Message threads > export depth | All JSON files in export are processed              |
 
 ---
 

@@ -49,7 +49,9 @@ function toMessage(row: MessageRow): Message {
 }
 
 export async function findMessage(db: Queryable, id: string): Promise<Message | null> {
-  const { rows } = await db.query<MessageRow>(`select ${COLUMNS} from messages where id = $1`, [id]);
+  const { rows } = await db.query<MessageRow>(`select ${COLUMNS} from messages where id = $1`, [
+    id,
+  ]);
   return rows[0] ? toMessage(rows[0]) : null;
 }
 
@@ -161,7 +163,10 @@ export async function listChannelMessages(
      limit $4`,
     [channelId, options.beforeSeq ?? null, options.afterSeq ?? null, options.limit + 1],
   );
-  return { items: rows.slice(0, options.limit).map(toMessage), hasMore: rows.length > options.limit };
+  return {
+    items: rows.slice(0, options.limit).map(toMessage),
+    hasMore: rows.length > options.limit,
+  };
 }
 
 /** Thread replies, oldest first, keyset-paginated on seq. */
@@ -177,7 +182,10 @@ export async function listThreadReplies(
      limit $3`,
     [threadRootId, options.afterSeq ?? null, options.limit + 1],
   );
-  return { items: rows.slice(0, options.limit).map(toMessage), hasMore: rows.length > options.limit };
+  return {
+    items: rows.slice(0, options.limit).map(toMessage),
+    hasMore: rows.length > options.limit,
+  };
 }
 
 export type EditMessageResult =

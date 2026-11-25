@@ -7,7 +7,7 @@ Confirmed direction. Target buyer is a developer or platform engineer already bu
 ### Why this wedge fits the product as specced
 
 - The **MCP server** (`mcp/`) is a self-serve, zero-sales-call distribution surface: `npx @wire/mcp-server`, point Claude/Cursor/custom runner at it, done. This is the single best PLG hook in the spec and should be the headline of every dev-facing GTM asset.
-- **API-first** means there's a real product to try without talking to sales — `product/01-vision.md`'s own success metric is "time-to-first-agent-message via API &lt; 15 minutes for a new developer." That metric *is* the PLG funnel's top-of-funnel conversion target; instrument it.
+- **API-first** means there's a real product to try without talking to sales — `product/01-vision.md`'s own success metric is "time-to-first-agent-message via API &lt; 15 minutes for a new developer." That metric _is_ the PLG funnel's top-of-funnel conversion target; instrument it.
 - **Harness-neutral** (Claude, OpenAI, custom HTTP) matters to this buyer specifically — they've likely already got opinions about model choice and don't want lock-in.
 
 ### Who, concretely
@@ -18,8 +18,8 @@ Confirmed direction. Target buyer is a developer or platform engineer already bu
 
 ### Not the initial wedge (sequence later)
 
-- **Slack-dissatisfied orgs / migration buyers** (IT/ops-led, lead with import tool) — real opportunity, but the import tool's value compounds *after* there's a credible agent-native product people already trust; leading with "replace Slack" invites feature-parity scrutiny before Wire has earned it. Revisit once feature parity (`product/05-feature-parity.md`) closes more gaps, especially the acknowledged ones (notification delivery, link unfurl, custom emoji).
-- **AI-ops/compliance buyers** (eng leadership, governance angle) — this is where Enterprise tier revenue comes from ([pricing/packaging.md](../pricing/packaging.md)), but it's a *follow-on* sale into accounts that adopted bottom-up first, via the same "every agent action has an `agent_run_id` in audit logs" feature — not a cold-start wedge, since compliance buyers want proof of production usage, not a spec.
+- **Slack-dissatisfied orgs / migration buyers** (IT/ops-led, lead with import tool) — real opportunity, but the import tool's value compounds _after_ there's a credible agent-native product people already trust; leading with "replace Slack" invites feature-parity scrutiny before Wire has earned it. Revisit once feature parity (`product/05-feature-parity.md`) closes more gaps, especially the acknowledged ones (notification delivery, link unfurl, custom emoji).
+- **AI-ops/compliance buyers** (eng leadership, governance angle) — this is where Enterprise tier revenue comes from ([pricing/packaging.md](../pricing/packaging.md)), but it's a _follow-on_ sale into accounts that adopted bottom-up first, via the same "every agent action has an `agent_run_id` in audit logs" feature — not a cold-start wedge, since compliance buyers want proof of production usage, not a spec.
 
 ## Anti-ICP (don't chase)
 

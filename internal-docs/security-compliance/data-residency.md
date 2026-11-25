@@ -2,7 +2,7 @@
 
 ## What's already specified
 
-`api/auth-tenancy.md` defines `data_region` as a workspace setting (`us`, `eu`) that "pins storage and search," with `X-Wire-Region` echoed on responses. That's the *policy* surface. This doc covers the *enforcement* surface, which matters more once the stack is self-hosted-by-default ([stack/](../stack/)) rather than a multi-region managed cloud.
+`api/auth-tenancy.md` defines `data_region` as a workspace setting (`us`, `eu`) that "pins storage and search," with `X-Wire-Region` echoed on responses. That's the _policy_ surface. This doc covers the _enforcement_ surface, which matters more once the stack is self-hosted-by-default ([stack/](../stack/)) rather than a multi-region managed cloud.
 
 ## Self-hosted changes what "region pinning" means
 
@@ -17,11 +17,11 @@ In a managed multi-region SaaS, `data_region` would route to a regional database
 
 The common case — one self-hosted deployment serving one org's multiple workspaces on one Postgres instance (per `stack/architecture.md`) — needs explicit isolation guarantees that aren't yet written anywhere:
 
-| Isolation concern | Current state | Needed |
-|---------------------|----------------|--------|
-| **Row-level tenant isolation** | `workspace_id` FK on every table (`data-model/data-model.md`) | Postgres **Row-Level Security (RLS)** policies keyed on `workspace_id`, not just application-layer `WHERE` clauses — defense in depth against a query-layer bug leaking cross-workspace rows |
-| **Noisy-neighbor resource caps** | Workspace-level rate limits exist for automations (1000/min) | No documented cap on agent-run concurrency, search query load, or storage per workspace sharing one self-hosted Postgres instance — a single workspace's runaway agent could degrade every other workspace on the same deployment |
-| **Search/vector index isolation** | `acl_channel_ids` on `search_chunks` (`data-model/data-model.md`) | Confirmed row-level, which is good — but `pgvector` index performance on a shared table across many workspaces should be load-tested; may need per-workspace partitioning if a deployment hosts many large workspaces |
+| Isolation concern                 | Current state                                                     | Needed                                                                                                                                                                                                                            |
+| --------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Row-level tenant isolation**    | `workspace_id` FK on every table (`data-model/data-model.md`)     | Postgres **Row-Level Security (RLS)** policies keyed on `workspace_id`, not just application-layer `WHERE` clauses — defense in depth against a query-layer bug leaking cross-workspace rows                                      |
+| **Noisy-neighbor resource caps**  | Workspace-level rate limits exist for automations (1000/min)      | No documented cap on agent-run concurrency, search query load, or storage per workspace sharing one self-hosted Postgres instance — a single workspace's runaway agent could degrade every other workspace on the same deployment |
+| **Search/vector index isolation** | `acl_channel_ids` on `search_chunks` (`data-model/data-model.md`) | Confirmed row-level, which is good — but `pgvector` index performance on a shared table across many workspaces should be load-tested; may need per-workspace partitioning if a deployment hosts many large workspaces             |
 
 Recommend adding RLS policies to the `packages/db` migration set ([stack/monorepo-layout.md](../stack/monorepo-layout.md)) as a baseline hardening step — cheap to add now, expensive to retrofit after data exists.
 

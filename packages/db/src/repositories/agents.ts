@@ -46,7 +46,11 @@ export async function listAgents(
   return { items: rows.rows.map(toAgent), total: count.rows[0]?.total ?? 0 };
 }
 
-export async function findAgent(db: Queryable, workspaceId: string, id: string): Promise<Agent | null> {
+export async function findAgent(
+  db: Queryable,
+  workspaceId: string,
+  id: string,
+): Promise<Agent | null> {
   const { rows } = await db.query<AgentRow>(
     `select * from agents where workspace_id = $1 and id = $2 and status <> 'deleted'`,
     [workspaceId, id],
@@ -55,7 +59,11 @@ export async function findAgent(db: Queryable, workspaceId: string, id: string):
 }
 
 /** Used by @handle mention parsing on message post — only active agents can be triggered. */
-export async function findAgentByHandle(db: Queryable, workspaceId: string, handle: string): Promise<Agent | null> {
+export async function findAgentByHandle(
+  db: Queryable,
+  workspaceId: string,
+  handle: string,
+): Promise<Agent | null> {
   const { rows } = await db.query<AgentRow>(
     `select * from agents where workspace_id = $1 and handle = $2 and status = 'active'`,
     [workspaceId, handle],

@@ -24,29 +24,37 @@ export interface WorkspaceActor extends RequestActor {
 function actorFrom(ctx: ExecutionContext): RequestActor {
   const actor = ctx.switchToHttp().getRequest<AuthedRequest>().actor;
   if (!actor) {
-    throw new ApiException("INTERNAL_ERROR", "Request actor was not resolved.", HttpStatus.INTERNAL_SERVER_ERROR);
+    throw new ApiException(
+      "INTERNAL_ERROR",
+      "Request actor was not resolved.",
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
   return actor;
 }
 
 /** The caller on any authenticated route. */
-export const CurrentUser = createParamDecorator((_data: unknown, ctx: ExecutionContext): RequestActor => actorFrom(ctx));
+export const CurrentUser = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext): RequestActor => actorFrom(ctx),
+);
 
 /**
  * The caller on a workspace-scoped route. Using it on a route without a workspace
  * scope is a wiring bug and fails loudly rather than acting without tenancy.
  */
-export const CurrentActor = createParamDecorator((_data: unknown, ctx: ExecutionContext): WorkspaceActor => {
-  const actor = actorFrom(ctx);
-  if (!actor.workspaceId || !actor.member) {
-    throw new ApiException(
-      "INTERNAL_ERROR",
-      "This endpoint is missing a workspace scope declaration.",
-      HttpStatus.INTERNAL_SERVER_ERROR,
-    );
-  }
-  return actor as WorkspaceActor;
-});
+export const CurrentActor = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext): WorkspaceActor => {
+    const actor = actorFrom(ctx);
+    if (!actor.workspaceId || !actor.member) {
+      throw new ApiException(
+        "INTERNAL_ERROR",
+        "This endpoint is missing a workspace scope declaration.",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+    return actor as WorkspaceActor;
+  },
+);
 
 export function isAdmin(actor: RequestActor): boolean {
   return actor.role === "admin";

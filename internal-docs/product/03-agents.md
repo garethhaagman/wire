@@ -16,12 +16,12 @@ Agent
 
 ## Agent vs service account
 
-| | Agent | Service account |
-|---|--------|------------------|
-| Purpose | LLM-driven or tool-orchestrated actor | Deterministic integration |
-| Harness | Required (or explicit `deterministic` mode) | N/A |
-| Visible in UI | Yes, with "bot" styling | Often hidden |
-| Agent runs | Yes | No |
+|               | Agent                                       | Service account           |
+| ------------- | ------------------------------------------- | ------------------------- |
+| Purpose       | LLM-driven or tool-orchestrated actor       | Deterministic integration |
+| Harness       | Required (or explicit `deterministic` mode) | N/A                       |
+| Visible in UI | Yes, with "bot" styling                     | Often hidden              |
+| Agent runs    | Yes                                         | No                        |
 
 Service accounts may still post via API; agents add **runs**, **tool traces**, and **approval flows**.
 

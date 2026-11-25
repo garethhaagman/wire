@@ -1,7 +1,19 @@
-import { Inject, Injectable, Logger, type OnApplicationBootstrap, type OnApplicationShutdown } from "@nestjs/common";
+import {
+  Inject,
+  Injectable,
+  Logger,
+  type OnApplicationBootstrap,
+  type OnApplicationShutdown,
+} from "@nestjs/common";
 import type { Redis } from "ioredis";
 import { API_VERSION, type ApiEnv } from "@wire/config";
-import { claimUnpublishedEvents, Database, enqueueWebhookDeliveries, markEventsPublished, pruneEvents } from "@wire/db";
+import {
+  claimUnpublishedEvents,
+  Database,
+  enqueueWebhookDeliveries,
+  markEventsPublished,
+  pruneEvents,
+} from "@wire/db";
 import type { WireEvent } from "@wire/types";
 import { RepeatErrorLogger } from "../common/logging/repeat-error-logger.js";
 import { API_ENV } from "../config/env.provider.js";
@@ -105,7 +117,12 @@ export class OutboxRelayService implements OnApplicationBootstrap, OnApplication
       }
       await pipeline.exec();
     } catch (err) {
-      warnRedisFailure(this.redis, this.logger, "realtime publish failed (clients will resync on reconnect)", err);
+      warnRedisFailure(
+        this.redis,
+        this.logger,
+        "realtime publish failed (clients will resync on reconnect)",
+        err,
+      );
     }
   }
 

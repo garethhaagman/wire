@@ -13,7 +13,8 @@ import type { IconPack } from "@wire/ui-config";
  * (code) separate. `custom` packs resolve to a generic <img>-based renderer
  * against the org's sprite sheet instead of a bundled component set.
  */
-export type IconName = "hash" | "lock" | "search" | "plus" | "settings" | "send" | "chevron-right" | "message-square";
+export type IconName =
+  "hash" | "lock" | "search" | "plus" | "settings" | "send" | "chevron-right" | "message-square";
 
 const lucideIcons: Record<IconName, LucideIcon> = {
   hash: Lucide.Hash,
@@ -26,7 +27,15 @@ const lucideIcons: Record<IconName, LucideIcon> = {
   "message-square": Lucide.MessageSquare,
 };
 
-function CustomSpriteIcon({ name, spriteUrl, className }: { name: IconName; spriteUrl: string; className: string }): React.JSX.Element {
+function CustomSpriteIcon({
+  name,
+  spriteUrl,
+  className,
+}: {
+  name: IconName;
+  spriteUrl: string;
+  className: string;
+}): React.JSX.Element {
   return (
     <svg className={className} aria-hidden="true">
       <use href={`${spriteUrl}#${name}`} />
@@ -41,7 +50,9 @@ export interface IconRegistry {
 export function createIconRegistry(pack: IconPack): IconRegistry {
   if (pack.kind === "custom") {
     return {
-      Icon: ({ name, className = "" }) => <CustomSpriteIcon name={name} spriteUrl={pack.spriteUrl} className={className} />,
+      Icon: ({ name, className = "" }) => (
+        <CustomSpriteIcon name={name} spriteUrl={pack.spriteUrl} className={className} />
+      ),
     };
   }
 

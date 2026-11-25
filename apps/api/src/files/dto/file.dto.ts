@@ -29,7 +29,10 @@ export class FileDto implements WireFile {
   @ApiProperty({ example: 2_458_112, description: "Size in bytes" })
   sizeBytes!: number;
 
-  @ApiProperty({ example: true, description: "False until confirmUpload() verifies the blob actually landed in storage." })
+  @ApiProperty({
+    example: true,
+    description: "False until confirmUpload() verifies the blob actually landed in storage.",
+  })
   sizeConfirmed!: boolean;
 
   @ApiProperty({ enum: ["pending", "clean", "infected"] })
@@ -65,7 +68,10 @@ export class CreateUploadResponseDto implements CreateUploadResponse {
   @ApiProperty({ type: () => FileDto })
   file!: WireFile;
 
-  @ApiProperty({ example: "https://wire-files.s3.us-east-1.amazonaws.com/ws_64d9.../blob_01jd5x...?X-Amz-Signature=..." })
+  @ApiProperty({
+    example:
+      "https://wire-files.s3.us-east-1.amazonaws.com/ws_64d9.../blob_01jd5x...?X-Amz-Signature=...",
+  })
   uploadUrl!: string;
 
   @ApiProperty({ enum: ["PUT"] })
@@ -81,6 +87,9 @@ export class CreateUploadResponseDto implements CreateUploadResponse {
 }
 
 export class DownloadUrlResponseDto implements DownloadUrlResponse {
-  @ApiProperty({ example: "https://wire-files.s3.us-east-1.amazonaws.com/ws_64d9.../blob_01jd5x...?X-Amz-Signature=..." })
+  @ApiProperty({
+    example:
+      "https://wire-files.s3.us-east-1.amazonaws.com/ws_64d9.../blob_01jd5x...?X-Amz-Signature=...",
+  })
   downloadUrl!: string;
 }

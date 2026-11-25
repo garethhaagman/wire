@@ -1,11 +1,31 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query } from "@nestjs/common";
-import { ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiQuery, ApiTags } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+} from "@nestjs/common";
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Reaction } from "@wire/types";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
 import { ReactionsService } from "./reactions.service.js";
-import { CreateReactionRequestDto, ReactionDto, RemoveReactionQueryDto } from "./dto/reaction.dto.js";
+import {
+  CreateReactionRequestDto,
+  ReactionDto,
+  RemoveReactionQueryDto,
+} from "./dto/reaction.dto.js";
 
 @ApiTags("Reactions")
 @ApiCookieAuth()
@@ -18,7 +38,10 @@ export class ReactionsController {
   @Get()
   @RequirePermission("read", "Reaction")
   @ApiOkResponse({ type: ReactionDto, isArray: true })
-  list(@CurrentActor() actor: WorkspaceActor, @Param("messageId") messageId: string): Promise<Reaction[]> {
+  list(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("messageId") messageId: string,
+  ): Promise<Reaction[]> {
     return this.reactions.list(actor, messageId);
   }
 

@@ -64,7 +64,8 @@ export type ApiErrorCode =
 
 export function successEnvelope<T>(
   data: T,
-  meta: Omit<ApiMeta, "request_id" | "api_version"> & Partial<Pick<ApiMeta, "request_id" | "api_version">>,
+  meta: Omit<ApiMeta, "request_id" | "api_version"> &
+    Partial<Pick<ApiMeta, "request_id" | "api_version">>,
   requestId: string,
   apiVersion: string,
 ): ApiResponse<T> {

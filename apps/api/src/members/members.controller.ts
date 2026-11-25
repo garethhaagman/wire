@@ -1,5 +1,23 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseInterceptors } from "@nestjs/common";
-import { ApiCookieAuth, ApiCreatedResponse, ApiHeader, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseInterceptors,
+} from "@nestjs/common";
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiHeader,
+  ApiOkResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Member, MemberPreferences } from "@wire/types";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
 import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
@@ -25,7 +43,10 @@ export class MembersController {
   @Get()
   @RequirePermission("read", "Member")
   @ApiOkResponse({ type: MemberDto, isArray: true })
-  async list(@CurrentActor() actor: WorkspaceActor, @Query() query: PaginationQueryDto): Promise<PaginatedResult<Member>> {
+  async list(
+    @CurrentActor() actor: WorkspaceActor,
+    @Query() query: PaginationQueryDto,
+  ): Promise<PaginatedResult<Member>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
     const { items, total } = await this.members.list(actor, page, perPage, query.search);
@@ -65,10 +86,17 @@ export class MembersController {
 
   @Post()
   @RequirePermission("create", "Member")
-  @ApiHeader({ name: "Idempotency-Key", required: false, description: "Replays the original response if the same key is sent again." })
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: false,
+    description: "Replays the original response if the same key is sent again.",
+  })
   @ApiCreatedResponse({ type: MemberDto })
   @UseInterceptors(IdempotencyInterceptor)
-  create(@CurrentActor() actor: WorkspaceActor, @Body() body: CreateMemberRequestDto): Promise<Member> {
+  create(
+    @CurrentActor() actor: WorkspaceActor,
+    @Body() body: CreateMemberRequestDto,
+  ): Promise<Member> {
     return this.members.create(actor, body);
   }
 

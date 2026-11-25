@@ -1,5 +1,10 @@
 import { InternalServerErrorException } from "@nestjs/common";
-import { HeadObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  HeadObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { ApiEnv } from "@wire/config";
 import type { StorageAdapter } from "./storage-adapter.interface.js";
@@ -17,7 +22,9 @@ export class S3Adapter implements StorageAdapter {
 
   constructor(env: ApiEnv) {
     if (!env.S3_BUCKET || !env.S3_REGION || !env.S3_ACCESS_KEY_ID || !env.S3_SECRET_ACCESS_KEY) {
-      throw new InternalServerErrorException("S3Adapter requires S3_BUCKET, S3_REGION, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY.");
+      throw new InternalServerErrorException(
+        "S3Adapter requires S3_BUCKET, S3_REGION, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY.",
+      );
     }
     this.bucket = env.S3_BUCKET;
     this.client = new S3Client({
@@ -49,19 +56,25 @@ export class S3Adapter implements StorageAdapter {
       ContentType: input.mime,
       ContentLength: input.sizeBytes,
     });
-    const uploadUrl = await getSignedUrl(this.client, command, { expiresIn: SIGNED_URL_TTL_SECONDS });
+    const uploadUrl = await getSignedUrl(this.client, command, {
+      expiresIn: SIGNED_URL_TTL_SECONDS,
+    });
     return { uploadUrl, method: "PUT", headers: { "Content-Type": input.mime } };
   }
 
   async createDownloadUrl(input: { key: string }): Promise<{ downloadUrl: string }> {
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: input.key });
-    const downloadUrl = await getSignedUrl(this.client, command, { expiresIn: SIGNED_URL_TTL_SECONDS });
+    const downloadUrl = await getSignedUrl(this.client, command, {
+      expiresIn: SIGNED_URL_TTL_SECONDS,
+    });
     return { downloadUrl };
   }
 
   async confirmUpload(input: { key: string }): Promise<{ exists: boolean; sizeBytes: number }> {
     try {
-      const head = await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: input.key }));
+      const head = await this.client.send(
+        new HeadObjectCommand({ Bucket: this.bucket, Key: input.key }),
+      );
       return { exists: true, sizeBytes: head.ContentLength ?? 0 };
     } catch {
       return { exists: false, sizeBytes: 0 };

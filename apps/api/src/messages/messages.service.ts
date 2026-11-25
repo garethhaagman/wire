@@ -1,4 +1,11 @@
-import { ForbiddenException, HttpStatus, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import {
   addChannelMembers,
   appendEvents,
@@ -79,7 +86,9 @@ export class MessagesService {
     const message = await this.db.tx(async (tx) => {
       const events: NewEvent[] = [];
       if (!isMember) {
-        const joined = await addChannelMembers(tx, input.channelId, actor.workspaceId, [actor.member.id]);
+        const joined = await addChannelMembers(tx, input.channelId, actor.workspaceId, [
+          actor.member.id,
+        ]);
         if (joined.length) {
           events.push({
             workspaceId: actor.workspaceId,
@@ -101,7 +110,11 @@ export class MessagesService {
       });
       if (!result.ok) {
         if (result.reason === "channel_unavailable") {
-          throw new ApiException("RESOURCE_CONFLICT", `Channel ${input.channelId} is archived.`, HttpStatus.CONFLICT);
+          throw new ApiException(
+            "RESOURCE_CONFLICT",
+            `Channel ${input.channelId} is archived.`,
+            HttpStatus.CONFLICT,
+          );
         }
         throw new NotFoundException(`No thread root message with id ${input.threadRootId}`);
       }
@@ -175,7 +188,12 @@ export class MessagesService {
         throw new NotFoundException(`No message with id ${id}`);
       }
       await appendEvents(tx, [
-        { workspaceId: actor.workspaceId, type: "message.edited", channelId, data: { message: result.message } },
+        {
+          workspaceId: actor.workspaceId,
+          type: "message.edited",
+          channelId,
+          data: { message: result.message },
+        },
       ]);
       return result.message;
     });
@@ -217,7 +235,10 @@ export class MessagesService {
     perPage: number,
   ): Promise<{ items: Message[]; cursor: ApiCursorPagination }> {
     await this.threadRoot(actor, threadRootId, { includeDeleted: true });
-    const page = await listThreadReplies(this.db.primary, threadRootId, { afterSeq, limit: perPage });
+    const page = await listThreadReplies(this.db.primary, threadRootId, {
+      afterSeq,
+      limit: perPage,
+    });
     const last = page.items.at(-1);
     return {
       items: page.items,
@@ -229,12 +250,21 @@ export class MessagesService {
     };
   }
 
-  async reply(actor: WorkspaceActor, threadRootId: string, body: string, broadcast: boolean): Promise<Message> {
+  async reply(
+    actor: WorkspaceActor,
+    threadRootId: string,
+    body: string,
+    broadcast: boolean,
+  ): Promise<Message> {
     const root = await this.threadRoot(actor, threadRootId, { includeDeleted: false });
     return this.post(actor, { channelId: root.channelId, body, threadRootId, broadcast });
   }
 
-  async markThreadRead(actor: WorkspaceActor, threadRootId: string, seq: number | undefined): Promise<{ lastReadSeq: number }> {
+  async markThreadRead(
+    actor: WorkspaceActor,
+    threadRootId: string,
+    seq: number | undefined,
+  ): Promise<{ lastReadSeq: number }> {
     await this.threadRoot(actor, threadRootId, { includeDeleted: true });
     const lastReadSeq = await markThreadRead(this.db, {
       threadRootId,
@@ -246,7 +276,11 @@ export class MessagesService {
     return { lastReadSeq };
   }
 
-  private async threadRoot(actor: WorkspaceActor, id: string, options: { includeDeleted: boolean }): Promise<Message> {
+  private async threadRoot(
+    actor: WorkspaceActor,
+    id: string,
+    options: { includeDeleted: boolean },
+  ): Promise<Message> {
     const { message } = await this.access.readableMessage(actor, id, options);
     if (message.threadRootId) {
       throw new NotFoundException(`Message ${id} is a reply, not a thread root`);

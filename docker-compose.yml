@@ -30,7 +30,8 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory-policy", "noeviction"]
+    command:
+      ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory-policy", "noeviction"]
     ports:
       - "6379:6379"
     healthcheck:

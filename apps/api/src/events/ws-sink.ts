@@ -33,7 +33,10 @@ export class WsSink implements StreamSink {
   }
 
   end(): void {
-    if (this.socket.readyState === this.socket.OPEN || this.socket.readyState === this.socket.CONNECTING) {
+    if (
+      this.socket.readyState === this.socket.OPEN ||
+      this.socket.readyState === this.socket.CONNECTING
+    ) {
       this.socket.close(1000, "closed");
     }
   }

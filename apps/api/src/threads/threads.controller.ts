@@ -1,14 +1,38 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, UseInterceptors } from "@nestjs/common";
-import { ApiCookieAuth, ApiCreatedResponse, ApiHeader, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  UseInterceptors,
+} from "@nestjs/common";
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiHeader,
+  ApiOkResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Message } from "@wire/types";
-import { CursorPaginatedResult, CursorQueryDto, decodeCursor } from "../common/dto/cursor-paginated-result.js";
+import {
+  CursorPaginatedResult,
+  CursorQueryDto,
+  decodeCursor,
+} from "../common/dto/cursor-paginated-result.js";
 import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor.js";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
 import { MessagesService } from "../messages/messages.service.js";
 import { MarkReadRequestDto } from "../channels/dto/channel.dto.js";
-import { CreateThreadReplyRequestDto, MessageDto, ThreadReadStateDto } from "../messages/dto/message.dto.js";
+import {
+  CreateThreadReplyRequestDto,
+  MessageDto,
+  ThreadReadStateDto,
+} from "../messages/dto/message.dto.js";
 
 /**
  * Threads are a view over messages.thread_root_id, not a separate resource —
@@ -30,13 +54,22 @@ export class ThreadsController {
     @Query() query: CursorQueryDto,
   ): Promise<CursorPaginatedResult<Message>> {
     const afterSeq = decodeCursor(query.cursor)?.seq ?? query.after_seq;
-    const { items, cursor } = await this.messages.listThread(actor, threadRootId, afterSeq, query.per_page ?? 50);
+    const { items, cursor } = await this.messages.listThread(
+      actor,
+      threadRootId,
+      afterSeq,
+      query.per_page ?? 50,
+    );
     return new CursorPaginatedResult(items, cursor);
   }
 
   @Post("messages")
   @RequirePermission("create", "Thread")
-  @ApiHeader({ name: "Idempotency-Key", required: false, description: "Replays the original response if the same key is sent again." })
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: false,
+    description: "Replays the original response if the same key is sent again.",
+  })
   @ApiCreatedResponse({ type: MessageDto })
   @UseInterceptors(IdempotencyInterceptor)
   reply(

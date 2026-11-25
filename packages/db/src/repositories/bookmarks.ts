@@ -31,7 +31,10 @@ export async function listBookmarks(
       `select * from bookmarks where member_id = $1 order by created_at desc, id desc limit $2 offset $3`,
       [memberId, perPage, (page - 1) * perPage],
     ),
-    db.query<{ total: number }>(`select count(*)::int as total from bookmarks where member_id = $1`, [memberId]),
+    db.query<{ total: number }>(
+      `select count(*)::int as total from bookmarks where member_id = $1`,
+      [memberId],
+    ),
   ]);
   return { items: rows.rows.map(toBookmark), total: count.rows[0]?.total ?? 0 };
 }
@@ -49,7 +52,14 @@ export async function insertBookmark(
   return rows[0] ? toBookmark(rows[0]) : null;
 }
 
-export async function deleteBookmark(db: Queryable, memberId: string, id: string): Promise<boolean> {
-  const { rowCount } = await db.query(`delete from bookmarks where member_id = $1 and id = $2`, [memberId, id]);
+export async function deleteBookmark(
+  db: Queryable,
+  memberId: string,
+  id: string,
+): Promise<boolean> {
+  const { rowCount } = await db.query(`delete from bookmarks where member_id = $1 and id = $2`, [
+    memberId,
+    id,
+  ]);
   return (rowCount ?? 0) > 0;
 }

@@ -26,7 +26,10 @@ export class PaginationQueryDto {
   @Max(100)
   per_page?: number = 20;
 
-  @ApiPropertyOptional({ description: "Field to sort by; prefix with - for descending", example: "-createdAt" })
+  @ApiPropertyOptional({
+    description: "Field to sort by; prefix with - for descending",
+    example: "-createdAt",
+  })
   @IsOptional()
   @IsString()
   sort?: string;
@@ -40,7 +43,8 @@ export class PaginationQueryDto {
     type: "object",
     additionalProperties: { type: "string" },
     example: { type: "public", joined: "true" },
-    description: "Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...] entries for the fields it supports.",
+    description:
+      "Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...] entries for the fields it supports.",
   })
   @IsOptional()
   @IsObject()
@@ -61,7 +65,9 @@ export function parseFilterQuery(rawQuery: Record<string, unknown>): Record<stri
 export const SORT_DIRECTION = { ASC: "ASC", DESC: "DESC" } as const;
 export type SortDirection = (typeof SORT_DIRECTION)[keyof typeof SORT_DIRECTION];
 
-export function parseSort(sort: string | undefined): { field: string; direction: SortDirection } | null {
+export function parseSort(
+  sort: string | undefined,
+): { field: string; direction: SortDirection } | null {
   if (!sort) return null;
   const direction: SortDirection = sort.startsWith("-") ? SORT_DIRECTION.DESC : SORT_DIRECTION.ASC;
   const field = sort.startsWith("-") ? sort.slice(1) : sort;

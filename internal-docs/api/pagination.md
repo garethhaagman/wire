@@ -9,13 +9,13 @@ GET /v1/workspaces?filter[dataRegion]=us
 GET /v1/workspaces?search=acme
 ```
 
-| Parameter | Purpose | Default |
-|-----------|---------|---------|
-| `page` | Page number (1-indexed) | `1` |
-| `per_page` | Results per page | `20` (max `100`) |
-| `sort` | Sort field; prefix with `-` for descending | resource-defined |
-| `filter[field]` | Filter by field | — |
-| `search` | Free-text search query | — |
+| Parameter       | Purpose                                    | Default          |
+| --------------- | ------------------------------------------ | ---------------- |
+| `page`          | Page number (1-indexed)                    | `1`              |
+| `per_page`      | Results per page                           | `20` (max `100`) |
+| `sort`          | Sort field; prefix with `-` for descending | resource-defined |
+| `filter[field]` | Filter by field                            | —                |
+| `search`        | Free-text search query                     | —                |
 
 Pagination metadata is always in the response envelope's `meta.pagination`, never in the response body itself:
 

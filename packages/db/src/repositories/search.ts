@@ -42,7 +42,13 @@ export async function searchMessages(
         where c.id = m.channel_id and c.type = 'public' and c.workspace_id = any($2::text[])
       )
     )`;
-  const params = [scope.memberIds, scope.publicWorkspaceIds, filters.channelId ?? null, filters.threadRootId ?? null, filters.query];
+  const params = [
+    scope.memberIds,
+    scope.publicWorkspaceIds,
+    filters.channelId ?? null,
+    filters.threadRootId ?? null,
+    filters.query,
+  ];
 
   const [rows, count] = await Promise.all([
     db.query<{

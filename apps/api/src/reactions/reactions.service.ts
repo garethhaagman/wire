@@ -32,13 +32,20 @@ export class ReactionsService {
       });
       if (inserted) {
         await appendEvents(tx, [
-          { workspaceId: actor.workspaceId, type: "reaction.added", channelId: message.channelId, data: { reaction: inserted } },
+          {
+            workspaceId: actor.workspaceId,
+            type: "reaction.added",
+            channelId: message.channelId,
+            data: { reaction: inserted },
+          },
         ]);
       }
       return inserted;
     });
     if (!reaction) {
-      throw new ResourceConflictException(`You already reacted to message ${messageId} with ${emoji}`);
+      throw new ResourceConflictException(
+        `You already reacted to message ${messageId} with ${emoji}`,
+      );
     }
     this.relay.kick();
     return reaction;

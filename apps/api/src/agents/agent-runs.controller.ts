@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Inject, NotFoundException, Param, Post, Query } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  NotFoundException,
+  Param,
+  Post,
+  Query,
+} from "@nestjs/common";
 import { ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { Database, findAgentRun, listAgentRunsForAgent, listAgentRunSteps } from "@wire/db";
 import type { AgentRun } from "@wire/types";
@@ -53,7 +62,13 @@ export class AgentRunsController {
     await this.agents.getById(actor, agentId);
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
-    const { items, total } = await listAgentRunsForAgent(this.db, actor.workspaceId, agentId, page, perPage);
+    const { items, total } = await listAgentRunsForAgent(
+      this.db,
+      actor.workspaceId,
+      agentId,
+      page,
+      perPage,
+    );
     return new PaginatedResult(items, buildPaginationMeta(page, perPage, total));
   }
 

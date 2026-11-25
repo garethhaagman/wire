@@ -41,7 +41,10 @@ export default function SignupRoute(): React.JSX.Element {
       description={
         <>
           Already have an account?{" "}
-          <Link to="/login" className="font-medium text-foreground underline-offset-4 hover:underline">
+          <Link
+            to="/login"
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+          >
             Sign in
           </Link>
         </>
@@ -90,7 +93,10 @@ export default function SignupRoute(): React.JSX.Element {
         </div>
 
         {error ? (
-          <p role="alert" className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          <p
+            role="alert"
+            className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+          >
             {error}
           </p>
         ) : null}

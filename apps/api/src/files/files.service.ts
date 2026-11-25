@@ -11,7 +11,12 @@ import {
   updateVirusScanStatus,
 } from "@wire/db";
 import type { ApiEnv } from "@wire/config";
-import type { CreateUploadRequest, CreateUploadResponse, DownloadUrlResponse, WireFile } from "@wire/types";
+import type {
+  CreateUploadRequest,
+  CreateUploadResponse,
+  DownloadUrlResponse,
+  WireFile,
+} from "@wire/types";
 import { ChannelAccessService } from "../channels/channel-access.service.js";
 import { API_ENV } from "../config/env.provider.js";
 import { ApiException } from "../common/errors/api-exception.js";
@@ -70,7 +75,10 @@ export class FilesService {
   }
 
   /** Creates the file row and issues a signed URL to PUT bytes to. No file.created event yet — the bytes don't exist. */
-  async requestUpload(actor: WorkspaceActor, input: CreateUploadRequest): Promise<CreateUploadResponse> {
+  async requestUpload(
+    actor: WorkspaceActor,
+    input: CreateUploadRequest,
+  ): Promise<CreateUploadResponse> {
     await this.access.writable(actor, input.channelId);
 
     const storageKey = `${actor.workspaceId}/${newId("blob")}`;
@@ -116,7 +124,14 @@ export class FilesService {
       const updated = await markFileUploaded(tx, fileId, { sizeBytes });
       if (!updated) throw new NotFoundException(`No file with id ${fileId}`);
       const scanned = (await updateVirusScanStatus(tx, fileId, scanStatus)) ?? updated;
-      await appendEvents(tx, [{ workspaceId: actor.workspaceId, type: "file.created", channelId: file.channelId, data: { file: scanned } }]);
+      await appendEvents(tx, [
+        {
+          workspaceId: actor.workspaceId,
+          type: "file.created",
+          channelId: file.channelId,
+          data: { file: scanned },
+        },
+      ]);
       return scanned;
     });
     this.relay.kick();

@@ -4,12 +4,12 @@ Package name: `@wire/mcp-server` (spec only).
 
 ## Configuration
 
-| Env var | Required | Description |
-|---------|----------|-------------|
-| `WIRE_API_URL` | yes | e.g. `https://api.wire.example/v1` |
-| `WIRE_TOKEN` | yes* | Bearer token (*or OAuth device flow) |
-| `WIRE_WORKSPACE_ID` | yes | Default workspace for tools |
-| `WIRE_MCP_TRANSPORT` | no | `stdio` (default) or `http` |
+| Env var              | Required | Description                          |
+| -------------------- | -------- | ------------------------------------ |
+| `WIRE_API_URL`       | yes      | e.g. `https://api.wire.example/v1`   |
+| `WIRE_TOKEN`         | yes*     | Bearer token (*or OAuth device flow) |
+| `WIRE_WORKSPACE_ID`  | yes      | Default workspace for tools          |
+| `WIRE_MCP_TRANSPORT` | no       | `stdio` (default) or `http`          |
 
 ## Security
 

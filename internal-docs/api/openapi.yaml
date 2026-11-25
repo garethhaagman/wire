@@ -13,7 +13,8 @@ paths:
         - name: after_seq
           required: false
           in: query
-          description: Return items with seq greater than this, oldest first (catch-up after reconnect).
+          description:
+            Return items with seq greater than this, oldest first (catch-up after reconnect).
             Ignored when cursor is set.
           schema:
             minimum: 0
@@ -172,7 +173,8 @@ paths:
         - name: filter
           required: false
           in: query
-          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+          description:
+            Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
             entries for the fields it supports.
           schema:
             additionalProperties:
@@ -296,7 +298,8 @@ paths:
         - name: filter
           required: false
           in: query
-          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+          description:
+            Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
             entries for the fields it supports.
           schema:
             additionalProperties:
@@ -481,7 +484,8 @@ paths:
         - name: filter
           required: false
           in: query
-          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+          description:
+            Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
             entries for the fields it supports.
           schema:
             additionalProperties:
@@ -666,7 +670,8 @@ paths:
         - name: filter
           required: false
           in: query
-          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+          description:
+            Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
             entries for the fields it supports.
           schema:
             additionalProperties:
@@ -776,7 +781,8 @@ paths:
         - name: after_seq
           required: false
           in: query
-          description: Return items with seq greater than this, oldest first (catch-up after reconnect).
+          description:
+            Return items with seq greater than this, oldest first (catch-up after reconnect).
             Ignored when cursor is set.
           schema:
             minimum: 0
@@ -941,7 +947,8 @@ paths:
         - name: filter
           required: false
           in: query
-          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+          description:
+            Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
             entries for the fields it supports.
           schema:
             additionalProperties:
@@ -1112,7 +1119,8 @@ paths:
         - name: filter
           required: false
           in: query
-          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+          description:
+            Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
             entries for the fields it supports.
           schema:
             additionalProperties:
@@ -1173,7 +1181,8 @@ paths:
         - name: after_seq
           required: false
           in: query
-          description: Return items with seq greater than this, oldest first (catch-up after reconnect).
+          description:
+            Return items with seq greater than this, oldest first (catch-up after reconnect).
             Ignored when cursor is set.
           schema:
             minimum: 0
@@ -1423,7 +1432,8 @@ paths:
         - name: filter
           required: false
           in: query
-          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+          description:
+            Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
             entries for the fields it supports.
           schema:
             additionalProperties:
@@ -1579,7 +1589,8 @@ paths:
         - name: filter
           required: false
           in: query
-          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+          description:
+            Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
             entries for the fields it supports.
           schema:
             additionalProperties:
@@ -1691,7 +1702,8 @@ paths:
         - name: filter
           required: false
           in: query
-          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+          description:
+            Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
             entries for the fields it supports.
           schema:
             additionalProperties:
@@ -1830,7 +1842,8 @@ paths:
         - name: filter
           required: false
           in: query
-          description: Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
+          description:
+            Dynamic filter[field]=value params, see each endpoint's own @ApiQuery filter[...]
             entries for the fields it supports.
           schema:
             additionalProperties:
@@ -3438,7 +3451,8 @@ components:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/SlotConfigDto"
-          description: "Keyed by slot id (one of: nav.primary, nav.workspaceSwitcher, sidebar.channelList,
+          description:
+            "Keyed by slot id (one of: nav.primary, nav.workspaceSwitcher, sidebar.channelList,
             topbar, composer, thread.panel, search.trigger, command.palette). Must include every
             required slot: nav.primary, sidebar.channelList, composer."
           example:
@@ -3479,7 +3493,8 @@ components:
           type: object
           additionalProperties: true
           example: {}
-          description: Forward-compatibility staging area for fields not yet promoted to the typed schema, see
+          description:
+            Forward-compatibility staging area for fields not yet promoted to the typed schema, see
             @wire/ui-config's extensions.ts.
       required:
         - schemaVersion

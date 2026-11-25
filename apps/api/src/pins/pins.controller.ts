@@ -17,7 +17,10 @@ export class PinsController {
   @Get()
   @RequirePermission("read", "Pin")
   @ApiOkResponse({ type: PinDto, isArray: true })
-  list(@CurrentActor() actor: WorkspaceActor, @Param("channelId") channelId: string): Promise<Pin[]> {
+  list(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("channelId") channelId: string,
+  ): Promise<Pin[]> {
     return this.pins.list(actor, channelId);
   }
 

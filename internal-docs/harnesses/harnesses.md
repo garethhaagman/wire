@@ -17,10 +17,10 @@ Harness
 
 ## First-class providers (v0.1)
 
-| Provider | Notes |
-|----------|--------|
-| Anthropic | Messages API; tool use; prompt caching hints on context packs |
-| OpenAI | Chat Completions / Responses API mapping layer in worker |
+| Provider    | Notes                                                                                   |
+| ----------- | --------------------------------------------------------------------------------------- |
+| Anthropic   | Messages API; tool use; prompt caching hints on context packs                           |
+| OpenAI      | Chat Completions / Responses API mapping layer in worker                                |
 | Custom HTTP | `POST` to customer URL with Wire-signed payload; returns assistant message + tool calls |
 
 Wire does not embed vendor SDKs in the public API; harness records are portable JSON.

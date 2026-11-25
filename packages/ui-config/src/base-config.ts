@@ -34,7 +34,8 @@ export const baseUiConfig: UiConfig = {
     radius: "md",
     typography: {
       sans: { kind: "system" },
-      mono: { kind: "system" },      baseSizePx: 16,
+      mono: { kind: "system" },
+      baseSizePx: 16,
       scale: "comfortable",
     },
     iconPack: { kind: "lucide" },

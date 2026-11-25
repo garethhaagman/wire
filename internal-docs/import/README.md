@@ -2,10 +2,10 @@
 
 Wire’s **primary onboarding** path is importing a **Slack workspace admin export** (zip). See [workspace-import.md](./workspace-import.md).
 
-| Doc | Contents |
-|-----|----------|
-| [slack-admin-export.md](./slack-admin-export.md) | Zip layout → Wire entity mapping |
-| [claim-flow.md](./claim-flow.md) | Unclaimed members and first login |
+| Doc                                              | Contents                          |
+| ------------------------------------------------ | --------------------------------- |
+| [slack-admin-export.md](./slack-admin-export.md) | Zip layout → Wire entity mapping  |
+| [claim-flow.md](./claim-flow.md)                 | Unclaimed members and first login |
 
 **Quick API sequence**
 

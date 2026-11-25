@@ -40,7 +40,9 @@ export class LocalDiskAdapter implements StorageAdapter {
 
   createDownloadUrl(input: { key: string }): Promise<{ downloadUrl: string }> {
     const token = this.sign(input.key, Date.now() + TOKEN_TTL_MS);
-    return Promise.resolve({ downloadUrl: `${this.baseUrl}/v1/files/_local-upload/${encodeURIComponent(input.key)}?token=${token}` });
+    return Promise.resolve({
+      downloadUrl: `${this.baseUrl}/v1/files/_local-upload/${encodeURIComponent(input.key)}?token=${token}`,
+    });
   }
 
   async confirmUpload(input: { key: string }): Promise<{ exists: boolean; sizeBytes: number }> {

@@ -36,38 +36,60 @@ export async function listWebhookEndpoints(
       `select * from webhook_endpoints where workspace_id = $1 order by created_at desc, id limit $2 offset $3`,
       [workspaceId, perPage, (page - 1) * perPage],
     ),
-    db.query<{ total: number }>(`select count(*)::int as total from webhook_endpoints where workspace_id = $1`, [
-      workspaceId,
-    ]),
+    db.query<{ total: number }>(
+      `select count(*)::int as total from webhook_endpoints where workspace_id = $1`,
+      [workspaceId],
+    ),
   ]);
   return { items: rows.rows.map(toEndpoint), total: count.rows[0]?.total ?? 0 };
 }
 
-export async function findWebhookEndpoint(db: Queryable, workspaceId: string, id: string): Promise<WebhookEndpoint | null> {
-  const { rows } = await db.query<EndpointRow>(`select * from webhook_endpoints where workspace_id = $1 and id = $2`, [
-    workspaceId,
-    id,
-  ]);
+export async function findWebhookEndpoint(
+  db: Queryable,
+  workspaceId: string,
+  id: string,
+): Promise<WebhookEndpoint | null> {
+  const { rows } = await db.query<EndpointRow>(
+    `select * from webhook_endpoints where workspace_id = $1 and id = $2`,
+    [workspaceId, id],
+  );
   return rows[0] ? toEndpoint(rows[0]) : null;
 }
 
 export async function insertWebhookEndpoint(
   db: Queryable,
-  input: { workspaceId: string; url: string; enabledEvents: string[]; channelFilter: string[] | null; secretCiphertext: string },
+  input: {
+    workspaceId: string;
+    url: string;
+    enabledEvents: string[];
+    channelFilter: string[] | null;
+    secretCiphertext: string;
+  },
 ): Promise<WebhookEndpoint> {
   const { rows } = await db.query<EndpointRow>(
     `insert into webhook_endpoints (id, workspace_id, url, enabled_events, channel_filter, secret_ciphertext)
      values ($1, $2, $3, $4, $5, $6) returning *`,
-    [newId("whe"), input.workspaceId, input.url, input.enabledEvents, input.channelFilter, input.secretCiphertext],
+    [
+      newId("whe"),
+      input.workspaceId,
+      input.url,
+      input.enabledEvents,
+      input.channelFilter,
+      input.secretCiphertext,
+    ],
   );
   return toEndpoint(rows[0]!);
 }
 
-export async function deleteWebhookEndpoint(db: Queryable, workspaceId: string, id: string): Promise<boolean> {
-  const { rowCount } = await db.query(`delete from webhook_endpoints where workspace_id = $1 and id = $2`, [
-    workspaceId,
-    id,
-  ]);
+export async function deleteWebhookEndpoint(
+  db: Queryable,
+  workspaceId: string,
+  id: string,
+): Promise<boolean> {
+  const { rowCount } = await db.query(
+    `delete from webhook_endpoints where workspace_id = $1 and id = $2`,
+    [workspaceId, id],
+  );
   return (rowCount ?? 0) > 0;
 }
 
@@ -77,7 +99,11 @@ export async function deleteWebhookEndpoint(db: Queryable, workspaceId: string, 
  * channel-scoped events. The (endpoint_id, event_id) unique constraint makes a
  * relay retry after a crash a no-op instead of a duplicate delivery.
  */
-export async function enqueueWebhookDeliveries(tx: Queryable, events: WireEvent[], apiVersion: string): Promise<void> {
+export async function enqueueWebhookDeliveries(
+  tx: Queryable,
+  events: WireEvent[],
+  apiVersion: string,
+): Promise<void> {
   if (events.length === 0) return;
   await tx.query(
     `insert into webhook_deliveries (endpoint_id, event_id, workspace_id, payload)
@@ -121,7 +147,11 @@ export interface ClaimedDelivery {
  * so a worker that crashes mid-delivery doesn't strand the job — it becomes due
  * again when the lease expires. SKIP LOCKED spreads work across worker replicas.
  */
-export async function claimDueDeliveries(db: Queryable, limit: number, leaseSeconds: number): Promise<ClaimedDelivery[]> {
+export async function claimDueDeliveries(
+  db: Queryable,
+  limit: number,
+  leaseSeconds: number,
+): Promise<ClaimedDelivery[]> {
   const { rows } = await db.query<{
     id: string;
     endpoint_id: string;
@@ -159,7 +189,11 @@ export async function claimDueDeliveries(db: Queryable, limit: number, leaseSeco
   }));
 }
 
-export async function completeDelivery(db: Queryable, id: string, statusCode: number): Promise<void> {
+export async function completeDelivery(
+  db: Queryable,
+  id: string,
+  statusCode: number,
+): Promise<void> {
   await db.query(
     `update webhook_deliveries set status = 'succeeded', last_status_code = $2, last_error = null, updated_at = now()
      where id = $1`,
@@ -182,7 +216,11 @@ export async function failDelivery(
   );
 }
 
-export async function pruneDeliveries(db: Queryable, olderThanSeconds: number, batchSize: number): Promise<number> {
+export async function pruneDeliveries(
+  db: Queryable,
+  olderThanSeconds: number,
+  batchSize: number,
+): Promise<number> {
   const { rowCount } = await db.query(
     `delete from webhook_deliveries where id in (
        select id from webhook_deliveries

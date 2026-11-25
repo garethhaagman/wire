@@ -8,9 +8,9 @@ A workspace admin needs to do two different things that look similar but aren't:
 
 ```typescript
 interface Lock {
-  path: string;           // dot-path into UiConfig, e.g. "theme.colors.primary"
-  lockedBy: "org";        // the only lockable layer today
-  reason?: string;        // optional, shown in future admin/settings UI
+  path: string; // dot-path into UiConfig, e.g. "theme.colors.primary"
+  lockedBy: "org"; // the only lockable layer today
+  reason?: string; // optional, shown in future admin/settings UI
 }
 ```
 
@@ -18,7 +18,7 @@ Defined in `packages/ui-config/src/locks.ts`. A `LockSet` is just `Lock[]`, stor
 
 ## Enforcement is in the resolver, not the API layer
 
-`applyLocks()` (inside `resolveUiConfig()`, `packages/ui-config/src/resolve.ts`) runs **after** the base→org→user merge: for every lock path, it overwrites the merged tree at that path with the org layer's value (falling back to base if org didn't set a value there either), regardless of what the user layer contained. A user's `PATCH .../ui-config/me` call can still *write* a locked field to their personal layer — the write succeeds — it just never shows up in what `GET .../ui-config` returns, because the lock wins at resolve time, every time, unconditionally. There's no scenario where a lock is "mostly" respected.
+`applyLocks()` (inside `resolveUiConfig()`, `packages/ui-config/src/resolve.ts`) runs **after** the base→org→user merge: for every lock path, it overwrites the merged tree at that path with the org layer's value (falling back to base if org didn't set a value there either), regardless of what the user layer contained. A user's `PATCH .../ui-config/me` call can still _write_ a locked field to their personal layer — the write succeeds — it just never shows up in what `GET .../ui-config` returns, because the lock wins at resolve time, every time, unconditionally. There's no scenario where a lock is "mostly" respected.
 
 ### Locking a prefix locks everything beneath it
 
@@ -26,11 +26,11 @@ Defined in `packages/ui-config/src/locks.ts`. A `LockSet` is just `Lock[]`, stor
 
 ## RBAC
 
-| Action | CASL permission | Who |
-|--------|------------------|-----|
-| `GET /v1/workspaces/:id/ui-config` | `read`, `UiConfig` | Any workspace member |
-| `PATCH /v1/workspaces/:id/ui-config/me` | `update`, `UiConfig` | Any workspace member — writes **only their own** user layer; the controller takes the session's own user id, never a route param, so there is no "edit someone else's preferences" path to even gate |
-| `PATCH /v1/workspaces/:id/ui-config/org` | `manage`, `UiConfig` | `admin` only (CASL's `manage` wildcard implies this; `member`'s ability only grants `read`/`update`, not `manage`) |
+| Action                                   | CASL permission      | Who                                                                                                                                                                                                  |
+| ---------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /v1/workspaces/:id/ui-config`       | `read`, `UiConfig`   | Any workspace member                                                                                                                                                                                 |
+| `PATCH /v1/workspaces/:id/ui-config/me`  | `update`, `UiConfig` | Any workspace member — writes **only their own** user layer; the controller takes the session's own user id, never a route param, so there is no "edit someone else's preferences" path to even gate |
+| `PATCH /v1/workspaces/:id/ui-config/org` | `manage`, `UiConfig` | `admin` only (CASL's `manage` wildcard implies this; `member`'s ability only grants `read`/`update`, not `manage`)                                                                                   |
 
 Added to the existing CASL vocabulary in `apps/api/src/permissions/permission.types.ts` (`PermissionSubject` gains `"UiConfig"`) and `ability.factory.ts`, following the same pattern as every other resource — see [api/permissions.md](../api/permissions.md) for the general CASL model this reuses unchanged. No new permission action was needed: `manage` (admin-only, already CASL's wildcard) and `update` (both roles) were sufficient to express "admin writes org+locks, member writes only their own layer" without inventing an action just for this resource.
 

@@ -14,7 +14,9 @@ export function ChannelListDefault(_props: SlotProps): React.JSX.Element {
 
   return (
     <div className="flex h-full w-60 flex-col border-r border-border bg-muted px-3 py-4">
-      <h2 className="mb-3 px-1 text-sm font-semibold text-foreground">{config.branding.productName}</h2>
+      <h2 className="mb-3 px-1 text-sm font-semibold text-foreground">
+        {config.branding.productName}
+      </h2>
       <ul className="flex flex-col gap-0.5">
         {PLACEHOLDER_CHANNELS.map((channel) => (
           <li key={channel.id}>

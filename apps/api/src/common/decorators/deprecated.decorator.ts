@@ -21,7 +21,11 @@ export interface DeprecationMetadata {
  */
 export function Deprecated(metadata: DeprecationMetadata) {
   return (target: object, key?: string, descriptor?: PropertyDescriptor) => {
-    SetMetadata(DEPRECATED_METADATA_KEY, metadata)(target, key as string, descriptor as PropertyDescriptor);
+    SetMetadata(DEPRECATED_METADATA_KEY, metadata)(
+      target,
+      key as string,
+      descriptor as PropertyDescriptor,
+    );
     ApiHeader({
       name: "Deprecation",
       description: "RFC 9745 deprecation marker; see Sunset and Link headers for details.",

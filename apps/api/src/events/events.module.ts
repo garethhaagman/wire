@@ -10,7 +10,13 @@ import { RealtimeWsGateway } from "./realtime-ws.gateway.js";
 @Global()
 @Module({
   controllers: [EventsController],
-  providers: [OutboxRelayService, RealtimeService, PresenceService, ChannelAccessService, RealtimeWsGateway],
+  providers: [
+    OutboxRelayService,
+    RealtimeService,
+    PresenceService,
+    ChannelAccessService,
+    RealtimeWsGateway,
+  ],
   exports: [OutboxRelayService, RealtimeService, ChannelAccessService],
 })
 export class EventsModule {}

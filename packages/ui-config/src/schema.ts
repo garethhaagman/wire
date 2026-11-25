@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { colorRolesSchema, iconPackSchema, logoSchema, motionSchema, radiusSchema, typographySchema } from "./primitives.js";
+import {
+  colorRolesSchema,
+  iconPackSchema,
+  logoSchema,
+  motionSchema,
+  radiusSchema,
+  typographySchema,
+} from "./primitives.js";
 import { layoutSchema } from "./slots.js";
 import { extensionsSchema } from "./extensions.js";
 

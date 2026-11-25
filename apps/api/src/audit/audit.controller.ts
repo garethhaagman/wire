@@ -24,7 +24,10 @@ export class AuditController {
   @Get()
   @RequirePermission("read", "AuditEvent")
   @ApiOkResponse({ type: AuditEventDto, isArray: true })
-  async list(@CurrentActor() actor: WorkspaceActor, @Query() query: PaginationQueryDto): Promise<PaginatedResult<AuditEvent>> {
+  async list(
+    @CurrentActor() actor: WorkspaceActor,
+    @Query() query: PaginationQueryDto,
+  ): Promise<PaginatedResult<AuditEvent>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
     const { items, total } = await this.audit.list(actor.workspaceId, page, perPage);

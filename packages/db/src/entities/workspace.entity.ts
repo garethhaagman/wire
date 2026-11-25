@@ -1,11 +1,4 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  PrimaryColumn,
-  UpdateDateColumn,
-} from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, PrimaryColumn, UpdateDateColumn } from "typeorm";
 
 /**
  * Mirrors internal-docs/data-model/data-model.md `workspaces` table.

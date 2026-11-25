@@ -2,7 +2,10 @@ import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg
 
 /** Anything that can run a parameterized query — a Pool, or a PoolClient inside a transaction. */
 export interface Queryable {
-  query<R extends QueryResultRow = QueryResultRow>(text: string, values?: unknown[]): Promise<QueryResult<R>>;
+  query<R extends QueryResultRow = QueryResultRow>(
+    text: string,
+    values?: unknown[],
+  ): Promise<QueryResult<R>>;
 }
 
 export interface DatabaseOptions {
@@ -18,7 +21,11 @@ const RETRYABLE_SQLSTATES = new Set(["40001", "40P01"]);
 const MAX_TX_ATTEMPTS = 3;
 
 function isRetryable(err: unknown): boolean {
-  return typeof err === "object" && err !== null && RETRYABLE_SQLSTATES.has((err as { code?: string }).code ?? "");
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    RETRYABLE_SQLSTATES.has((err as { code?: string }).code ?? "")
+  );
 }
 
 /**
@@ -39,15 +46,23 @@ export class Database {
       ...(options.statementTimeoutMs ? { statement_timeout: options.statementTimeoutMs } : {}),
     };
     this.primary = new Pool({ connectionString: options.url, ...common });
-    this.replica = options.readUrl ? new Pool({ connectionString: options.readUrl, ...common }) : null;
+    this.replica = options.readUrl
+      ? new Pool({ connectionString: options.readUrl, ...common })
+      : null;
   }
 
-  query<R extends QueryResultRow = QueryResultRow>(text: string, values?: unknown[]): Promise<QueryResult<R>> {
+  query<R extends QueryResultRow = QueryResultRow>(
+    text: string,
+    values?: unknown[],
+  ): Promise<QueryResult<R>> {
     return this.primary.query<R>(text, values);
   }
 
   /** Replica-backed read; falls back to the primary when no replica is configured. */
-  read<R extends QueryResultRow = QueryResultRow>(text: string, values?: unknown[]): Promise<QueryResult<R>> {
+  read<R extends QueryResultRow = QueryResultRow>(
+    text: string,
+    values?: unknown[],
+  ): Promise<QueryResult<R>> {
     return this.reader.query<R>(text, values);
   }
 

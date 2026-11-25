@@ -1,4 +1,10 @@
-import { Inject, Injectable, Logger, type OnApplicationShutdown, type OnModuleInit } from "@nestjs/common";
+import {
+  Inject,
+  Injectable,
+  Logger,
+  type OnApplicationShutdown,
+  type OnModuleInit,
+} from "@nestjs/common";
 import { Database, insertAuditEvents, listAuditEvents, type NewAuditEvent } from "@wire/db";
 import type { AuditEvent } from "@wire/types";
 
@@ -32,7 +38,11 @@ export class AuditService implements OnModuleInit, OnApplicationShutdown {
     await this.flush();
   }
 
-  list(workspaceId: string, page: number, perPage: number): Promise<{ items: AuditEvent[]; total: number }> {
+  list(
+    workspaceId: string,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: AuditEvent[]; total: number }> {
     return listAuditEvents(this.db, workspaceId, page, perPage);
   }
 
@@ -51,7 +61,9 @@ export class AuditService implements OnModuleInit, OnApplicationShutdown {
     this.buffer = [];
     this.flushing = insertAuditEvents(this.db, batch)
       .catch((err: unknown) => {
-        this.logger.error(`audit flush failed, requeueing ${batch.length}: ${(err as Error).message}`);
+        this.logger.error(
+          `audit flush failed, requeueing ${batch.length}: ${(err as Error).message}`,
+        );
         this.buffer = batch.concat(this.buffer).slice(0, MAX_BUFFERED);
       })
       .finally(() => {

@@ -23,7 +23,9 @@ export class SecretBox {
     const iv = randomBytes(IV_BYTES);
     const cipher = createCipheriv("aes-256-gcm", this.key, iv);
     const ciphertext = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
-    return [VERSION, iv, cipher.getAuthTag(), ciphertext].map((p) => (typeof p === "string" ? p : p.toString("base64url"))).join(".");
+    return [VERSION, iv, cipher.getAuthTag(), ciphertext]
+      .map((p) => (typeof p === "string" ? p : p.toString("base64url")))
+      .join(".");
   }
 
   open(sealed: string): string {
@@ -31,8 +33,13 @@ export class SecretBox {
     if (version !== VERSION || !iv || !tag || ciphertext === undefined) {
       throw new SecretBoxError("Malformed sealed secret");
     }
-    const decipher = createDecipheriv("aes-256-gcm", this.key, Buffer.from(iv, "base64url"), { authTagLength: TAG_BYTES });
+    const decipher = createDecipheriv("aes-256-gcm", this.key, Buffer.from(iv, "base64url"), {
+      authTagLength: TAG_BYTES,
+    });
     decipher.setAuthTag(Buffer.from(tag, "base64url"));
-    return Buffer.concat([decipher.update(Buffer.from(ciphertext, "base64url")), decipher.final()]).toString("utf8");
+    return Buffer.concat([
+      decipher.update(Buffer.from(ciphertext, "base64url")),
+      decipher.final(),
+    ]).toString("utf8");
   }
 }

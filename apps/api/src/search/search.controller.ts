@@ -25,7 +25,10 @@ export class SearchController {
   @WorkspaceScope({ from: "optionalQueryWorkspace", key: "workspace_id" })
   @RequirePermission("read", "Search")
   @ApiOkResponse({ type: SearchResultDto, isArray: true })
-  async list(@CurrentUser() actor: RequestActor, @Query() query: SearchQueryDto): Promise<PaginatedResult<SearchResult>> {
+  async list(
+    @CurrentUser() actor: RequestActor,
+    @Query() query: SearchQueryDto,
+  ): Promise<PaginatedResult<SearchResult>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
     const { items, total } = await this.search.search(actor, {

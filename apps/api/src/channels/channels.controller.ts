@@ -1,5 +1,24 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req, UseInterceptors } from "@nestjs/common";
-import { ApiCookieAuth, ApiCreatedResponse, ApiHeader, ApiOkResponse, ApiQuery, ApiTags } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseInterceptors,
+} from "@nestjs/common";
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiHeader,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Request } from "express";
 import type { Channel } from "@wire/types";
 import { PaginationQueryDto, parseFilterQuery } from "../common/dto/pagination-query.dto.js";
@@ -22,9 +41,17 @@ export class ChannelsController {
   /** The public directory plus every channel and conversation the caller belongs to. */
   @Get()
   @RequirePermission("read", "Channel")
-  @ApiQuery({ name: "filter[joined]", required: false, description: "true = only channels you belong to" })
+  @ApiQuery({
+    name: "filter[joined]",
+    required: false,
+    description: "true = only channels you belong to",
+  })
   @ApiQuery({ name: "filter[type]", required: false, enum: [...CHANNEL_TYPES] })
-  @ApiQuery({ name: "filter[archived]", required: false, description: "true = include archived channels" })
+  @ApiQuery({
+    name: "filter[archived]",
+    required: false,
+    description: "true = include archived channels",
+  })
   @ApiOkResponse({ type: ChannelDto, isArray: true })
   async list(
     @CurrentActor() actor: WorkspaceActor,
@@ -34,7 +61,9 @@ export class ChannelsController {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
     const filter = parseFilterQuery(req.query);
-    const type = CHANNEL_TYPES.has(filter["type"] as Channel["type"]) ? (filter["type"] as Channel["type"]) : undefined;
+    const type = CHANNEL_TYPES.has(filter["type"] as Channel["type"])
+      ? (filter["type"] as Channel["type"])
+      : undefined;
     const { items, total } = await this.channels.list(actor, {
       page,
       perPage,
@@ -55,10 +84,17 @@ export class ChannelsController {
 
   @Post()
   @RequirePermission("create", "Channel")
-  @ApiHeader({ name: "Idempotency-Key", required: false, description: "Replays the original response if the same key is sent again." })
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: false,
+    description: "Replays the original response if the same key is sent again.",
+  })
   @ApiCreatedResponse({ type: ChannelDto })
   @UseInterceptors(IdempotencyInterceptor)
-  create(@CurrentActor() actor: WorkspaceActor, @Body() body: CreateChannelRequestDto): Promise<Channel> {
+  create(
+    @CurrentActor() actor: WorkspaceActor,
+    @Body() body: CreateChannelRequestDto,
+  ): Promise<Channel> {
     return this.channels.create(actor, body);
   }
 
@@ -86,7 +122,10 @@ export class ChannelsController {
   @RequirePermission("delete", "Channel")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: ChannelDto })
-  executeUnarchive(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<Channel> {
+  executeUnarchive(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("id") id: string,
+  ): Promise<Channel> {
     return this.channels.setArchived(actor, id, false);
   }
 }

@@ -53,9 +53,7 @@ Defined in `@wire/types` (`packages/types/src/envelope.ts`) — the single canon
   "error": {
     "code": "VALIDATION_ERROR",
     "message": "The request contains invalid fields.",
-    "details": [
-      { "field": "email", "code": "ISEMAIL", "message": "email must be an email" }
-    ]
+    "details": [{ "field": "email", "code": "ISEMAIL", "message": "email must be an email" }]
   },
   "meta": {
     "request_id": "req_...",
@@ -68,20 +66,20 @@ See [errors.md](./errors.md) for the full error code list.
 
 ## Standard HTTP status codes
 
-| Code | Meaning | Typical use |
-|------|---------|--------------|
-| 200 | OK | Successful retrieval/update |
-| 201 | Created | Resource created |
-| 202 | Accepted | Async operation accepted |
-| 400 | Bad Request | Malformed request |
-| 401 | Unauthenticated | Missing/invalid credentials |
-| 403 | Forbidden | Insufficient permissions |
-| 404 | Not Found | Resource doesn't exist |
-| 409 | Conflict | Conflicting operation |
-| 422 | Unprocessable Entity | Validation failure |
-| 429 | Too Many Requests | Rate limited |
-| 500 | Internal Server Error | Unexpected error |
-| 503 | Service Unavailable | Temporary outage |
+| Code | Meaning               | Typical use                 |
+| ---- | --------------------- | --------------------------- |
+| 200  | OK                    | Successful retrieval/update |
+| 201  | Created               | Resource created            |
+| 202  | Accepted              | Async operation accepted    |
+| 400  | Bad Request           | Malformed request           |
+| 401  | Unauthenticated       | Missing/invalid credentials |
+| 403  | Forbidden             | Insufficient permissions    |
+| 404  | Not Found             | Resource doesn't exist      |
+| 409  | Conflict              | Conflicting operation       |
+| 422  | Unprocessable Entity  | Validation failure          |
+| 429  | Too Many Requests     | Rate limited                |
+| 500  | Internal Server Error | Unexpected error            |
+| 503  | Service Unavailable   | Temporary outage            |
 
 **204 is never used.** A `204 No Content` cannot carry a body, which would break the universal envelope guarantee — every response, including deletions, returns `200` with `data: null` instead.
 

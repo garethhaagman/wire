@@ -7,7 +7,10 @@ export class WireEventDto implements WireEvent {
   @ApiProperty({ example: "evt_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   id!: WireEvent["id"];
 
-  @ApiProperty({ example: 48213, description: "Workspace-wide replay cursor (SSE id / Last-Event-ID)" })
+  @ApiProperty({
+    example: 48213,
+    description: "Workspace-wide replay cursor (SSE id / Last-Event-ID)",
+  })
   seq!: number;
 
   @ApiProperty({ example: "message.created" })
@@ -33,12 +36,19 @@ export class WireEventDto implements WireEvent {
 
 function toStringArray(value: unknown): string[] | undefined {
   if (value === undefined || value === "") return undefined;
-  const values: unknown[] = Array.isArray(value) ? value : typeof value === "string" ? value.split(",") : [];
+  const values: unknown[] = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? value.split(",")
+      : [];
   return values.filter((v): v is string => typeof v === "string" && v.length > 0);
 }
 
 export class StreamQueryDto {
-  @ApiPropertyOptional({ type: [String], description: "Only deliver these event types (comma-separated or repeated)" })
+  @ApiPropertyOptional({
+    type: [String],
+    description: "Only deliver these event types (comma-separated or repeated)",
+  })
   @IsOptional()
   @Transform(({ value }) => toStringArray(value))
   @IsArray()
@@ -52,7 +62,10 @@ export class StreamQueryDto {
   @IsString({ each: true })
   channel_ids?: string[];
 
-  @ApiPropertyOptional({ example: 48000, description: "Replay events after this seq first; the Last-Event-ID header takes precedence" })
+  @ApiPropertyOptional({
+    example: 48000,
+    description: "Replay events after this seq first; the Last-Event-ID header takes precedence",
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -72,7 +85,10 @@ export class PresenceEntryDto implements PresenceEntry {
 }
 
 export class TypingRequestDto {
-  @ApiPropertyOptional({ example: "msg_01jd5x0k8f3v8q2m7n4r6t9w1y", description: "Set when typing a thread reply" })
+  @ApiPropertyOptional({
+    example: "msg_01jd5x0k8f3v8q2m7n4r6t9w1y",
+    description: "Set when typing a thread reply",
+  })
   @IsOptional()
   @IsString()
   @Length(1, 64)

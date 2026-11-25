@@ -22,7 +22,8 @@ export function selectModel(env: ApiEnv): LanguageModel {
       const prompt = options.prompt
         .flatMap((message) => {
           if (message.role === "system") return [message.content];
-          if (message.role === "user") return message.content.map((part) => (part.type === "text" ? part.text : ""));
+          if (message.role === "user")
+            return message.content.map((part) => (part.type === "text" ? part.text : ""));
           return [];
         })
         .join(" ")
@@ -32,7 +33,12 @@ export function selectModel(env: ApiEnv): LanguageModel {
         content: [{ type: "text", text: `[mock] ${prompt}` }],
         finishReason: { unified: "stop", raw: "stop" },
         usage: {
-          inputTokens: { total: undefined, noCache: undefined, cacheRead: undefined, cacheWrite: undefined },
+          inputTokens: {
+            total: undefined,
+            noCache: undefined,
+            cacheRead: undefined,
+            cacheWrite: undefined,
+          },
           outputTokens: { total: undefined, text: undefined, reasoning: undefined },
         },
         warnings: [],

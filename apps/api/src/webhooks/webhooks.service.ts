@@ -9,7 +9,11 @@ import {
   insertWebhookEndpoint,
   listWebhookEndpoints,
 } from "@wire/db";
-import { WIRE_EVENT_TYPES, type CreateWebhookEndpointRequest, type WebhookEndpoint } from "@wire/types";
+import {
+  WIRE_EVENT_TYPES,
+  type CreateWebhookEndpointRequest,
+  type WebhookEndpoint,
+} from "@wire/types";
 import { ValidationException } from "../common/errors/api-exception.js";
 import { API_ENV } from "../config/env.provider.js";
 import type { WorkspaceActor } from "../permissions/actor.js";
@@ -29,7 +33,11 @@ export class WebhooksService {
     private readonly secrets: WebhookSecretBox,
   ) {}
 
-  list(actor: WorkspaceActor, page: number, perPage: number): Promise<{ items: WebhookEndpoint[]; total: number }> {
+  list(
+    actor: WorkspaceActor,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: WebhookEndpoint[]; total: number }> {
     return listWebhookEndpoints(this.db, actor.workspaceId, page, perPage);
   }
 
@@ -42,7 +50,10 @@ export class WebhooksService {
   }
 
   /** Returns the endpoint plus its signing secret — the one time the secret is ever visible. */
-  async create(actor: WorkspaceActor, input: CreateWebhookEndpointRequest): Promise<WebhookEndpoint & { secret: string }> {
+  async create(
+    actor: WorkspaceActor,
+    input: CreateWebhookEndpointRequest,
+  ): Promise<WebhookEndpoint & { secret: string }> {
     await this.validate(actor, input);
     const secret = `whsec_${randomBytes(32).toString("base64url")}`;
     const endpoint = await insertWebhookEndpoint(this.db, {
@@ -61,20 +72,33 @@ export class WebhooksService {
     }
   }
 
-  private async validate(actor: WorkspaceActor, input: CreateWebhookEndpointRequest): Promise<void> {
+  private async validate(
+    actor: WorkspaceActor,
+    input: CreateWebhookEndpointRequest,
+  ): Promise<void> {
     const details = [];
     if (this.env.NODE_ENV === "production" && new URL(input.url).protocol !== "https:") {
       details.push({ field: "url", code: "INSECURE_URL", message: "Webhook URLs must use https" });
     }
     const unknown = input.enabledEvents.filter((e) => !SUBSCRIBABLE.has(e));
     if (unknown.length) {
-      details.push({ field: "enabledEvents", code: "UNKNOWN_EVENT_TYPE", message: `Unknown event types: ${unknown.join(", ")}` });
+      details.push({
+        field: "enabledEvents",
+        code: "UNKNOWN_EVENT_TYPE",
+        message: `Unknown event types: ${unknown.join(", ")}`,
+      });
     }
     if (input.channelFilter?.length) {
-      const found = new Set(await filterWorkspaceChannelIds(this.db, actor.workspaceId, input.channelFilter));
+      const found = new Set(
+        await filterWorkspaceChannelIds(this.db, actor.workspaceId, input.channelFilter),
+      );
       const missing = input.channelFilter.filter((id) => !found.has(id));
       if (missing.length) {
-        details.push({ field: "channelFilter", code: "UNKNOWN_CHANNEL", message: `No such channels: ${missing.join(", ")}` });
+        details.push({
+          field: "channelFilter",
+          code: "UNKNOWN_CHANNEL",
+          message: `No such channels: ${missing.join(", ")}`,
+        });
       }
     }
     if (details.length) throw new ValidationException(details);

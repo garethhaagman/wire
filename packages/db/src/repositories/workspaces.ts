@@ -109,7 +109,10 @@ export interface OrgUiConfigLayer {
   locks: unknown;
 }
 
-export async function getOrgUiConfig(db: Queryable, workspaceId: string): Promise<OrgUiConfigLayer | null> {
+export async function getOrgUiConfig(
+  db: Queryable,
+  workspaceId: string,
+): Promise<OrgUiConfigLayer | null> {
   const { rows } = await db.query<{ ui_config: unknown; ui_config_locks: unknown }>(
     `select ui_config, ui_config_locks from workspaces where id = $1`,
     [workspaceId],
@@ -119,7 +122,11 @@ export async function getOrgUiConfig(db: Queryable, workspaceId: string): Promis
   return { override: row.ui_config, locks: row.ui_config_locks };
 }
 
-export async function setOrgUiConfig(db: Queryable, workspaceId: string, layer: OrgUiConfigLayer): Promise<void> {
+export async function setOrgUiConfig(
+  db: Queryable,
+  workspaceId: string,
+  layer: OrgUiConfigLayer,
+): Promise<void> {
   await db.query(
     `update workspaces set ui_config = $2::jsonb, ui_config_locks = $3::jsonb, updated_at = now() where id = $1`,
     [workspaceId, JSON.stringify(layer.override), JSON.stringify(layer.locks)],

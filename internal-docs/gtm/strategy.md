@@ -2,7 +2,7 @@
 
 ## Motion: product-led, developer-first, open-core
 
-Bottom-up adoption by developers via API + MCP, monetized later through Enterprise features and/or a hosted tier (see [pricing/packaging.md](../pricing/packaging.md)). No outbound sales motion until there's organic self-hosted adoption to sell *into* — this sequencing matches the [icp-wedge.md](./icp-wedge.md) decision to lead with developers, not IT/compliance buyers.
+Bottom-up adoption by developers via API + MCP, monetized later through Enterprise features and/or a hosted tier (see [pricing/packaging.md](../pricing/packaging.md)). No outbound sales motion until there's organic self-hosted adoption to sell _into_ — this sequencing matches the [icp-wedge.md](./icp-wedge.md) decision to lead with developers, not IT/compliance buyers.
 
 ## Phases
 

@@ -1,6 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { IsBoolean, IsInt, IsOptional, IsString, Length, Min } from "class-validator";
-import type { CreateMessageRequest, CreateThreadReplyRequest, Message, UpdateMessageRequest } from "@wire/types";
+import type {
+  CreateMessageRequest,
+  CreateThreadReplyRequest,
+  Message,
+  UpdateMessageRequest,
+} from "@wire/types";
 
 export class MessageDto implements Message {
   @ApiProperty({ example: "msg_01jd5x0k8f3v8q2m7n4r6t9w1y" })
@@ -73,7 +78,10 @@ export class UpdateMessageRequestDto implements UpdateMessageRequest {
   @Length(1, 8000)
   body!: string;
 
-  @ApiPropertyOptional({ description: "Expected current revision; 409 if the message has changed since", example: 1 })
+  @ApiPropertyOptional({
+    description: "Expected current revision; 409 if the message has changed since",
+    example: 1,
+  })
   @IsOptional()
   @IsInt()
   @Min(1)
@@ -86,7 +94,10 @@ export class CreateThreadReplyRequestDto implements CreateThreadReplyRequest {
   @Length(1, 8000)
   body!: string;
 
-  @ApiPropertyOptional({ description: "Also post a copy of this reply to the channel", example: false })
+  @ApiPropertyOptional({
+    description: "Also post a copy of this reply to the channel",
+    example: false,
+  })
   @IsOptional()
   @IsBoolean()
   broadcastToChannel?: boolean;

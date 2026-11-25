@@ -14,12 +14,12 @@ Agents and integrations need **faithful, citeable context**—not raw channel du
 
 ## Search modes
 
-| Mode | API | Use case |
-|------|-----|----------|
-| Keyword | `GET /v1/search?q=` | Exact terms, handles, ids |
-| Semantic | `POST /v1/search/semantic` | Natural language |
-| Hybrid | `POST /v1/search/hybrid` | Default for agents (RRF merge) |
-| Structured | `POST /v1/search/records` | Metadata filters, date ranges |
+| Mode       | API                        | Use case                       |
+| ---------- | -------------------------- | ------------------------------ |
+| Keyword    | `GET /v1/search?q=`        | Exact terms, handles, ids      |
+| Semantic   | `POST /v1/search/semantic` | Natural language               |
+| Hybrid     | `POST /v1/search/hybrid`   | Default for agents (RRF merge) |
+| Structured | `POST /v1/search/records`  | Metadata filters, date ranges  |
 
 All modes accept `channel_ids`, `author_ids`, `actor_types`, `after`/`before`, `thread_id`, `include_files`.
 

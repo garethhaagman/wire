@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+} from "@nestjs/common";
 import { ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import type { WebhookEndpoint } from "@wire/types";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
@@ -37,7 +47,10 @@ export class WebhooksController {
   @Get(":id")
   @RequirePermission("read", "WebhookEndpoint")
   @ApiOkResponse({ type: WebhookEndpointDto })
-  getById(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<WebhookEndpoint> {
+  getById(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("id") id: string,
+  ): Promise<WebhookEndpoint> {
     return this.webhooks.getById(actor, id);
   }
 

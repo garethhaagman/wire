@@ -12,7 +12,7 @@ All async integrations use a canonical envelope:
   "type": "message.created",
   "created_at": "2026-11-19T19:00:00Z",
   "workspace_id": "ws_abc",
-  "data": { },
+  "data": {},
   "api_version": "2026-11-19"
 }
 ```
@@ -32,22 +32,22 @@ Every mutation writes its events to an `events` outbox table **in the same trans
 
 ## Core event types (v0.1)
 
-| Type | When |
-|------|------|
-| `message.created` | New message |
-| `message.edited` | New revision |
-| `thread.reply` | Reply in thread |
-| `reaction.added` | Reaction |
-| `channel.member.joined` | Membership change |
-| `agent.run.started` | Run begins |
-| `agent.run.completed` | Terminal state |
-| `agent.run.awaiting_approval` | HITL gate |
-| `automation.execution.started` | Automation fired |
-| `automation.execution.completed` | Automation done |
-| `file.indexed` | Searchable |
-| `context_pack.created` | Pack ready |
-| `import.completed` | Slack export ingest finished |
-| `import.failed` | Terminal import failure |
+| Type                             | When                         |
+| -------------------------------- | ---------------------------- |
+| `message.created`                | New message                  |
+| `message.edited`                 | New revision                 |
+| `thread.reply`                   | Reply in thread              |
+| `reaction.added`                 | Reaction                     |
+| `channel.member.joined`          | Membership change            |
+| `agent.run.started`              | Run begins                   |
+| `agent.run.completed`            | Terminal state               |
+| `agent.run.awaiting_approval`    | HITL gate                    |
+| `automation.execution.started`   | Automation fired             |
+| `automation.execution.completed` | Automation done              |
+| `file.indexed`                   | Searchable                   |
+| `context_pack.created`           | Pack ready                   |
+| `import.completed`               | Slack export ingest finished |
+| `import.failed`                  | Terminal import failure      |
 
 Bulk import runs with `suppress_events: true` must **not** emit per-message webhooks; only terminal import events.
 

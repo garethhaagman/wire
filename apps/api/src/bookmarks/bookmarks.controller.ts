@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+} from "@nestjs/common";
 import { ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import type { Bookmark } from "@wire/types";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
@@ -19,7 +29,10 @@ export class BookmarksController {
   @Get()
   @RequirePermission("read", "Bookmark")
   @ApiOkResponse({ type: BookmarkDto, isArray: true })
-  async list(@CurrentActor() actor: WorkspaceActor, @Query() query: PaginationQueryDto): Promise<PaginatedResult<Bookmark>> {
+  async list(
+    @CurrentActor() actor: WorkspaceActor,
+    @Query() query: PaginationQueryDto,
+  ): Promise<PaginatedResult<Bookmark>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
     const { items, total } = await this.bookmarks.list(actor, page, perPage);
@@ -29,7 +42,10 @@ export class BookmarksController {
   @Post()
   @RequirePermission("create", "Bookmark")
   @ApiCreatedResponse({ type: BookmarkDto })
-  add(@CurrentActor() actor: WorkspaceActor, @Body() body: CreateBookmarkRequestDto): Promise<Bookmark> {
+  add(
+    @CurrentActor() actor: WorkspaceActor,
+    @Body() body: CreateBookmarkRequestDto,
+  ): Promise<Bookmark> {
     return this.bookmarks.add(actor, body.messageId);
   }
 

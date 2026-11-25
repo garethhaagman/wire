@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+} from "@nestjs/common";
 import { ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import type { ChannelMember } from "@wire/types";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
@@ -8,7 +18,11 @@ import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
 import { ChannelsService } from "./channels.service.js";
-import { AddChannelMemberRequestDto, ChannelMemberDto, MarkReadRequestDto } from "./dto/channel.dto.js";
+import {
+  AddChannelMemberRequestDto,
+  ChannelMemberDto,
+  MarkReadRequestDto,
+} from "./dto/channel.dto.js";
 
 @ApiTags("Channel members")
 @ApiCookieAuth()

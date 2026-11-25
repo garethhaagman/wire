@@ -10,7 +10,15 @@ function BrandMark(): React.JSX.Element {
   return (
     <div className="flex items-center gap-2.5 text-foreground">
       <span className="flex h-7 w-7 items-center justify-center rounded-md border border-border bg-card text-foreground shadow-sm">
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
           <path d="M3 8h5c4 0 4 8 8 8h5" />
           <path d="M3 16h5c1.6 0 2.5-1.3 3.3-2.8M12.7 10.8C13.5 9.3 14.4 8 16 8h5" />
         </svg>
@@ -24,7 +32,11 @@ function BrandMark(): React.JSX.Element {
  * Full-bleed auth screen: form column on the left, shader panel on the right (hidden below lg).
  * Renders against the base config — no org is known until after sign-in.
  */
-export function AuthLayout({ title, description, children }: {
+export function AuthLayout({
+  title,
+  description,
+  children,
+}: {
   title: string;
   description?: ReactNode;
   children: ReactNode;
@@ -37,7 +49,9 @@ export function AuthLayout({ title, description, children }: {
         <div className="flex flex-1 items-center py-12">
           <div className="w-full max-w-[360px]">
             <h1 className="text-3xl font-semibold tracking-tight text-foreground">{title}</h1>
-            {description ? <div className="mt-2 text-sm text-muted-foreground">{description}</div> : null}
+            {description ? (
+              <div className="mt-2 text-sm text-muted-foreground">{description}</div>
+            ) : null}
             <div className="mt-8">{children}</div>
           </div>
         </div>

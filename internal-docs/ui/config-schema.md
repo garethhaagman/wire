@@ -8,21 +8,21 @@ Defined in `@wire/ui-config` (`packages/ui-config/src/`) as a [zod](https://zod.
 interface UiConfig {
   schemaVersion: 1;
   theme: {
-    mode: "light" | "dark" | "system";  // default "light"; "system" follows prefers-color-scheme
-    colors: ColorRoles;        // 16 semantic roles (background, primary, border, ...), each a {light, dark?} pair
+    mode: "light" | "dark" | "system"; // default "light"; "system" follows prefers-color-scheme
+    colors: ColorRoles; // 16 semantic roles (background, primary, border, ...), each a {light, dark?} pair
     radius: "none" | "sm" | "md" | "lg" | "xl" | "full";
     typography: {
-      sans: FontSource;         // {kind: "system"} | {kind: "google", family} | {kind: "custom", family, url}
+      sans: FontSource; // {kind: "system"} | {kind: "google", family} | {kind: "custom", family, url}
       mono: FontSource;
-      display?: FontSource;     // headings (e.g. auth screen title); system serif stack when unset
-      baseSizePx: number;       // 10-24, default 16
+      display?: FontSource; // headings (e.g. auth screen title); system serif stack when unset
+      baseSizePx: number; // 10-24, default 16
       scale: "compact" | "comfortable" | "spacious";
     };
-    iconPack: IconPack;          // {kind: "lucide"} | {kind: "phosphor"} | {kind: "custom", id, spriteUrl}
+    iconPack: IconPack; // {kind: "lucide"} | {kind: "phosphor"} | {kind: "custom", id, spriteUrl}
   };
   branding: {
     productName: string;
-    logo: { mark?, full?, markDark?, fullDark? };  // URLs
+    logo: { mark?; full?; markDark?; fullDark? }; // URLs
     faviconUrl?: string;
   };
   motion: {
@@ -30,9 +30,9 @@ interface UiConfig {
     speed: "slower" | "normal" | "faster";
     respectReducedMotion: boolean;
   };
-  layouts: Layout[];             // see theming-and-layout.md
-  activeLayoutId: string;        // must reference a layout in `layouts`
-  extensions: Record<string, unknown>;  // forward-compat escape hatch, see below
+  layouts: Layout[]; // see theming-and-layout.md
+  activeLayoutId: string; // must reference a layout in `layouts`
+  extensions: Record<string, unknown>; // forward-compat escape hatch, see below
 }
 ```
 
@@ -65,19 +65,19 @@ This resolution happens **on the server** (`apps/api/src/ui-config/`), not in th
 - A custom layout missing one of the **required slots** (see [theming-and-layout.md](./theming-and-layout.md) "Required slots") gets that slot backfilled from the base layout, with a warning.
 - If, after all of the above, the merged document somehow still fails final validation, the entire resolution falls back to `baseUiConfig` — the one guarantee that can never itself fail, because it's asserted to validate standalone.
 
-`warnings` is surfaced in the API response (`UiConfigResource.warnings` in `@wire/types`) specifically so an admin-facing UI (or an agent editing config) can see *what* got silently corrected, rather than a config edit failing mysteriously or a page rendering subtly wrong with no signal why.
+`warnings` is surfaced in the API response (`UiConfigResource.warnings` in `@wire/types`) specifically so an admin-facing UI (or an agent editing config) can see _what_ got silently corrected, rather than a config edit failing mysteriously or a page rendering subtly wrong with no signal why.
 
 ## Extensibility rules
 
 Three mechanisms, for three different kinds of change:
 
 1. **New optional field, new enum member** — additive, no version bump, no migration. This is the common case and should be most schema changes.
-2. **`extensions: Record<string, unknown>`** — a staging area for a setting that doesn't have a typed field yet. Namespaced by feature key (e.g. `extensions.messageDensity`). Rules (enforced by convention/review, not by the type system): keys are feature identifiers, not dot-paths; values must be JSON-serializable; once a key graduates to a typed field, it's removed from `extensions` in the same change, not kept as a duplicate. This is the mechanism an AI agent or a human can use to add UI-affecting config *today* without a schema PR landing first.
+2. **`extensions: Record<string, unknown>`** — a staging area for a setting that doesn't have a typed field yet. Namespaced by feature key (e.g. `extensions.messageDensity`). Rules (enforced by convention/review, not by the type system): keys are feature identifiers, not dot-paths; values must be JSON-serializable; once a key graduates to a typed field, it's removed from `extensions` in the same change, not kept as a duplicate. This is the mechanism an AI agent or a human can use to add UI-affecting config _today_ without a schema PR landing first.
 3. **`schemaVersion` bump** — only for breaking shape changes (field removed or retyped). `UI_CONFIG_SCHEMA_VERSION` (currently `1`) is a zod `z.literal`, so a config written against a different major version fails validation outright rather than being silently misinterpreted. No migration tooling exists yet — v1 is the only version — but the field exists from the start so adding one later doesn't require touching every stored config.
 
 ## Slots are the modularity boundary, not `extensions`
 
-A new *arrangement* of existing UI (move the composer, resize a sidebar, pick a denser variant) is expressed through `layouts`/`slots` (see [theming-and-layout.md](./theming-and-layout.md)) — config can only select among slot ids and variants the web app has registered in code, never invent one. A new *setting* that doesn't fit an existing typed field goes in `extensions`. If you're unsure which: if it changes what renders, it's a slot/variant (code change required); if it changes a value an existing renderer reads, it's a field (typed or `extensions`).
+A new _arrangement_ of existing UI (move the composer, resize a sidebar, pick a denser variant) is expressed through `layouts`/`slots` (see [theming-and-layout.md](./theming-and-layout.md)) — config can only select among slot ids and variants the web app has registered in code, never invent one. A new _setting_ that doesn't fit an existing typed field goes in `extensions`. If you're unsure which: if it changes what renders, it's a slot/variant (code change required); if it changes a value an existing renderer reads, it's a field (typed or `extensions`).
 
 ## Agent-editable (forward-looking)
 

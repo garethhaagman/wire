@@ -12,23 +12,25 @@ This repo's commit and PR titles use a type prefix. Commit bodies and PR descrip
 
 `<type>: <concise, specific summary>` — no scope, no parenthetical package name (checked against this repo's own history: it uses plain titles with no scope, and that is deliberate going forward).
 
-| Type | Use for |
-|------|---------|
-| `feat` | A new capability a user or caller can now do |
-| `fix` | A bug fix — behavior was wrong, now it is correct |
-| `chore` | No behavior change — deps, config, generated files, docs |
-| `refactor` | No behavior change — internal structure only |
-| `test` | Test-only change |
-| `perf` | A performance improvement with no behavior change |
-| `revert` | Undoes an earlier commit |
+| Type       | Use for                                                  |
+| ---------- | -------------------------------------------------------- |
+| `feat`     | A new capability a user or caller can now do             |
+| `fix`      | A bug fix — behavior was wrong, now it is correct        |
+| `chore`    | No behavior change — deps, config, generated files, docs |
+| `refactor` | No behavior change — internal structure only             |
+| `test`     | Test-only change                                         |
+| `perf`     | A performance improvement with no behavior change        |
+| `revert`   | Undoes an earlier commit                                 |
 
 **Good:**
+
 - `feat: add agent run endpoint`
 - `fix: correct presigned upload checksum mismatch`
 - `chore: update stale internal docs`
 - `refactor: extract StreamSink from RealtimeService`
 
 **Bad, and why:**
+
 - `fix: bug fixes` — not specific; a reader can't tell what changed from the title alone.
 - `feat(api): add agent run endpoint` — this repo's convention has no scope; drop the parenthetical.
 - `Update files` — no type prefix, and "files" names nothing.
@@ -63,12 +65,15 @@ Technical terms (an actual field name, an endpoint path, a library name) are exe
 
 ```markdown
 ## Summary
+
 <1-3 sentences, simple-English rules above, stating what changed and why>
 
 ## Contract changes
+
 <omit this section entirely if there are none — see below>
 
 ## Test plan
+
 - [ ] <specific, checkable step>
 ```
 

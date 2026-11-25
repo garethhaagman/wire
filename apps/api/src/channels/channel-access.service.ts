@@ -1,5 +1,11 @@
 import { HttpStatus, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { Database, findChannelRecord, findMessage, isChannelMember, type ChannelRecord } from "@wire/db";
+import {
+  Database,
+  findChannelRecord,
+  findMessage,
+  isChannelMember,
+  type ChannelRecord,
+} from "@wire/db";
 import type { Message } from "@wire/types";
 import { ApiException } from "../common/errors/api-exception.js";
 import type { WorkspaceActor } from "../permissions/actor.js";
@@ -36,7 +42,11 @@ export class ChannelAccessService {
   async writable(actor: WorkspaceActor, channelId: string): Promise<ChannelAccess> {
     const access = await this.readable(actor, channelId);
     if (access.channel.archivedAt) {
-      throw new ApiException("RESOURCE_CONFLICT", `Channel ${channelId} is archived.`, HttpStatus.CONFLICT);
+      throw new ApiException(
+        "RESOURCE_CONFLICT",
+        `Channel ${channelId} is archived.`,
+        HttpStatus.CONFLICT,
+      );
     }
     return access;
   }

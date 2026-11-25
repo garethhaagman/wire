@@ -8,11 +8,17 @@ import type { UiConfig } from "./schema.js";
  * provider can write these directly onto `:root`/`.dark` without any
  * per-component mapping.
  */
-export function toCssVariables(config: UiConfig): { light: Record<string, string>; dark: Record<string, string> } {
+export function toCssVariables(config: UiConfig): {
+  light: Record<string, string>;
+  dark: Record<string, string>;
+} {
   const light: Record<string, string> = {};
   const dark: Record<string, string> = {};
 
-  for (const [role, pair] of Object.entries(config.theme.colors) as [keyof ColorRoles, ColorRoles[keyof ColorRoles]][]) {
+  for (const [role, pair] of Object.entries(config.theme.colors) as [
+    keyof ColorRoles,
+    ColorRoles[keyof ColorRoles],
+  ][]) {
     const varName = colorRoleVarName(role);
     light[varName] = pair.light;
     dark[varName] = pair.dark ?? pair.light;

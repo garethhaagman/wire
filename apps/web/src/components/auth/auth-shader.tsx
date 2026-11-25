@@ -113,7 +113,10 @@ function compile(gl: WebGLRenderingContext, type: number, source: string): WebGL
 }
 
 function motionReduced(): boolean {
-  return document.documentElement.dataset.motion === "reduced" || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return (
+    document.documentElement.dataset.motion === "reduced" ||
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 }
 
 /** Animated halftone panel. Falls back to the flat `.auth-shader` background if WebGL is unavailable. */

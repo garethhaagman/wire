@@ -22,7 +22,15 @@ export function createRedis(name: string, args: RedisArgs): RedisResult {
   const container = new docker.Container(`${name}-redis`, {
     name: `${name}-redis`,
     image: "redis:7-alpine",
-    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory-policy", "noeviction"],
+    command: [
+      "redis-server",
+      "--save",
+      "",
+      "--appendonly",
+      "no",
+      "--maxmemory-policy",
+      "noeviction",
+    ],
     networksAdvanced: [{ name: args.networkName, aliases: ["redis"] }],
     healthcheck: {
       tests: ["CMD", "redis-cli", "ping"],

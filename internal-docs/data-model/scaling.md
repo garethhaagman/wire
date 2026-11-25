@@ -38,16 +38,16 @@ A hot channel (thousands of posts/sec) is bounded by row-lock throughput on its 
 
 ## Concurrency guarantees
 
-| Operation | Mechanism |
-|-----------|-----------|
-| Message ordering | Per-channel `seq` under the channel row lock |
-| Edit vs. edit | `SELECT … FOR UPDATE` plus optional `revision` precondition → 409 on conflict |
-| Duplicate reaction/pin/bookmark | Unique constraints with `ON CONFLICT DO NOTHING` |
-| DM creation race | `UNIQUE(workspace_id, dm_key)` with `ON CONFLICT` returning the existing DM |
-| Duplicate invite | `UNIQUE(workspace_id, lower(email))` |
-| Last owner demotion/removal | `FOR UPDATE` over active owners |
-| Retried POST | Redis idempotency key with an in-flight marker |
-| Transient deadlock / serialization failure | `Database.tx` retries 40001/40P01 up to 3× |
+| Operation                                  | Mechanism                                                                     |
+| ------------------------------------------ | ----------------------------------------------------------------------------- |
+| Message ordering                           | Per-channel `seq` under the channel row lock                                  |
+| Edit vs. edit                              | `SELECT … FOR UPDATE` plus optional `revision` precondition → 409 on conflict |
+| Duplicate reaction/pin/bookmark            | Unique constraints with `ON CONFLICT DO NOTHING`                              |
+| DM creation race                           | `UNIQUE(workspace_id, dm_key)` with `ON CONFLICT` returning the existing DM   |
+| Duplicate invite                           | `UNIQUE(workspace_id, lower(email))`                                          |
+| Last owner demotion/removal                | `FOR UPDATE` over active owners                                               |
+| Retried POST                               | Redis idempotency key with an in-flight marker                                |
+| Transient deadlock / serialization failure | `Database.tx` retries 40001/40P01 up to 3×                                    |
 
 ## Realtime fan-out
 
@@ -59,12 +59,12 @@ A hot channel (thousands of posts/sec) is bounded by row-lock throughput on its 
 
 ## Caching
 
-| Cache | Where | TTL / invalidation |
-|-------|-------|--------------------|
-| Session | Redis (Better Auth `secondaryStorage`) + 5-minute cookie cache | Better Auth managed |
-| Membership (workspace, user) → member/role | Redis | 60s (negative: 5s); explicit invalidation on member changes |
-| Resource → workspace (channel/message/file) | In-process LRU (200k) | None needed: immutable |
-| Channel type / channel member sets (realtime) | In-process | LRU / 30s plus event invalidation |
+| Cache                                         | Where                                                          | TTL / invalidation                                          |
+| --------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------- |
+| Session                                       | Redis (Better Auth `secondaryStorage`) + 5-minute cookie cache | Better Auth managed                                         |
+| Membership (workspace, user) → member/role    | Redis                                                          | 60s (negative: 5s); explicit invalidation on member changes |
+| Resource → workspace (channel/message/file)   | In-process LRU (200k)                                          | None needed: immutable                                      |
+| Channel type / channel member sets (realtime) | In-process                                                     | LRU / 30s plus event invalidation                           |
 
 ## Retention and background work
 

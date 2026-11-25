@@ -6,9 +6,14 @@ A **slot** is a named mount point the app shell always knows how to render into 
 
 ```typescript
 type SlotId =
-  | "nav.primary" | "nav.workspaceSwitcher"
-  | "sidebar.channelList" | "topbar" | "composer"
-  | "thread.panel" | "search.trigger" | "command.palette";
+  | "nav.primary"
+  | "nav.workspaceSwitcher"
+  | "sidebar.channelList"
+  | "topbar"
+  | "composer"
+  | "thread.panel"
+  | "search.trigger"
+  | "command.palette";
 ```
 
 Config can arrange, resize, and reskin a slot, and pick which registered **variant** renders into it — but it cannot invent a new slot id, and it cannot make a required slot disappear. This is the concrete answer to "fully customizable, but a user can't break their own interface": the set of things that must exist somewhere never shrinks to zero, only their presentation does.
@@ -44,7 +49,9 @@ interface Layout {
   id: string;
   name: string;
   description?: string;
-  slots: Partial<Record<SlotId, { placement: SlotPlacement; variant: string; props: Record<string, unknown> }>>;
+  slots: Partial<
+    Record<SlotId, { placement: SlotPlacement; variant: string; props: Record<string, unknown> }>
+  >;
 }
 ```
 
@@ -61,7 +68,7 @@ interface Layout {
 1. `UiConfigProvider` (`apps/web/src/lib/ui-config/config-provider.tsx`) fetches `GET /v1/workspaces/:id/ui-config` via React Query and gets back one resolved `UiConfig`.
 2. `applyTheme()` (`apps/web/src/lib/ui-config/apply-theme.ts`) calls `toCssVariables()` (`@wire/ui-config`) to turn `theme.colors` into a flat `--role-name: value` map, and writes it onto `document.documentElement` along with `--radius`, `--font-sans`/`--font-mono`/`--ui-font-display` (the `font-display` utility), and `--ui-base-size`. `google` and `custom` font sources are fetched on first use (a Google Fonts stylesheet or a `FontFace`); the fallback stack renders until they arrive. Light/dark selection comes from `theme.mode` (`"light"` by default; `"system"` follows `prefers-color-scheme`); `ColorRoles` carries an optional `dark` value per role for this.
 3. Tailwind's `@theme inline` block (`apps/web/src/styles/theme.generated.css`, imported by `globals.css`) maps `--color-primary` etc. to those same custom properties, so ordinary utility classes (`bg-primary`, `text-muted-foreground`) read the live, per-session theme — no component ever reads `UiConfig` directly for color. That file is generated from `colorRolesSchema` by `toTailwindThemeCss()` (`bun run gen:theme` in `apps/web`); never edit it by hand. See "Drift guards" below.
-4. `createIconRegistry(config.theme.iconPack)` builds the `Icon` component the rest of the tree calls via `useIcon()` — config says *which pack* (`{kind: "lucide"}`), the registry (`apps/web/src/lib/ui-config/icon-pack.tsx`) says what that pack actually renders. A `custom` pack resolves to an inline `<svg><use></svg>` against the org's own sprite sheet URL, so a self-hosted icon set needs no app rebuild either.
+4. `createIconRegistry(config.theme.iconPack)` builds the `Icon` component the rest of the tree calls via `useIcon()` — config says _which pack_ (`{kind: "lucide"}`), the registry (`apps/web/src/lib/ui-config/icon-pack.tsx`) says what that pack actually renders. A `custom` pack resolves to an inline `<svg><use></svg>` against the org's own sprite sheet URL, so a self-hosted icon set needs no app rebuild either.
 5. `AppShell` renders the active layout's slots as described above.
 
 ## No flash, no blank state
@@ -72,12 +79,12 @@ interface Layout {
 
 The schema in `@wire/ui-config` is the single source of truth; everything that has to agree with it is either generated from it or checked against it in `bun run lint` / `bun run test`:
 
-| Guard | Catches |
-|-------|---------|
-| `check:generated` (part of `bun run lint`) | A color role added to/removed from `colorRolesSchema` without regenerating `theme.generated.css` — i.e. a role with no `bg-<role>` utility. |
+| Guard                                                            | Catches                                                                                                                                                                                |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `check:generated` (part of `bun run lint`)                       | A color role added to/removed from `colorRolesSchema` without regenerating `theme.generated.css` — i.e. a role with no `bg-<role>` utility.                                            |
 | `wire-ui/no-hardcoded-colors` (`packages/eslint-plugin-wire-ui`) | Palette classes (`bg-indigo-500`, `text-white`), arbitrary colors (`bg-[#fff]`), and color literals in `style={{…}}` in `apps/web/src` — anything that would ignore an org/user theme. |
-| `SlotRegistry` type (`slot-registry.tsx`) | A required slot (`REQUIRED_SLOT_IDS`) without a registered `default` variant — a compile error, not a blank pane. |
-| `packages/ui-config/src/ui-config.test.ts` | `baseUiConfig` failing its own schema, a base layout missing a required slot, a dangling `activeLayoutId`, or a color role `toCssVariables`/`toTailwindThemeCss` doesn't emit. |
+| `SlotRegistry` type (`slot-registry.tsx`)                        | A required slot (`REQUIRED_SLOT_IDS`) without a registered `default` variant — a compile error, not a blank pane.                                                                      |
+| `packages/ui-config/src/ui-config.test.ts`                       | `baseUiConfig` failing its own schema, a base layout missing a required slot, a dangling `activeLayoutId`, or a color role `toCssVariables`/`toTailwindThemeCss` doesn't emit.         |
 
 ## Motion
 

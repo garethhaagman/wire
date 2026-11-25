@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsOptional, IsString, IsUrl, MaxLength } from "class-validator";
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+} from "class-validator";
 import type { CreateWebhookEndpointRequest, WebhookEndpoint } from "@wire/types";
 
 export class WebhookEndpointDto implements WebhookEndpoint {
@@ -40,14 +48,21 @@ export class CreateWebhookEndpointRequestDto implements CreateWebhookEndpointReq
   @MaxLength(2048)
   url!: string;
 
-  @ApiProperty({ type: [String], example: ["message.created", "thread.reply"], description: 'Event types, or "*" for all' })
+  @ApiProperty({
+    type: [String],
+    example: ["message.created", "thread.reply"],
+    description: 'Event types, or "*" for all',
+  })
   @IsArray()
   @ArrayMinSize(1)
   @ArrayMaxSize(50)
   @IsString({ each: true })
   enabledEvents!: string[];
 
-  @ApiPropertyOptional({ type: [String], description: "Only deliver channel events from these channels" })
+  @ApiPropertyOptional({
+    type: [String],
+    description: "Only deliver channel events from these channels",
+  })
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(100)

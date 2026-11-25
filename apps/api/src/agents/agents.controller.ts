@@ -1,5 +1,23 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseInterceptors } from "@nestjs/common";
-import { ApiCookieAuth, ApiCreatedResponse, ApiHeader, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseInterceptors,
+} from "@nestjs/common";
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiHeader,
+  ApiOkResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Agent } from "@wire/types";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
 import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
@@ -19,7 +37,10 @@ export class AgentsController {
   @Get()
   @RequirePermission("read", "Agent")
   @ApiOkResponse({ type: AgentDto, isArray: true })
-  async list(@CurrentActor() actor: WorkspaceActor, @Query() query: PaginationQueryDto): Promise<PaginatedResult<Agent>> {
+  async list(
+    @CurrentActor() actor: WorkspaceActor,
+    @Query() query: PaginationQueryDto,
+  ): Promise<PaginatedResult<Agent>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
     const { items, total } = await this.agents.list(actor, page, perPage);
@@ -35,17 +56,28 @@ export class AgentsController {
 
   @Post()
   @RequirePermission("create", "Agent")
-  @ApiHeader({ name: "Idempotency-Key", required: false, description: "Replays the original response if the same key is sent again." })
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: false,
+    description: "Replays the original response if the same key is sent again.",
+  })
   @ApiCreatedResponse({ type: AgentDto })
   @UseInterceptors(IdempotencyInterceptor)
-  create(@CurrentActor() actor: WorkspaceActor, @Body() body: CreateAgentRequestDto): Promise<Agent> {
+  create(
+    @CurrentActor() actor: WorkspaceActor,
+    @Body() body: CreateAgentRequestDto,
+  ): Promise<Agent> {
     return this.agents.create(actor, body);
   }
 
   @Patch(":id")
   @RequirePermission("update", "Agent")
   @ApiOkResponse({ type: AgentDto })
-  update(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string, @Body() body: UpdateAgentRequestDto): Promise<Agent> {
+  update(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("id") id: string,
+    @Body() body: UpdateAgentRequestDto,
+  ): Promise<Agent> {
     return this.agents.update(actor, id, body);
   }
 

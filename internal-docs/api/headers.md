@@ -2,13 +2,13 @@
 
 ## General headers
 
-| Header | Direction | Purpose |
-|--------|-----------|---------|
-| `Content-Type` | Both | `application/json` |
-| `Authorization` | Request | Bearer token |
-| `X-Request-ID` | Both | Request tracing — client may supply one, server mints one if absent, always echoed |
-| `X-API-Version` | Response | The major API version that served the request (`v1`) |
-| `Idempotency-Key` | Request | Duplicate-execution protection on mutating endpoints |
+| Header            | Direction | Purpose                                                                            |
+| ----------------- | --------- | ---------------------------------------------------------------------------------- |
+| `Content-Type`    | Both      | `application/json`                                                                 |
+| `Authorization`   | Request   | Bearer token                                                                       |
+| `X-Request-ID`    | Both      | Request tracing — client may supply one, server mints one if absent, always echoed |
+| `X-API-Version`   | Response  | The major API version that served the request (`v1`)                               |
+| `Idempotency-Key` | Request   | Duplicate-execution protection on mutating endpoints                               |
 
 Implementation: `RequestIdMiddleware` (`apps/api/src/common/middleware/request-id.middleware.ts`) handles `X-Request-ID`; `ResponseEnvelopeInterceptor` sets `X-API-Version` on every response.
 
@@ -22,11 +22,11 @@ Sunset: Tue, 30 Jun 2027 23:59:59 GMT
 Link: <https://docs.wire.example/migrations/v1-workspaces>; rel="deprecation"
 ```
 
-| Header | Purpose |
-|--------|---------|
+| Header        | Purpose                                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `Deprecation` | Unix timestamp (seconds) of when the route became deprecated — [RFC 9745](https://www.rfc-editor.org/rfc/rfc9745) |
-| `Sunset` | HTTP-date the route stops being served — [RFC 8594](https://www.rfc-editor.org/rfc/rfc8594) |
-| `Link` | Points to migration documentation; never a substitute for it |
+| `Sunset`      | HTTP-date the route stops being served — [RFC 8594](https://www.rfc-editor.org/rfc/rfc8594)                       |
+| `Link`        | Points to migration documentation; never a substitute for it                                                      |
 
 Implementation: `@Deprecated({ since, sunset, migrationUrl })` decorator + `DeprecationHeadersInterceptor` (`apps/api/src/common/decorators/deprecated.decorator.ts`, `apps/api/src/common/interceptors/deprecation-headers.interceptor.ts`). See [versioning.md](./versioning.md) for the full lifecycle.
 
@@ -40,12 +40,12 @@ RateLimit-Remaining: 0
 RateLimit-Reset: 30
 ```
 
-| Header | Purpose |
-|--------|---------|
-| `Retry-After` | Seconds (or an HTTP date) the client should wait before retrying |
-| `RateLimit-Limit` | Maximum requests allowed in the current window |
-| `RateLimit-Remaining` | Requests remaining in the current window |
-| `RateLimit-Reset` | Seconds until the window resets |
+| Header                | Purpose                                                          |
+| --------------------- | ---------------------------------------------------------------- |
+| `Retry-After`         | Seconds (or an HTTP date) the client should wait before retrying |
+| `RateLimit-Limit`     | Maximum requests allowed in the current window                   |
+| `RateLimit-Remaining` | Requests remaining in the current window                         |
+| `RateLimit-Reset`     | Seconds until the window resets                                  |
 
 `RateLimit-*` headers are set on **every** response, not just 429s, so clients can monitor their remaining quota proactively.
 

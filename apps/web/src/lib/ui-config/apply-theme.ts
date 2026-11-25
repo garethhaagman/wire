@@ -12,7 +12,9 @@ export function applyTheme(config: UiConfig): void {
   const root = document.documentElement;
 
   const { mode } = config.theme;
-  const isDark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const isDark =
+    mode === "dark" ||
+    (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   const vars = isDark ? dark : light;
 
   for (const [name, value] of Object.entries(vars)) {
@@ -23,7 +25,10 @@ export function applyTheme(config: UiConfig): void {
   root.style.setProperty("--ui-base-size", `${typography.baseSizePx}px`);
   root.style.setProperty("--font-sans", fontFamilyFor(typography.sans, SANS_STACK));
   root.style.setProperty("--font-mono", fontFamilyFor(typography.mono, MONO_STACK));
-  root.style.setProperty("--ui-font-display", typography.display ? fontFamilyFor(typography.display, SERIF_STACK) : SERIF_STACK);
+  root.style.setProperty(
+    "--ui-font-display",
+    typography.display ? fontFamilyFor(typography.display, SERIF_STACK) : SERIF_STACK,
+  );
   for (const source of [typography.sans, typography.mono, typography.display]) {
     if (source) loadFont(source);
   }
@@ -58,13 +63,16 @@ function loadFont(source: FontSource): void {
     return;
   }
 
-  const face = new FontFace(source.family, `url(${JSON.stringify(source.url)})`, { display: "swap" });
+  const face = new FontFace(source.family, `url(${JSON.stringify(source.url)})`, {
+    display: "swap",
+  });
   document.fonts.add(face);
   face.load().catch((err: unknown) => console.warn(`Failed to load font "${source.family}"`, err));
 }
 
 function applyMotionPreference(config: UiConfig): void {
   const osReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const reduced = config.motion.respectReducedMotion && osReducedMotion ? true : !config.motion.enabled;
+  const reduced =
+    config.motion.respectReducedMotion && osReducedMotion ? true : !config.motion.enabled;
   document.documentElement.dataset.motion = reduced ? "reduced" : config.motion.speed;
 }

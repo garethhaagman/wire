@@ -24,14 +24,23 @@ export class PinsService {
     await this.access.readableMessage(actor, messageId, { channelId });
 
     const pin = await this.db.tx(async (tx) => {
-      const inserted = await insertPin(tx, { workspaceId: actor.workspaceId, channelId, messageId, pinnedBy: actor.member.id });
+      const inserted = await insertPin(tx, {
+        workspaceId: actor.workspaceId,
+        channelId,
+        messageId,
+        pinnedBy: actor.member.id,
+      });
       if (inserted) {
-        await appendEvents(tx, [{ workspaceId: actor.workspaceId, type: "pin.added", channelId, data: { pin: inserted } }]);
+        await appendEvents(tx, [
+          { workspaceId: actor.workspaceId, type: "pin.added", channelId, data: { pin: inserted } },
+        ]);
       }
       return inserted;
     });
     if (!pin) {
-      throw new ResourceConflictException(`Message ${messageId} is already pinned in channel ${channelId}`);
+      throw new ResourceConflictException(
+        `Message ${messageId} is already pinned in channel ${channelId}`,
+      );
     }
     this.relay.kick();
     return pin;
@@ -42,7 +51,9 @@ export class PinsService {
     const removed = await this.db.tx(async (tx) => {
       const pin = await deletePin(tx, channelId, pinId);
       if (pin) {
-        await appendEvents(tx, [{ workspaceId: actor.workspaceId, type: "pin.removed", channelId, data: { pin } }]);
+        await appendEvents(tx, [
+          { workspaceId: actor.workspaceId, type: "pin.removed", channelId, data: { pin } },
+        ]);
       }
       return pin;
     });

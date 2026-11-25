@@ -9,16 +9,16 @@ https://api.wire.example/v1/workspaces
 https://api.wire.example/v2/workspaces
 ```
 
-| Change | Version impact |
-|--------|-----------------|
-| Add endpoint | None — always safe |
-| Add optional request field | None — always safe |
-| Add response field | None — clients must tolerate unknown fields |
-| Fix backward-compatible bug | None |
-| Remove or rename a field | **Major** |
-| Change a field's type | **Major** |
-| Change which fields are required | **Major** |
-| Change response structure | **Major** |
+| Change                           | Version impact                              |
+| -------------------------------- | ------------------------------------------- |
+| Add endpoint                     | None — always safe                          |
+| Add optional request field       | None — always safe                          |
+| Add response field               | None — clients must tolerate unknown fields |
+| Fix backward-compatible bug      | None                                        |
+| Remove or rename a field         | **Major**                                   |
+| Change a field's type            | **Major**                                   |
+| Change which fields are required | **Major**                                   |
+| Change response structure        | **Major**                                   |
 
 - Major versions represent breaking changes; minor/patch-equivalent changes stay backward-compatible within a major version.
 - Never silently change existing endpoint behavior.
@@ -32,12 +32,12 @@ Version the API **contract**, not individual endpoints — all `/v1` endpoints m
 
 New functionality ships without committing to a permanent contract:
 
-| Stage | Convention | Stability |
-|-------|-----------|-----------|
-| Stable | `/v1/workspaces` | Guaranteed contract |
-| Beta | `/v1/beta/workspaces` | May change before stabilizing |
-| Experimental | `/v1/experimental/workspaces` | No stability guarantee |
-| Deprecated | Existing route | Scheduled removal |
+| Stage        | Convention                    | Stability                     |
+| ------------ | ----------------------------- | ----------------------------- |
+| Stable       | `/v1/workspaces`              | Guaranteed contract           |
+| Beta         | `/v1/beta/workspaces`         | May change before stabilizing |
+| Experimental | `/v1/experimental/workspaces` | No stability guarantee        |
+| Deprecated   | Existing route                | Scheduled removal             |
 
 Rules:
 
@@ -53,12 +53,12 @@ Rules:
 announce → deprecated (dual-run) → sunset-warning → removed
 ```
 
-| Stage | Duration (minimum) | Signal to clients |
-|-------|---------------------|---------------------|
-| **Announce** | — | Changelog entry; migration doc published |
-| **Deprecated** | 6 months (field/behavior) / 12 months (major version) | `Deprecation` + `Sunset` + `Link` response headers on every affected call — see [headers.md](./headers.md) |
-| **Sunset-warning** | Final 30 days | Same headers, migration urgency called out in the `Link`-referenced doc |
-| **Removed** | — | Old major version paths return `404`; deprecated endpoints return `410` after their sunset date |
+| Stage              | Duration (minimum)                                    | Signal to clients                                                                                          |
+| ------------------ | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Announce**       | —                                                     | Changelog entry; migration doc published                                                                   |
+| **Deprecated**     | 6 months (field/behavior) / 12 months (major version) | `Deprecation` + `Sunset` + `Link` response headers on every affected call — see [headers.md](./headers.md) |
+| **Sunset-warning** | Final 30 days                                         | Same headers, migration urgency called out in the `Link`-referenced doc                                    |
+| **Removed**        | —                                                     | Old major version paths return `404`; deprecated endpoints return `410` after their sunset date            |
 
 Minimums, not targets — enterprise contracts may negotiate longer dual-run windows.
 
