@@ -17,22 +17,22 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import type { Message } from "@wire/types";
+import { MarkReadRequestDto } from "../channels/dto/channel.dto.js";
 import {
   CursorPaginatedResult,
   CursorQueryDto,
   decodeCursor,
 } from "../common/dto/cursor-paginated-result.js";
 import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor.js";
-import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
-import { RequirePermission } from "../permissions/require-permission.decorator.js";
-import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
-import { MessagesService } from "../messages/messages.service.js";
-import { MarkReadRequestDto } from "../channels/dto/channel.dto.js";
 import {
   CreateThreadReplyRequestDto,
   MessageDto,
   ThreadReadStateDto,
 } from "../messages/dto/message.dto.js";
+import { MessagesService } from "../messages/messages.service.js";
+import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
+import { RequirePermission } from "../permissions/require-permission.decorator.js";
+import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
 
 /**
  * Threads are a view over messages.thread_root_id, not a separate resource —
@@ -51,14 +51,14 @@ export class ThreadsController {
   async list(
     @CurrentActor() actor: WorkspaceActor,
     @Param("threadRootId") threadRootId: string,
-    @Query() query: CursorQueryDto,
+    @Query() query: CursorQueryDto
   ): Promise<CursorPaginatedResult<Message>> {
     const afterSeq = decodeCursor(query.cursor)?.seq ?? query.after_seq;
     const { items, cursor } = await this.messages.listThread(
       actor,
       threadRootId,
       afterSeq,
-      query.per_page ?? 50,
+      query.per_page ?? 50
     );
     return new CursorPaginatedResult(items, cursor);
   }
@@ -75,9 +75,14 @@ export class ThreadsController {
   reply(
     @CurrentActor() actor: WorkspaceActor,
     @Param("threadRootId") threadRootId: string,
-    @Body() body: CreateThreadReplyRequestDto,
+    @Body() body: CreateThreadReplyRequestDto
   ): Promise<Message> {
-    return this.messages.reply(actor, threadRootId, body.body, body.broadcastToChannel ?? false);
+    return this.messages.reply(
+      actor,
+      threadRootId,
+      body.body,
+      body.broadcastToChannel ?? false
+    );
   }
 
   @Post("mark-read")
@@ -87,7 +92,7 @@ export class ThreadsController {
   executeMarkRead(
     @CurrentActor() actor: WorkspaceActor,
     @Param("threadRootId") threadRootId: string,
-    @Body() body: MarkReadRequestDto,
+    @Body() body: MarkReadRequestDto
   ): Promise<{ lastReadSeq: number }> {
     return this.messages.markThreadRead(actor, threadRootId, body.seq);
   }

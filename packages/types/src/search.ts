@@ -4,12 +4,12 @@
  * search depends on the retrieval pipeline (internal-docs/retrieval/).
  */
 export interface SearchResult {
-  messageId: string;
-  workspaceId: string;
-  channelId: string;
-  threadRootId: string | null;
   actorId: string;
-  excerpt: string;
-  score: number;
+  channelId: string;
   createdAt: string;
+  excerpt: string;
+  messageId: string;
+  score: number;
+  threadRootId: string | null;
+  workspaceId: string;
 }

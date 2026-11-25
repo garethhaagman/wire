@@ -1,4 +1,4 @@
-import type { UiConfig, UiConfigOverride, Lock } from "@wire/ui-config";
+import type { Lock, UiConfig, UiConfigOverride } from "@wire/ui-config";
 
 /**
  * Mirrors internal-docs/ui/config-schema.md. The deep, versioned shape lives
@@ -8,16 +8,16 @@ import type { UiConfig, UiConfigOverride, Lock } from "@wire/ui-config";
  * "API request/response shape".
  */
 export interface UiConfigResource {
-  workspaceId: string;
   /** Resolved config for the requesting session — base + org + user already merged, locks applied. */
   resolved: UiConfig;
   /** Non-fatal recovery notes from the resolver (invalid layer dropped, slot backfilled, etc). */
   warnings: string[];
+  workspaceId: string;
 }
 
 export interface UpdateOrgUiConfigRequest {
-  override: UiConfigOverride;
   locks: Lock[];
+  override: UiConfigOverride;
 }
 
 export interface UpdateUserUiConfigRequest {

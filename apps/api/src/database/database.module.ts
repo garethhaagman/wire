@@ -1,6 +1,11 @@
-import { Global, Inject, Module, type OnApplicationShutdown } from "@nestjs/common";
-import { Database } from "@wire/db";
+import {
+  Global,
+  Inject,
+  Module,
+  type OnApplicationShutdown,
+} from "@nestjs/common";
 import type { ApiEnv } from "@wire/config";
+import { Database } from "@wire/db";
 import { API_ENV } from "../config/env.provider.js";
 
 /**

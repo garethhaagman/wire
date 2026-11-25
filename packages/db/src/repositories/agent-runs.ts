@@ -3,28 +3,28 @@ import { iso, isoRequired, type Queryable } from "../database.js";
 import { newId } from "../ids.js";
 
 interface AgentRunRow {
-  id: string;
-  workspace_id: string;
   agent_id: string;
-  triggered_by_message_id: string | null;
   channel_id: string | null;
-  status: AgentRun["status"];
+  created_at: Date;
+  error: string | null;
+  finished_at: Date | null;
+  id: string;
   input: AgentRun["input"];
   output: string | null;
-  error: string | null;
   started_at: Date | null;
-  finished_at: Date | null;
-  created_at: Date;
+  status: AgentRun["status"];
+  triggered_by_message_id: string | null;
   updated_at: Date;
+  workspace_id: string;
 }
 
 interface AgentRunStepRow {
+  created_at: Date;
+  data: unknown;
   id: string;
   run_id: string;
   seq: number;
   type: AgentRunStep["type"];
-  data: unknown;
-  created_at: Date;
 }
 
 function toAgentRun(row: AgentRunRow): AgentRun {
@@ -32,7 +32,8 @@ function toAgentRun(row: AgentRunRow): AgentRun {
     id: row.id as AgentRun["id"],
     workspaceId: row.workspace_id,
     agentId: row.agent_id as AgentRun["agentId"],
-    triggeredByMessageId: row.triggered_by_message_id as AgentRun["triggeredByMessageId"],
+    triggeredByMessageId:
+      row.triggered_by_message_id as AgentRun["triggeredByMessageId"],
     channelId: row.channel_id,
     status: row.status,
     input: row.input,
@@ -64,7 +65,7 @@ export async function insertAgentRun(
     triggeredByMessageId: string | null;
     channelId: string | null;
     input: AgentRun["input"];
-  },
+  }
 ): Promise<AgentRun> {
   const { rows } = await db.query<AgentRunRow>(
     `insert into agent_runs (id, workspace_id, agent_id, triggered_by_message_id, channel_id, input)
@@ -76,7 +77,7 @@ export async function insertAgentRun(
       input.triggeredByMessageId,
       input.channelId,
       input.input,
-    ],
+    ]
   );
   return toAgentRun(rows[0]!);
 }
@@ -90,7 +91,7 @@ export async function updateAgentRun(
     error?: string | null;
     startedAt?: Date;
     finishedAt?: Date;
-  },
+  }
 ): Promise<AgentRun | null> {
   const { rows } = await db.query<AgentRunRow>(
     `update agent_runs set
@@ -109,7 +110,7 @@ export async function updateAgentRun(
       patch.error ?? null,
       patch.startedAt ?? null,
       patch.finishedAt ?? null,
-    ],
+    ]
   );
   return rows[0] ? toAgentRun(rows[0]) : null;
 }
@@ -117,11 +118,11 @@ export async function updateAgentRun(
 export async function findAgentRun(
   db: Queryable,
   workspaceId: string,
-  id: string,
+  id: string
 ): Promise<AgentRun | null> {
   const { rows } = await db.query<AgentRunRow>(
-    `select * from agent_runs where workspace_id = $1 and id = $2`,
-    [workspaceId, id],
+    "select * from agent_runs where workspace_id = $1 and id = $2",
+    [workspaceId, id]
   );
   return rows[0] ? toAgentRun(rows[0]) : null;
 }
@@ -131,17 +132,17 @@ export async function listAgentRunsForAgent(
   workspaceId: string,
   agentId: string,
   page: number,
-  perPage: number,
+  perPage: number
 ): Promise<{ items: AgentRun[]; total: number }> {
   const [rows, count] = await Promise.all([
     db.query<AgentRunRow>(
       `select * from agent_runs where workspace_id = $1 and agent_id = $2
        order by created_at desc limit $3 offset $4`,
-      [workspaceId, agentId, perPage, (page - 1) * perPage],
+      [workspaceId, agentId, perPage, (page - 1) * perPage]
     ),
     db.query<{ total: number }>(
-      `select count(*)::int as total from agent_runs where workspace_id = $1 and agent_id = $2`,
-      [workspaceId, agentId],
+      "select count(*)::int as total from agent_runs where workspace_id = $1 and agent_id = $2",
+      [workspaceId, agentId]
     ),
   ]);
   return { items: rows.rows.map(toAgentRun), total: count.rows[0]?.total ?? 0 };
@@ -149,19 +150,27 @@ export async function listAgentRunsForAgent(
 
 export async function insertAgentRunStep(
   db: Queryable,
-  input: { runId: string; seq: number; type: AgentRunStep["type"]; data: unknown },
+  input: {
+    runId: string;
+    seq: number;
+    type: AgentRunStep["type"];
+    data: unknown;
+  }
 ): Promise<AgentRunStep> {
   const { rows } = await db.query<AgentRunStepRow>(
-    `insert into agent_run_steps (id, run_id, seq, type, data) values ($1, $2, $3, $4, $5) returning *`,
-    [newId("step"), input.runId, input.seq, input.type, input.data],
+    "insert into agent_run_steps (id, run_id, seq, type, data) values ($1, $2, $3, $4, $5) returning *",
+    [newId("step"), input.runId, input.seq, input.type, input.data]
   );
   return toAgentRunStep(rows[0]!);
 }
 
-export async function listAgentRunSteps(db: Queryable, runId: string): Promise<AgentRunStep[]> {
+export async function listAgentRunSteps(
+  db: Queryable,
+  runId: string
+): Promise<AgentRunStep[]> {
   const { rows } = await db.query<AgentRunStepRow>(
-    `select * from agent_run_steps where run_id = $1 order by seq asc`,
-    [runId],
+    "select * from agent_run_steps where run_id = $1 order by seq asc",
+    [runId]
   );
   return rows.map(toAgentRunStep);
 }

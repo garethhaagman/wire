@@ -1,10 +1,10 @@
 /** "Save for later" — product/05-feature-parity.md § Reactions, pins, bookmarks. Private to one member. */
 export interface Bookmark {
+  createdAt: string;
   id: `bkm_${string}`;
-  workspaceId: string;
   memberId: string;
   messageId: string;
-  createdAt: string;
+  workspaceId: string;
 }
 
 export interface CreateBookmarkRequest {

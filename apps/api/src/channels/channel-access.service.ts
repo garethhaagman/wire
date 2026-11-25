@@ -1,10 +1,15 @@
-import { HttpStatus, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import {
+  HttpStatus,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import {
+  type ChannelRecord,
   Database,
   findChannelRecord,
   findMessage,
   isChannelMember,
-  type ChannelRecord,
 } from "@wire/db";
 import type { Message } from "@wire/types";
 import { ApiException } from "../common/errors/api-exception.js";
@@ -25,27 +30,34 @@ interface ChannelAccess {
 export class ChannelAccessService {
   constructor(@Inject(Database) private readonly db: Database) {}
 
-  async readable(actor: WorkspaceActor, channelId: string): Promise<ChannelAccess> {
+  async readable(
+    actor: WorkspaceActor,
+    channelId: string
+  ): Promise<ChannelAccess> {
     const channel = await findChannelRecord(this.db, channelId);
     if (!channel || channel.workspaceId !== actor.workspaceId) {
       throw new NotFoundException(`No channel with id ${channelId}`);
     }
     const isMember = await isChannelMember(this.db, channelId, actor.member.id);
-    const openToActor = channel.type === "public" && actor.member.role !== "guest";
-    if (!isMember && !openToActor) {
+    const openToActor =
+      channel.type === "public" && actor.member.role !== "guest";
+    if (!(isMember || openToActor)) {
       throw new NotFoundException(`No channel with id ${channelId}`);
     }
     return { channel, isMember };
   }
 
   /** Readable and not archived. */
-  async writable(actor: WorkspaceActor, channelId: string): Promise<ChannelAccess> {
+  async writable(
+    actor: WorkspaceActor,
+    channelId: string
+  ): Promise<ChannelAccess> {
     const access = await this.readable(actor, channelId);
     if (access.channel.archivedAt) {
       throw new ApiException(
         "RESOURCE_CONFLICT",
         `Channel ${channelId} is archived.`,
-        HttpStatus.CONFLICT,
+        HttpStatus.CONFLICT
       );
     }
     return access;
@@ -55,13 +67,14 @@ export class ChannelAccessService {
   async readableMessage(
     actor: WorkspaceActor,
     messageId: string,
-    options: { channelId?: string; includeDeleted?: boolean } = {},
+    options: { channelId?: string; includeDeleted?: boolean } = {}
   ): Promise<{ message: Message } & ChannelAccess> {
     const message = await findMessage(this.db, messageId);
     if (
       !message ||
       message.workspaceId !== actor.workspaceId ||
-      (options.channelId !== undefined && message.channelId !== options.channelId) ||
+      (options.channelId !== undefined &&
+        message.channelId !== options.channelId) ||
       (message.deletedAt && !options.includeDeleted)
     ) {
       throw new NotFoundException(`No message with id ${messageId}`);

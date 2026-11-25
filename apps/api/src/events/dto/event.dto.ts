@@ -1,14 +1,21 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { Transform, Type } from "class-transformer";
-import { IsArray, IsInt, IsOptional, IsString, Length, Min } from "class-validator";
 import type { PresenceEntry, WireEvent } from "@wire/types";
+import { Transform, Type } from "class-transformer";
+import {
+  IsArray,
+  IsInt,
+  IsOptional,
+  IsString,
+  Length,
+  Min,
+} from "class-validator";
 
 export class WireEventDto implements WireEvent {
   @ApiProperty({ example: "evt_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   id!: WireEvent["id"];
 
   @ApiProperty({
-    example: 48213,
+    example: 48_213,
     description: "Workspace-wide replay cursor (SSE id / Last-Event-ID)",
   })
   seq!: number;
@@ -19,7 +26,11 @@ export class WireEventDto implements WireEvent {
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })
   workspaceId!: string;
 
-  @ApiProperty({ nullable: true, type: String, example: "ch_01jd5x0k8f3v8q2m7n4r6t9w1y" })
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    example: "ch_01jd5x0k8f3v8q2m7n4r6t9w1y",
+  })
   channelId!: string | null;
 
   @ApiProperty({
@@ -35,13 +46,20 @@ export class WireEventDto implements WireEvent {
 }
 
 function toStringArray(value: unknown): string[] | undefined {
-  if (value === undefined || value === "") return undefined;
-  const values: unknown[] = Array.isArray(value)
-    ? value
-    : typeof value === "string"
-      ? value.split(",")
-      : [];
-  return values.filter((v): v is string => typeof v === "string" && v.length > 0);
+  if (value === undefined || value === "") {
+    return undefined;
+  }
+  let values: unknown[];
+  if (Array.isArray(value)) {
+    values = value;
+  } else if (typeof value === "string") {
+    values = value.split(",");
+  } else {
+    values = [];
+  }
+  return values.filter(
+    (v): v is string => typeof v === "string" && v.length > 0
+  );
 }
 
 export class StreamQueryDto {
@@ -55,7 +73,10 @@ export class StreamQueryDto {
   @IsString({ each: true })
   types?: string[];
 
-  @ApiPropertyOptional({ type: [String], description: "Only deliver events for these channels" })
+  @ApiPropertyOptional({
+    type: [String],
+    description: "Only deliver events for these channels",
+  })
   @IsOptional()
   @Transform(({ value }) => toStringArray(value))
   @IsArray()
@@ -63,8 +84,9 @@ export class StreamQueryDto {
   channel_ids?: string[];
 
   @ApiPropertyOptional({
-    example: 48000,
-    description: "Replay events after this seq first; the Last-Event-ID header takes precedence",
+    example: 48_000,
+    description:
+      "Replay events after this seq first; the Last-Event-ID header takes precedence",
   })
   @IsOptional()
   @Type(() => Number)

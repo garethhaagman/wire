@@ -25,10 +25,12 @@ export class DeprecationHeadersInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const metadata = this.reflector.get<DeprecationMetadata | undefined>(
       DEPRECATED_METADATA_KEY,
-      context.getHandler(),
+      context.getHandler()
     );
 
-    if (!metadata) return next.handle();
+    if (!metadata) {
+      return next.handle();
+    }
 
     const res = context.switchToHttp().getResponse<Response>();
     return next.handle().pipe(
@@ -36,7 +38,7 @@ export class DeprecationHeadersInterceptor implements NestInterceptor {
         res.setHeader("Deprecation", `@${metadata.since}`);
         res.setHeader("Sunset", new Date(metadata.sunset).toUTCString());
         res.setHeader("Link", `<${metadata.migrationUrl}>; rel="deprecation"`);
-      }),
+      })
     );
   }
 }

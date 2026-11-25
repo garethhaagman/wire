@@ -3,14 +3,14 @@ import { isoRequired, type Queryable } from "../database.js";
 import { newId } from "../ids.js";
 
 interface MemberRow {
-  id: string;
-  workspace_id: string;
-  user_id: string | null;
-  email: string;
-  display_name: string;
-  role: Member["role"];
   created_at: Date;
+  display_name: string;
+  email: string;
+  id: string;
+  role: Member["role"];
   updated_at: Date;
+  user_id: string | null;
+  workspace_id: string;
 }
 
 function toMember(row: MemberRow): Member {
@@ -26,24 +26,31 @@ function toMember(row: MemberRow): Member {
   };
 }
 
-const ACTIVE = `deactivated_at is null`;
+const ACTIVE = "deactivated_at is null";
 
 export async function listMembers(
   db: Queryable,
   workspaceId: string,
-  options: { page: number; perPage: number; search?: string | undefined },
+  options: { page: number; perPage: number; search?: string | undefined }
 ): Promise<{ items: Member[]; total: number }> {
-  const search = options.search ? `%${options.search.replace(/[%_\\]/g, "\\$&")}%` : null;
+  const search = options.search
+    ? `%${options.search.replace(/[%_\\]/gu, "\\$&")}%`
+    : null;
   const where = `workspace_id = $1 and ${ACTIVE} and ($2::text is null or display_name ilike $2 or email ilike $2)`;
   const [rows, count] = await Promise.all([
     db.query<MemberRow>(
       `select * from members where ${where} order by display_name, id limit $3 offset $4`,
-      [workspaceId, search, options.perPage, (options.page - 1) * options.perPage],
+      [
+        workspaceId,
+        search,
+        options.perPage,
+        (options.page - 1) * options.perPage,
+      ]
     ),
-    db.query<{ total: number }>(`select count(*)::int as total from members where ${where}`, [
-      workspaceId,
-      search,
-    ]),
+    db.query<{ total: number }>(
+      `select count(*)::int as total from members where ${where}`,
+      [workspaceId, search]
+    ),
   ]);
   return { items: rows.rows.map(toMember), total: count.rows[0]?.total ?? 0 };
 }
@@ -51,11 +58,11 @@ export async function listMembers(
 export async function findMember(
   db: Queryable,
   workspaceId: string,
-  id: string,
+  id: string
 ): Promise<Member | null> {
   const { rows } = await db.query<MemberRow>(
     `select * from members where workspace_id = $1 and id = $2 and ${ACTIVE}`,
-    [workspaceId, id],
+    [workspaceId, id]
   );
   return rows[0] ? toMember(rows[0]) : null;
 }
@@ -63,11 +70,11 @@ export async function findMember(
 export async function findMemberByUser(
   db: Queryable,
   workspaceId: string,
-  userId: string,
+  userId: string
 ): Promise<Member | null> {
   const { rows } = await db.query<MemberRow>(
     `select * from members where workspace_id = $1 and user_id = $2 and ${ACTIVE}`,
-    [workspaceId, userId],
+    [workspaceId, userId]
   );
   return rows[0] ? toMember(rows[0]) : null;
 }
@@ -76,12 +83,14 @@ export async function findMemberByUser(
 export async function filterActiveMemberIds(
   db: Queryable,
   workspaceId: string,
-  ids: string[],
+  ids: string[]
 ): Promise<string[]> {
-  if (ids.length === 0) return [];
+  if (ids.length === 0) {
+    return [];
+  }
   const { rows } = await db.query<{ id: string }>(
     `select id from members where workspace_id = $1 and id = any($2::text[]) and ${ACTIVE}`,
-    [workspaceId, ids],
+    [workspaceId, ids]
   );
   return rows.map((r) => r.id);
 }
@@ -95,7 +104,7 @@ export async function claimInvitesByEmail(
   db: Queryable,
   userId: string,
   email: string,
-  workspaceId?: string,
+  workspaceId?: string
 ): Promise<Member[]> {
   const { rows } = await db.query<MemberRow>(
     `update members set user_id = $1, updated_at = now()
@@ -105,18 +114,18 @@ export async function claimInvitesByEmail(
          select 1 from members other where other.workspace_id = members.workspace_id and other.user_id = $1
        )
      returning *`,
-    [userId, email, workspaceId ?? null],
+    [userId, email, workspaceId ?? null]
   );
   return rows.map(toMember);
 }
 
 export async function findUserByEmail(
   db: Queryable,
-  email: string,
+  email: string
 ): Promise<{ id: string; emailVerified: boolean } | null> {
   const { rows } = await db.query<{ id: string; emailVerified: boolean }>(
     `select id, "emailVerified" from "user" where lower(email) = lower($1)`,
-    [email],
+    [email]
   );
   return rows[0] ?? null;
 }
@@ -133,7 +142,7 @@ export async function upsertMember(
     displayName: string;
     role: Member["role"];
     userId: string | null;
-  },
+  }
 ): Promise<Member | null> {
   const { rows } = await db.query<MemberRow>(
     `insert into members (id, workspace_id, user_id, email, display_name, role)
@@ -144,7 +153,14 @@ export async function upsertMember(
            deactivated_at = null, updated_at = now()
        where members.deactivated_at is not null
      returning *`,
-    [newId("mem"), input.workspaceId, input.userId, input.email, input.displayName, input.role],
+    [
+      newId("mem"),
+      input.workspaceId,
+      input.userId,
+      input.email,
+      input.displayName,
+      input.role,
+    ]
   );
   return rows[0] ? toMember(rows[0]) : null;
 }
@@ -153,21 +169,24 @@ export async function updateMember(
   db: Queryable,
   workspaceId: string,
   id: string,
-  patch: { displayName?: string; role?: Member["role"] },
+  patch: { displayName?: string; role?: Member["role"] }
 ): Promise<Member | null> {
   const { rows } = await db.query<MemberRow>(
     `update members set display_name = coalesce($3, display_name), role = coalesce($4, role), updated_at = now()
      where workspace_id = $1 and id = $2 and ${ACTIVE} returning *`,
-    [workspaceId, id, patch.displayName ?? null, patch.role ?? null],
+    [workspaceId, id, patch.displayName ?? null, patch.role ?? null]
   );
   return rows[0] ? toMember(rows[0]) : null;
 }
 
 /** Locks and counts active owners — call inside a transaction before demoting/removing an owner. */
-export async function lockActiveOwnerIds(tx: Queryable, workspaceId: string): Promise<string[]> {
+export async function lockActiveOwnerIds(
+  tx: Queryable,
+  workspaceId: string
+): Promise<string[]> {
   const { rows } = await tx.query<{ id: string }>(
     `select id from members where workspace_id = $1 and role = 'owner' and ${ACTIVE} for update`,
-    [workspaceId],
+    [workspaceId]
   );
   return rows.map((r) => r.id);
 }
@@ -179,27 +198,32 @@ export async function lockActiveOwnerIds(tx: Queryable, workspaceId: string): Pr
 export async function deactivateMember(
   tx: Queryable,
   workspaceId: string,
-  id: string,
+  id: string
 ): Promise<Member | null> {
   const { rows } = await tx.query<MemberRow>(
     `update members set deactivated_at = now(), updated_at = now()
      where workspace_id = $1 and id = $2 and ${ACTIVE} returning *`,
-    [workspaceId, id],
+    [workspaceId, id]
   );
-  if (!rows[0]) return null;
+  if (!rows[0]) {
+    return null;
+  }
   await tx.query(
     `with removed as (delete from channel_members where member_id = $1 returning channel_id)
      update channels set member_count = greatest(member_count - 1, 0)
      where id in (select channel_id from removed)`,
-    [id],
+    [id]
   );
   return toMember(rows[0]);
 }
 
-export async function getPreferences(db: Queryable, memberId: string): Promise<MemberPreferences> {
+export async function getPreferences(
+  db: Queryable,
+  memberId: string
+): Promise<MemberPreferences> {
   const { rows } = await db.query<{ preferences: Partial<MemberPreferences> }>(
-    `select preferences from members where id = $1`,
-    [memberId],
+    "select preferences from members where id = $1",
+    [memberId]
   );
   return normalizePreferences(rows[0]?.preferences ?? {});
 }
@@ -208,26 +232,31 @@ export async function getPreferences(db: Queryable, memberId: string): Promise<M
 export async function mergePreferences(
   db: Queryable,
   memberId: string,
-  patch: Partial<MemberPreferences>,
+  patch: Partial<MemberPreferences>
 ): Promise<MemberPreferences> {
   const { rows } = await db.query<{ preferences: Partial<MemberPreferences> }>(
-    `update members set preferences = preferences || $2::jsonb, updated_at = now() where id = $1 returning preferences`,
-    [memberId, JSON.stringify(patch)],
+    "update members set preferences = preferences || $2::jsonb, updated_at = now() where id = $1 returning preferences",
+    [memberId, JSON.stringify(patch)]
   );
   return normalizePreferences(rows[0]?.preferences ?? {});
 }
 
-function normalizePreferences(raw: Partial<MemberPreferences>): MemberPreferences {
+function normalizePreferences(
+  raw: Partial<MemberPreferences>
+): MemberPreferences {
   return {
     starredChannelIds: raw.starredChannelIds ?? [],
     mutedChannelIds: raw.mutedChannelIds ?? [],
   };
 }
 
-export async function getUiConfigOverride(db: Queryable, memberId: string): Promise<unknown> {
+export async function getUiConfigOverride(
+  db: Queryable,
+  memberId: string
+): Promise<unknown> {
   const { rows } = await db.query<{ ui_config_override: unknown }>(
-    `select ui_config_override from members where id = $1`,
-    [memberId],
+    "select ui_config_override from members where id = $1",
+    [memberId]
   );
   return rows[0]?.ui_config_override ?? null;
 }
@@ -235,10 +264,10 @@ export async function getUiConfigOverride(db: Queryable, memberId: string): Prom
 export async function setUiConfigOverride(
   db: Queryable,
   memberId: string,
-  override: unknown,
+  override: unknown
 ): Promise<void> {
   await db.query(
-    `update members set ui_config_override = $2::jsonb, updated_at = now() where id = $1`,
-    [memberId, JSON.stringify(override)],
+    "update members set ui_config_override = $2::jsonb, updated_at = now() where id = $1",
+    [memberId, JSON.stringify(override)]
   );
 }

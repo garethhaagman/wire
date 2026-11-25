@@ -8,17 +8,31 @@ import {
   Post,
   Query,
 } from "@nestjs/common";
-import { ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
-import { Database, findAgentRun, listAgentRunsForAgent, listAgentRunSteps } from "@wire/db";
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+} from "@nestjs/swagger";
+import {
+  Database,
+  findAgentRun,
+  listAgentRunSteps,
+  listAgentRunsForAgent,
+} from "@wire/db";
 import type { AgentRun } from "@wire/types";
-import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
-import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
 import { PaginatedResult } from "../common/dto/paginated-result.js";
+import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
+import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { AgentRunnerService } from "./agent-runner.service.js";
 import { AgentsService } from "./agents.service.js";
-import { AgentRunDto, AgentRunWithStepsDto, CreateAgentRunRequestDto } from "./dto/agent.dto.js";
+import {
+  AgentRunDto,
+  AgentRunWithStepsDto,
+  CreateAgentRunRequestDto,
+} from "./dto/agent.dto.js";
 
 /**
  * Nested one level under /agents/:id so a run always resolves through its owning
@@ -31,7 +45,7 @@ export class AgentRunsController {
   constructor(
     @Inject(Database) private readonly db: Database,
     private readonly agents: AgentsService,
-    private readonly runner: AgentRunnerService,
+    private readonly runner: AgentRunnerService
   ) {}
 
   @Post()
@@ -40,7 +54,7 @@ export class AgentRunsController {
   async run(
     @CurrentActor() actor: WorkspaceActor,
     @Param("agentId") agentId: string,
-    @Body() body: CreateAgentRunRequestDto,
+    @Body() body: CreateAgentRunRequestDto
   ): Promise<AgentRun> {
     const agent = await this.agents.getById(actor, agentId);
     return this.runner.trigger({
@@ -57,7 +71,7 @@ export class AgentRunsController {
   async list(
     @CurrentActor() actor: WorkspaceActor,
     @Param("agentId") agentId: string,
-    @Query() query: PaginationQueryDto,
+    @Query() query: PaginationQueryDto
   ): Promise<PaginatedResult<AgentRun>> {
     await this.agents.getById(actor, agentId);
     const page = query.page ?? 1;
@@ -67,9 +81,12 @@ export class AgentRunsController {
       actor.workspaceId,
       agentId,
       page,
-      perPage,
+      perPage
     );
-    return new PaginatedResult(items, buildPaginationMeta(page, perPage, total));
+    return new PaginatedResult(
+      items,
+      buildPaginationMeta(page, perPage, total)
+    );
   }
 
   @Get(":runId")
@@ -78,7 +95,7 @@ export class AgentRunsController {
   async getById(
     @CurrentActor() actor: WorkspaceActor,
     @Param("agentId") agentId: string,
-    @Param("runId") runId: string,
+    @Param("runId") runId: string
   ): Promise<AgentRunWithStepsDto> {
     await this.agents.getById(actor, agentId);
     const run = await findAgentRun(this.db, actor.workspaceId, runId);

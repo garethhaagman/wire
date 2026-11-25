@@ -20,12 +20,12 @@ import type { Reaction } from "@wire/types";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
-import { ReactionsService } from "./reactions.service.js";
 import {
   CreateReactionRequestDto,
   ReactionDto,
   RemoveReactionQueryDto,
 } from "./dto/reaction.dto.js";
+import { ReactionsService } from "./reactions.service.js";
 
 @ApiTags("Reactions")
 @ApiCookieAuth()
@@ -40,7 +40,7 @@ export class ReactionsController {
   @ApiOkResponse({ type: ReactionDto, isArray: true })
   list(
     @CurrentActor() actor: WorkspaceActor,
-    @Param("messageId") messageId: string,
+    @Param("messageId") messageId: string
   ): Promise<Reaction[]> {
     return this.reactions.list(actor, messageId);
   }
@@ -51,7 +51,7 @@ export class ReactionsController {
   add(
     @CurrentActor() actor: WorkspaceActor,
     @Param("messageId") messageId: string,
-    @Body() body: CreateReactionRequestDto,
+    @Body() body: CreateReactionRequestDto
   ): Promise<Reaction> {
     return this.reactions.add(actor, messageId, body.emoji);
   }
@@ -64,7 +64,7 @@ export class ReactionsController {
   async remove(
     @CurrentActor() actor: WorkspaceActor,
     @Param("messageId") messageId: string,
-    @Query() query: RemoveReactionQueryDto,
+    @Query() query: RemoveReactionQueryDto
   ): Promise<null> {
     await this.reactions.remove(actor, messageId, query.emoji);
     return null;

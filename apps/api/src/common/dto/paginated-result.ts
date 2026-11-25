@@ -8,6 +8,6 @@ import type { ApiPagination } from "@wire/types";
 export class PaginatedResult<T> {
   constructor(
     public readonly items: T[],
-    public readonly pagination: ApiPagination,
+    public readonly pagination: ApiPagination
   ) {}
 }

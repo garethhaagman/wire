@@ -1,8 +1,8 @@
 export interface EmailMessage {
-  to: string;
+  html?: string;
   subject: string;
   text: string;
-  html?: string;
+  to: string;
 }
 
 export type SendEmail = (message: EmailMessage) => Promise<void>;

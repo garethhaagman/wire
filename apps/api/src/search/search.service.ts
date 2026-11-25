@@ -1,14 +1,19 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { Database, listMembershipsForUser, searchMessages, type SearchScope } from "@wire/db";
+import {
+  Database,
+  listMembershipsForUser,
+  type SearchScope,
+  searchMessages,
+} from "@wire/db";
 import type { SearchResult } from "@wire/types";
 import type { RequestActor } from "../permissions/actor.js";
 
 interface SearchInput {
-  query: string;
   channelId?: string | undefined;
-  threadRootId?: string | undefined;
   page: number;
   perPage: number;
+  query: string;
+  threadRootId?: string | undefined;
 }
 
 /**
@@ -23,10 +28,12 @@ export class SearchService {
 
   async search(
     actor: RequestActor,
-    input: SearchInput,
+    input: SearchInput
   ): Promise<{ items: SearchResult[]; total: number }> {
     const scope = await this.scopeFor(actor);
-    if (scope.memberIds.length === 0) return { items: [], total: 0 };
+    if (scope.memberIds.length === 0) {
+      return { items: [], total: 0 };
+    }
     return searchMessages(this.db.reader, scope, {
       query: input.query,
       channelId: input.channelId,
@@ -41,13 +48,16 @@ export class SearchService {
     if (actor.workspaceId && actor.member) {
       return {
         memberIds: [actor.member.id],
-        publicWorkspaceIds: actor.member.role === "guest" ? [] : [actor.workspaceId],
+        publicWorkspaceIds:
+          actor.member.role === "guest" ? [] : [actor.workspaceId],
       };
     }
     const memberships = await listMembershipsForUser(this.db, actor.userId);
     return {
       memberIds: memberships.map((m) => m.memberId),
-      publicWorkspaceIds: memberships.filter((m) => m.role !== "guest").map((m) => m.workspaceId),
+      publicWorkspaceIds: memberships
+        .filter((m) => m.role !== "guest")
+        .map((m) => m.workspaceId),
     };
   }
 }

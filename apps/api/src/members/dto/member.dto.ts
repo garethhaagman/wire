@@ -1,4 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import type {
+  CreateMemberRequest,
+  Member,
+  MemberPreferences,
+  UpdateMemberPreferencesRequest,
+  UpdateMemberRequest,
+} from "@wire/types";
 import {
   ArrayMaxSize,
   IsArray,
@@ -8,13 +15,6 @@ import {
   IsString,
   Length,
 } from "class-validator";
-import type {
-  CreateMemberRequest,
-  Member,
-  MemberPreferences,
-  UpdateMemberPreferencesRequest,
-  UpdateMemberRequest,
-} from "@wire/types";
 
 const ROLES = ["owner", "admin", "member", "guest"] as const;
 
@@ -88,7 +88,9 @@ export class MemberPreferencesDto implements MemberPreferences {
   mutedChannelIds!: string[];
 }
 
-export class UpdateMemberPreferencesRequestDto implements UpdateMemberPreferencesRequest {
+export class UpdateMemberPreferencesRequestDto
+  implements UpdateMemberPreferencesRequest
+{
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()

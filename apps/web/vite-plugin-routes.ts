@@ -13,21 +13,24 @@ import type { Plugin } from "vite";
  * job is to prove the convention, not replace TanStack Router/Next's file-based routing.
  */
 const VIRTUAL_ID = "virtual:wire-routes";
-const RESOLVED_VIRTUAL_ID = "\0" + VIRTUAL_ID;
+const RESOLVED_VIRTUAL_ID = `\0${VIRTUAL_ID}`;
+const TSX_EXTENSION_PATTERN = /\.tsx$/u;
+const TRAILING_INDEX_PATTERN = /\/index$/u;
+const BARE_INDEX_PATTERN = /^index$/u;
 
 function filePathToRoutePath(relativeFile: string): string {
   let routePath = relativeFile
-    .replace(/\.tsx$/, "")
-    .replace(/\/index$/, "")
-    .replace(/^index$/, "");
+    .replace(TSX_EXTENSION_PATTERN, "")
+    .replace(TRAILING_INDEX_PATTERN, "")
+    .replace(BARE_INDEX_PATTERN, "");
 
-  routePath = routePath.replace(/\[([^\]]+)\]/g, ":$1");
+  routePath = routePath.replace(/\[(?<param>[^\]]+)\]/gu, ":$<param>");
 
-  return "/" + routePath;
+  return `/${routePath}`;
 }
 
 export function wireRoutesPlugin(): Plugin {
-  const routesDir = path.resolve(__dirname, "src/routes");
+  const routesDir = path.resolve(import.meta.dirname, "src/routes");
 
   async function generateModule(): Promise<string> {
     const files = await fg("**/*.tsx", { cwd: routesDir });
@@ -41,7 +44,9 @@ export function wireRoutesPlugin(): Plugin {
       const importName = `Route${i}`;
       const importPath = `/src/routes/${file}`;
       imports.push(`import ${importName} from "${importPath}";`);
-      entries.push(`  { path: ${JSON.stringify(routePath)}, Component: ${importName} }`);
+      entries.push(
+        `  { path: ${JSON.stringify(routePath)}, Component: ${importName} }`
+      );
     });
 
     return `${imports.join("\n")}\n\nexport const routes = [\n${entries.join(",\n")}\n];\n`;
@@ -50,12 +55,14 @@ export function wireRoutesPlugin(): Plugin {
   return {
     name: "wire-routes",
     resolveId(id) {
-      if (id === VIRTUAL_ID) return RESOLVED_VIRTUAL_ID;
-      return undefined;
+      if (id === VIRTUAL_ID) {
+        return RESOLVED_VIRTUAL_ID;
+      }
     },
-    async load(id) {
-      if (id === RESOLVED_VIRTUAL_ID) return generateModule();
-      return undefined;
+    load(id) {
+      if (id === RESOLVED_VIRTUAL_ID) {
+        return generateModule();
+      }
     },
     configureServer(server) {
       server.watcher.add(routesDir);

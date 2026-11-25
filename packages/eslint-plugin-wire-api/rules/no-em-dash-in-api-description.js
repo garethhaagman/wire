@@ -30,24 +30,32 @@ export default {
   meta: {
     type: "problem",
     docs: {
-      description: "OpenAPI-facing description strings must not contain an em dash (—).",
+      description:
+        "OpenAPI-facing description strings must not contain an em dash (—).",
     },
     schema: [],
     messages: {
-      emDash: "{{source}}'s description contains an em dash (—) — use a comma, colon, or hyphen instead; this text ends up verbatim in the generated OpenAPI spec.",
+      emDash:
+        "{{source}}'s description contains an em dash (—) — use a comma, colon, or hyphen instead; this text ends up verbatim in the generated OpenAPI spec.",
     },
   },
   create(context) {
     function decoratorName(decorator) {
       const expr = decorator.expression;
-      if (expr.type !== "CallExpression") return null;
-      const callee = expr.callee;
+      if (expr.type !== "CallExpression") {
+        return null;
+      }
+      const { callee } = expr;
       return callee.type === "Identifier" ? callee.name : null;
     }
 
     function stringHasEmDash(node) {
-      if (node.type === "Literal" && typeof node.value === "string") return node.value.includes(EM_DASH);
-      if (node.type === "TemplateLiteral") return node.quasis.some((q) => q.value.raw.includes(EM_DASH));
+      if (node.type === "Literal" && typeof node.value === "string") {
+        return node.value.includes(EM_DASH);
+      }
+      if (node.type === "TemplateLiteral") {
+        return node.quasis.some((q) => q.value.raw.includes(EM_DASH));
+      }
       // `"a " + "b" + ...` string concatenation, as used by setDescription(...) calls.
       if (node.type === "BinaryExpression" && node.operator === "+") {
         return stringHasEmDash(node.left) || stringHasEmDash(node.right);
@@ -57,24 +65,37 @@ export default {
 
     function checkObjectExpression(node, source) {
       const descProp = node.properties.find(
-        (prop) => prop.type === "Property" && prop.key.type === "Identifier" && prop.key.name === "description",
+        (prop) =>
+          prop.type === "Property" &&
+          prop.key.type === "Identifier" &&
+          prop.key.name === "description"
       );
-      if (!descProp || descProp.type !== "Property") return;
+      if (descProp?.type !== "Property") {
+        return;
+      }
 
       if (stringHasEmDash(descProp.value)) {
-        context.report({ node: descProp.value, messageId: "emDash", data: { source } });
+        context.report({
+          node: descProp.value,
+          messageId: "emDash",
+          data: { source },
+        });
       }
     }
 
     return {
       Decorator(node) {
         const name = decoratorName(node);
-        if (!name || !DESCRIBING_DECORATORS.has(name)) return;
+        if (!(name && DESCRIBING_DECORATORS.has(name))) {
+          return;
+        }
 
         const expr = node.expression;
-        if (expr.type !== "CallExpression") return;
-        const options = expr.arguments[0];
-        if (options && options.type === "ObjectExpression") {
+        if (expr.type !== "CallExpression") {
+          return;
+        }
+        const [options] = expr.arguments;
+        if (options?.type === "ObjectExpression") {
           checkObjectExpression(options, name);
         }
       },
@@ -83,11 +104,22 @@ export default {
       // top-level description, not tied to any one endpoint but still rendered
       // straight into the generated spec.
       CallExpression(node) {
-        if (node.callee.type !== "MemberExpression") return;
-        if (node.callee.property.type !== "Identifier" || node.callee.property.name !== "setDescription") return;
-        const arg = node.arguments[0];
+        if (node.callee.type !== "MemberExpression") {
+          return;
+        }
+        if (
+          node.callee.property.type !== "Identifier" ||
+          node.callee.property.name !== "setDescription"
+        ) {
+          return;
+        }
+        const [arg] = node.arguments;
         if (arg && stringHasEmDash(arg)) {
-          context.report({ node: arg, messageId: "emDash", data: { source: "setDescription(...)" } });
+          context.report({
+            node: arg,
+            messageId: "emDash",
+            data: { source: "setDescription(...)" },
+          });
         }
       },
     };

@@ -1,29 +1,36 @@
-import type { ReactNode } from "react";
 import { baseUiConfig } from "@wire/ui-config";
+import type { ReactNode } from "react";
 import { AuthShader } from "./auth-shader.js";
 
 function BrandMark(): React.JSX.Element {
   const { productName, logo } = baseUiConfig.branding;
 
-  if (logo.full) return <img src={logo.full} alt={productName} className="h-6 w-auto" />;
+  if (logo.full) {
+    return (
+      // biome-ignore lint/correctness/useImageSize: org-provided logo of unknown aspect ratio; h-6 w-auto preserves it, a fixed width would distort it
+      <img alt={productName} className="h-6 w-auto" src={logo.full} />
+    );
+  }
 
   return (
-    <div className="flex items-center gap-2.5 text-foreground">
-      <span className="flex h-7 w-7 items-center justify-center rounded-md border border-border bg-card text-foreground shadow-sm">
+    <div className="text-foreground flex items-center gap-2.5">
+      <span className="border-border bg-card text-foreground flex h-7 w-7 items-center justify-center rounded-md border shadow-sm">
         <svg
-          viewBox="0 0 24 24"
+          aria-hidden="true"
           className="h-4 w-4"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2.4"
           strokeLinecap="round"
-          aria-hidden="true"
+          strokeWidth="2.4"
+          viewBox="0 0 24 24"
         >
           <path d="M3 8h5c4 0 4 8 8 8h5" />
           <path d="M3 16h5c1.6 0 2.5-1.3 3.3-2.8M12.7 10.8C13.5 9.3 14.4 8 16 8h5" />
         </svg>
       </span>
-      <span className="text-lg font-semibold tracking-tight">{productName.toLowerCase()}</span>
+      <span className="text-lg font-semibold tracking-tight">
+        {productName.toLowerCase()}
+      </span>
     </div>
   );
 }
@@ -42,15 +49,19 @@ export function AuthLayout({
   children: ReactNode;
 }): React.JSX.Element {
   return (
-    <main className="grid min-h-dvh grid-cols-1 bg-background lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+    <main className="bg-background grid min-h-dvh grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
       <section className="flex flex-col px-6 py-6 sm:px-12 lg:px-14 lg:py-8">
         <BrandMark />
 
         <div className="flex flex-1 items-center py-12">
           <div className="w-full max-w-[360px]">
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">{title}</h1>
+            <h1 className="text-foreground text-3xl font-semibold tracking-tight">
+              {title}
+            </h1>
             {description ? (
-              <div className="mt-2 text-sm text-muted-foreground">{description}</div>
+              <div className="text-muted-foreground mt-2 text-sm">
+                {description}
+              </div>
             ) : null}
             <div className="mt-8">{children}</div>
           </div>

@@ -20,7 +20,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wire -d wire"]
+      test: [ "CMD-SHELL", "pg_isready -U wire -d wire" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -31,11 +31,19 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     command:
-      ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory-policy", "noeviction"]
+      [
+        "redis-server",
+        "--save",
+        "",
+        "--appendonly",
+        "no",
+        "--maxmemory-policy",
+        "noeviction",
+      ]
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -56,7 +64,7 @@ services:
   # a chosen access-key-id/secret-key at creation time) — copy them into
   # apps/api/.env. Re-running after the first time is a no-op.
   garage:
-    profiles: ["s3"]
+    profiles: [ "s3" ]
     image: dxflrs/garage:v2.5.0
     restart: unless-stopped
     volumes:
@@ -66,19 +74,19 @@ services:
     ports:
       - "3900:3900"
     healthcheck:
-      test: ["CMD", "/garage", "status"]
+      test: [ "CMD", "/garage", "status" ]
       interval: 5s
       timeout: 5s
       retries: 10
 
   migrate:
-    profiles: ["docker"]
+    profiles: [ "docker" ]
     build:
       context: .
       dockerfile: apps/api/Dockerfile
       target: build
     working_dir: /repo/packages/db
-    command: ["bun", "run", "migrate"]
+    command: [ "bun", "run", "migrate" ]
     environment:
       DATABASE_URL: postgres://wire:wire_dev_password@postgres:5432/wire
     depends_on:
@@ -86,7 +94,7 @@ services:
         condition: service_healthy
 
   api:
-    profiles: ["docker"]
+    profiles: [ "docker" ]
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -112,7 +120,7 @@ services:
         condition: service_completed_successfully
 
   web:
-    profiles: ["docker"]
+    profiles: [ "docker" ]
     build:
       context: .
       dockerfile: apps/web/Dockerfile
@@ -125,7 +133,7 @@ services:
       - api
 
   docs:
-    profiles: ["docker"]
+    profiles: [ "docker" ]
     build:
       context: .
       dockerfile: apps/docs/Dockerfile

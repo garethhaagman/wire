@@ -1,7 +1,7 @@
 import type { ApiEnv } from "@wire/config";
 import { sendEmailViaConsole } from "./console-email.sender.js";
-import { sendEmailViaResend } from "./resend-email.sender.js";
 import type { SendEmail } from "./email.types.js";
+import { sendEmailViaResend } from "./resend-email.sender.js";
 
 /**
  * Zero-config default: no RESEND_API_KEY means every email-sending code path still

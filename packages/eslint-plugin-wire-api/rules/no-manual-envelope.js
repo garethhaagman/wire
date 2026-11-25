@@ -28,12 +28,20 @@ export default {
     return {
       ObjectExpression(node) {
         const keys = node.properties
-          .map((prop) => (prop.type === "Property" && prop.key.type === "Identifier" ? prop.key.name : null))
+          .map((prop) =>
+            prop.type === "Property" && prop.key.type === "Identifier"
+              ? prop.key.name
+              : null
+          )
           .filter(Boolean);
 
-        if (keys.length < 3) return;
+        if (keys.length < 3) {
+          return;
+        }
         const matchCount = keys.filter((key) => ENVELOPE_KEYS.has(key)).length;
-        if (matchCount < 3) return;
+        if (matchCount < 3) {
+          return;
+        }
 
         context.report({ node, messageId: "manualEnvelope" });
       },

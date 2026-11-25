@@ -3,13 +3,13 @@ import { isoRequired, type Queryable } from "../database.js";
 import { newId } from "../ids.js";
 
 interface EventRow {
-  seq: string;
-  id: string;
-  workspace_id: string;
-  type: WireEventType;
   channel_id: string | null;
-  data: Record<string, unknown>;
   created_at: Date;
+  data: Record<string, unknown>;
+  id: string;
+  seq: string;
+  type: WireEventType;
+  workspace_id: string;
 }
 
 function toEvent(row: EventRow): WireEvent {
@@ -25,15 +25,20 @@ function toEvent(row: EventRow): WireEvent {
 }
 
 export interface NewEvent {
-  workspaceId: string;
-  type: WireEventType;
   channelId: string | null;
   data: object;
+  type: WireEventType;
+  workspaceId: string;
 }
 
 /** Outbox append — call with the same transaction as the change the event describes. */
-export async function appendEvents(tx: Queryable, events: NewEvent[]): Promise<void> {
-  if (events.length === 0) return;
+export async function appendEvents(
+  tx: Queryable,
+  events: NewEvent[]
+): Promise<void> {
+  if (events.length === 0) {
+    return;
+  }
   await tx.query(
     `insert into events (id, workspace_id, type, channel_id, data)
      select * from unnest($1::text[], $2::text[], $3::text[], $4::text[], $5::jsonb[])`,
@@ -43,7 +48,7 @@ export async function appendEvents(tx: Queryable, events: NewEvent[]): Promise<v
       events.map((e) => e.type),
       events.map((e) => e.channelId),
       events.map((e) => JSON.stringify(e.data)),
-    ],
+    ]
   );
 }
 
@@ -52,21 +57,32 @@ export async function appendEvents(tx: Queryable, events: NewEvent[]): Promise<v
  * of API/worker replicas relay concurrently without double-claiming; the row locks
  * are held until the caller's transaction marks them published.
  */
-export async function claimUnpublishedEvents(tx: Queryable, limit: number): Promise<WireEvent[]> {
+export async function claimUnpublishedEvents(
+  tx: Queryable,
+  limit: number
+): Promise<WireEvent[]> {
   const { rows } = await tx.query<EventRow>(
     `select seq, id, workspace_id, type, channel_id, data, created_at from events
      where published_at is null
      order by seq
      limit $1
      for update skip locked`,
-    [limit],
+    [limit]
   );
   return rows.map(toEvent);
 }
 
-export async function markEventsPublished(tx: Queryable, seqs: number[]): Promise<void> {
-  if (seqs.length === 0) return;
-  await tx.query(`update events set published_at = now() where seq = any($1::bigint[])`, [seqs]);
+export async function markEventsPublished(
+  tx: Queryable,
+  seqs: number[]
+): Promise<void> {
+  if (seqs.length === 0) {
+    return;
+  }
+  await tx.query(
+    "update events set published_at = now() where seq = any($1::bigint[])",
+    [seqs]
+  );
 }
 
 /**
@@ -82,7 +98,7 @@ export async function listEventsAfter(
     limit: number;
     viewerMemberId: string;
     viewerIsGuest: boolean;
-  },
+  }
 ): Promise<{ items: WireEvent[]; hasMore: boolean }> {
   const { rows } = await db.query<EventRow>(
     `select e.seq, e.id, e.workspace_id, e.type, e.channel_id, e.data, e.created_at from events e
@@ -94,16 +110,25 @@ export async function listEventsAfter(
        )
      order by e.seq
      limit $3`,
-    [input.workspaceId, input.afterSeq, input.limit + 1, input.viewerMemberId, input.viewerIsGuest],
+    [
+      input.workspaceId,
+      input.afterSeq,
+      input.limit + 1,
+      input.viewerMemberId,
+      input.viewerIsGuest,
+    ]
   );
-  return { items: rows.slice(0, input.limit).map(toEvent), hasMore: rows.length > input.limit };
+  return {
+    items: rows.slice(0, input.limit).map(toEvent),
+    hasMore: rows.length > input.limit,
+  };
 }
 
 /** Batched retention delete so pruning never holds a long lock on the outbox. */
 export async function pruneEvents(
   db: Queryable,
   olderThanSeconds: number,
-  batchSize: number,
+  batchSize: number
 ): Promise<number> {
   const { rowCount } = await db.query(
     `delete from events where seq in (
@@ -111,7 +136,7 @@ export async function pruneEvents(
        where published_at is not null and created_at < now() - make_interval(secs => $1)
        limit $2
      )`,
-    [olderThanSeconds, batchSize],
+    [olderThanSeconds, batchSize]
   );
   return rowCount ?? 0;
 }

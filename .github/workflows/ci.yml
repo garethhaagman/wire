@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [ main ]
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -13,11 +13,12 @@ env:
   BUN_VERSION: "1.3.9"
 
 jobs:
-  # Near-instant correctness/style pass. Runs first and alone (no bun install
-  # needed) so a trivial typo fails in seconds, not after waiting behind every
-  # other job's dependency install.
-  oxlint:
-    name: oxlint
+  # Near-instant correctness/style pass (Biome: lint + format, via Ultracite's
+  # config). Runs first and alone (no bun install needed) so a trivial typo
+  # fails in seconds, not after waiting behind every other job's dependency
+  # install.
+  biome:
+    name: biome
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,33 +33,20 @@ jobs:
           restore-keys: |
             bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
-      - run: bun run lint:oxlint
+      - run: bun run check
 
   # Each of these restores the same bun-cache key populated above (or, on a
   # cache miss, installs itself — nothing here blocks on another job). They
   # run as independent jobs, not independent steps in one job, specifically so
   # GitHub Actions schedules them on separate runners in parallel instead of
   # serially on one.
-  format:
-    name: format:check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-      - name: Cache bun install
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            bun-${{ runner.os }}-
-      - run: bun install --frozen-lockfile
-      - run: bun run format:check
-
-  eslint:
-    name: eslint
+  #
+  # Scoped to the repo's own ESLint rule plugins (wire-api, wire-ui) —
+  # everything generic is Biome's job above. Biome can't load custom
+  # ESLint plugins, so this is where Wire-specific/architectural rules
+  # (permission checks, response envelope shape, ...) live.
+  wire-rules:
+    name: wire-rules (eslint)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -76,11 +64,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .turbo
-          key: turbo-eslint-${{ runner.os }}-${{ github.sha }}
+          key: turbo-wire-rules-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
-            turbo-eslint-${{ runner.os }}-
+            turbo-wire-rules-${{ runner.os }}-
       - run: bun install --frozen-lockfile
-      - run: turbo run lint check:theme
+      - run: turbo run lint:wire-rules check:theme
 
   typecheck:
     name: typecheck
@@ -185,7 +173,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [api, web, docs]
+        app: [ api, web, docs ]
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3

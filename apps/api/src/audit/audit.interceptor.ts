@@ -25,20 +25,30 @@ const UNAUDITED_SUBJECTS = new Set(["Presence"]);
 export class AuditInterceptor implements NestInterceptor {
   constructor(
     private readonly reflector: Reflector,
-    private readonly audit: AuditService,
+    private readonly audit: AuditService
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const req = context.switchToHttp().getRequest<AuthedRequest & RequestWithId>();
-    const permission = this.reflector.get(PermissionMetadata, context.getHandler());
-    if (!MUTATING.has(req.method) || !permission || UNAUDITED_SUBJECTS.has(permission.subject)) {
+    const req = context
+      .switchToHttp()
+      .getRequest<AuthedRequest & RequestWithId>();
+    const permission = this.reflector.get(
+      PermissionMetadata,
+      context.getHandler()
+    );
+    if (
+      !(MUTATING.has(req.method) && permission) ||
+      UNAUDITED_SUBJECTS.has(permission.subject)
+    ) {
       return next.handle();
     }
 
     return next.handle().pipe(
       tap((body: unknown) => {
-        const actor = req.actor;
-        if (!actor?.workspaceId || !actor.member) return;
+        const { actor } = req;
+        if (!(actor?.workspaceId && actor.member)) {
+          return;
+        }
         this.audit.record({
           workspaceId: actor.workspaceId,
           actorId: actor.member.id,
@@ -46,16 +56,25 @@ export class AuditInterceptor implements NestInterceptor {
           resource: permission.subject,
           resourceId: resourceIdOf(body, req.params),
           action: `${permission.action}:${context.getHandler().name}`,
-          requestId: req.requestId?.slice(0, 128) ?? null,
+          requestId: req.requestId.slice(0, 128),
         });
-      }),
+      })
     );
   }
 }
 
-function resourceIdOf(body: unknown, params: Record<string, string | string[]>): string | null {
-  if (body && typeof body === "object" && "id" in body && typeof body.id === "string")
+function resourceIdOf(
+  body: unknown,
+  params: Record<string, string | string[]>
+): string | null {
+  if (
+    body &&
+    typeof body === "object" &&
+    "id" in body &&
+    typeof body.id === "string"
+  ) {
     return body.id;
+  }
   const last = Object.values(params).at(-1);
   return typeof last === "string" ? last : null;
 }

@@ -1,6 +1,12 @@
 // @ts-check
 
-const HTTP_METHOD_DECORATORS = new Set(["Get", "Post", "Put", "Patch", "Delete"]);
+const HTTP_METHOD_DECORATORS = new Set([
+  "Get",
+  "Post",
+  "Put",
+  "Patch",
+  "Delete",
+]);
 
 /**
  * Every HTTP-method-decorated controller handler must carry either @RequirePermission
@@ -16,7 +22,8 @@ export default {
   meta: {
     type: "problem",
     docs: {
-      description: "Controller handlers must declare @RequirePermission(action, subject) or @Public().",
+      description:
+        "Controller handlers must declare @RequirePermission(action, subject) or @Public().",
     },
     schema: [],
     messages: {
@@ -36,12 +43,19 @@ export default {
         const decorators = node.decorators ?? [];
         const names = decorators.map(decoratorName).filter(Boolean);
 
-        const httpDecorator = names.find((name) => HTTP_METHOD_DECORATORS.has(name));
-        if (!httpDecorator) return;
+        const httpDecorator = names.find((name) =>
+          HTTP_METHOD_DECORATORS.has(name)
+        );
+        if (!httpDecorator) {
+          return;
+        }
 
-        if (names.includes("RequirePermission") || names.includes("Public")) return;
+        if (names.includes("RequirePermission") || names.includes("Public")) {
+          return;
+        }
 
-        const methodName = node.key.type === "Identifier" ? node.key.name : "<unknown>";
+        const methodName =
+          node.key.type === "Identifier" ? node.key.name : "<unknown>";
         context.report({
           node,
           messageId: "missing",

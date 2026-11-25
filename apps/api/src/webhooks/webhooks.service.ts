@@ -10,9 +10,10 @@ import {
   listWebhookEndpoints,
 } from "@wire/db";
 import {
-  WIRE_EVENT_TYPES,
+  type ApiErrorDetail,
   type CreateWebhookEndpointRequest,
   type WebhookEndpoint,
+  WIRE_EVENT_TYPES,
 } from "@wire/types";
 import { ValidationException } from "../common/errors/api-exception.js";
 import { API_ENV } from "../config/env.provider.js";
@@ -30,13 +31,13 @@ export class WebhooksService {
   constructor(
     @Inject(Database) private readonly db: Database,
     @Inject(API_ENV) private readonly env: ApiEnv,
-    private readonly secrets: WebhookSecretBox,
+    private readonly secrets: WebhookSecretBox
   ) {}
 
   list(
     actor: WorkspaceActor,
     page: number,
-    perPage: number,
+    perPage: number
   ): Promise<{ items: WebhookEndpoint[]; total: number }> {
     return listWebhookEndpoints(this.db, actor.workspaceId, page, perPage);
   }
@@ -52,7 +53,7 @@ export class WebhooksService {
   /** Returns the endpoint plus its signing secret — the one time the secret is ever visible. */
   async create(
     actor: WorkspaceActor,
-    input: CreateWebhookEndpointRequest,
+    input: CreateWebhookEndpointRequest
   ): Promise<WebhookEndpoint & { secret: string }> {
     await this.validate(actor, input);
     const secret = `whsec_${randomBytes(32).toString("base64url")}`;
@@ -60,7 +61,9 @@ export class WebhooksService {
       workspaceId: actor.workspaceId,
       url: input.url,
       enabledEvents: [...new Set(input.enabledEvents)],
-      channelFilter: input.channelFilter?.length ? [...new Set(input.channelFilter)] : null,
+      channelFilter: input.channelFilter?.length
+        ? [...new Set(input.channelFilter)]
+        : null,
       secretCiphertext: this.secrets.seal(secret),
     });
     return { ...endpoint, secret };
@@ -74,11 +77,18 @@ export class WebhooksService {
 
   private async validate(
     actor: WorkspaceActor,
-    input: CreateWebhookEndpointRequest,
+    input: CreateWebhookEndpointRequest
   ): Promise<void> {
-    const details = [];
-    if (this.env.NODE_ENV === "production" && new URL(input.url).protocol !== "https:") {
-      details.push({ field: "url", code: "INSECURE_URL", message: "Webhook URLs must use https" });
+    const details: ApiErrorDetail[] = [];
+    if (
+      this.env.NODE_ENV === "production" &&
+      new URL(input.url).protocol !== "https:"
+    ) {
+      details.push({
+        field: "url",
+        code: "INSECURE_URL",
+        message: "Webhook URLs must use https",
+      });
     }
     const unknown = input.enabledEvents.filter((e) => !SUBSCRIBABLE.has(e));
     if (unknown.length) {
@@ -90,7 +100,11 @@ export class WebhooksService {
     }
     if (input.channelFilter?.length) {
       const found = new Set(
-        await filterWorkspaceChannelIds(this.db, actor.workspaceId, input.channelFilter),
+        await filterWorkspaceChannelIds(
+          this.db,
+          actor.workspaceId,
+          input.channelFilter
+        )
       );
       const missing = input.channelFilter.filter((id) => !found.has(id));
       if (missing.length) {
@@ -101,6 +115,8 @@ export class WebhooksService {
         });
       }
     }
-    if (details.length) throw new ValidationException(details);
+    if (details.length) {
+      throw new ValidationException(details);
+    }
   }
 }

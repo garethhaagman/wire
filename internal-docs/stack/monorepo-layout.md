@@ -5,7 +5,7 @@
 - **Runtime / package manager / workspaces**: Bun (`bun.lock`, `workspaces` in the root `package.json`). Apps run TypeScript directly — `apps/api` has no build step.
 - **Build orchestration**: Turborepo (task graph, local cache only — no vendor remote cache, keeping "no managed services" true).
 - **TypeScript**: `strict: true` plus `exactOptionalPropertyTypes`, shared via `tsconfig.base.json`; each package runs `tsc --noEmit`.
-- **Lint/format**: oxlint at the root, then ESLint per package (`@wire/eslint-config` plus the repo's own rule plugins `@wire/eslint-plugin-wire-api` and `@wire/eslint-plugin-wire-ui`), Prettier for formatting, knip for unused files/exports.
+- **Lint/format**: [Ultracite](https://www.ultracite.ai) (Biome) at the root for generic lint + format, plus a separate ESLint pass scoped to the repo's own rule plugins (`@wire/eslint-plugin-wire-api`, `@wire/eslint-plugin-wire-ui`) for Wire-specific/architectural rules Biome can't express, knip for unused files/exports.
 - **Testing**: `bun test` (currently only `packages/ui-config`). A contract suite that replays `openapi.yaml` against the running `api` is still planned (ties into [sdks/](../sdks/) drift checks).
 
 ## Directory structure
@@ -21,7 +21,7 @@ wire/
 │   ├── db/                      # @wire/db — Database (pg pools), typed query functions, migrations
 │   ├── config/                  # @wire/config — env var parsing/validation (zod), shared across apps
 │   ├── ui-config/               # @wire/ui-config — UI config schema, resolver, theme projection
-│   ├── eslint-config/           # shared ESLint config
+│   ├── eslint-config/           # shared ESLint parser config for the wire-rules packages
 │   ├── eslint-plugin-wire-api/  # API rules (require-permission, no-bare-error-throw, no-numeric-id, …)
 │   └── eslint-plugin-wire-ui/   # UI rules (no-hardcoded-colors, …)
 ├── infra/                       # Pulumi TypeScript program — see infra-pulumi.md

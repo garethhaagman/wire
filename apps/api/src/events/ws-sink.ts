@@ -1,5 +1,5 @@
-import type { WebSocket } from "ws";
 import type { WireEvent } from "@wire/types";
+import type { WebSocket } from "ws";
 import type { StreamSink } from "./realtime.service.js";
 
 /**
@@ -20,7 +20,11 @@ export class WsSink implements StreamSink {
     this.write({ event: event.type, data: event });
   }
 
-  sendEphemeral(type: string, channelId: string | null, data: Record<string, unknown>): void {
+  sendEphemeral(
+    type: string,
+    channelId: string | null,
+    data: Record<string, unknown>
+  ): void {
     this.write({ event: type, data: { channelId, ...data } });
   }
 
@@ -29,7 +33,9 @@ export class WsSink implements StreamSink {
   }
 
   ping(): void {
-    if (this.socket.readyState === this.socket.OPEN) this.socket.ping();
+    if (this.socket.readyState === this.socket.OPEN) {
+      this.socket.ping();
+    }
   }
 
   end(): void {
@@ -42,7 +48,9 @@ export class WsSink implements StreamSink {
   }
 
   private write(frame: { event: string; data: unknown }): void {
-    if (this.ended) return;
+    if (this.ended) {
+      return;
+    }
     // `ws` buffers internally and exposes backpressure via `bufferedAmount`; unlike
     // the SSE Response there's no risk of unbounded Node-side buffering from a
     // single `send()`, so no slow-consumer eviction is needed here — a socket that

@@ -13,7 +13,12 @@ All tools accept optional `_meta.workspace_id` to override the connection defaul
     "properties": {
       "query": { "type": "string" },
       "channel_ids": { "type": "array", "items": { "type": "string" } },
-      "limit": { "type": "integer", "minimum": 1, "maximum": 50, "default": 10 },
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 50,
+        "default": 10
+      },
       "after": { "type": "string", "format": "date-time" }
     },
     "required": ["query"]

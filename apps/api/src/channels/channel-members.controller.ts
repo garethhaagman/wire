@@ -9,11 +9,16 @@ import {
   Post,
   Query,
 } from "@nestjs/common";
-import { ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { ChannelMember } from "@wire/types";
-import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
-import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
 import { PaginatedResult } from "../common/dto/paginated-result.js";
+import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
+import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
@@ -37,12 +42,20 @@ export class ChannelMembersController {
   async list(
     @CurrentActor() actor: WorkspaceActor,
     @Param("channelId") channelId: string,
-    @Query() query: PaginationQueryDto,
+    @Query() query: PaginationQueryDto
   ): Promise<PaginatedResult<ChannelMember>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
-    const { items, total } = await this.channels.listMembers(actor, channelId, page, perPage);
-    return new PaginatedResult(items, buildPaginationMeta(page, perPage, total));
+    const { items, total } = await this.channels.listMembers(
+      actor,
+      channelId,
+      page,
+      perPage
+    );
+    return new PaginatedResult(
+      items,
+      buildPaginationMeta(page, perPage, total)
+    );
   }
 
   /** Join (pass your own member id) or add someone else. Idempotent. */
@@ -52,7 +65,7 @@ export class ChannelMembersController {
   add(
     @CurrentActor() actor: WorkspaceActor,
     @Param("channelId") channelId: string,
-    @Body() body: AddChannelMemberRequestDto,
+    @Body() body: AddChannelMemberRequestDto
   ): Promise<ChannelMember> {
     return this.channels.addMember(actor, channelId, body.memberId);
   }
@@ -65,7 +78,7 @@ export class ChannelMembersController {
   async remove(
     @CurrentActor() actor: WorkspaceActor,
     @Param("channelId") channelId: string,
-    @Param("memberId") memberId: string,
+    @Param("memberId") memberId: string
   ): Promise<null> {
     await this.channels.removeMember(actor, channelId, memberId);
     return null;
@@ -79,7 +92,7 @@ export class ChannelMembersController {
   executeMarkRead(
     @CurrentActor() actor: WorkspaceActor,
     @Param("channelId") channelId: string,
-    @Body() body: MarkReadRequestDto,
+    @Body() body: MarkReadRequestDto
   ): Promise<ChannelMember> {
     return this.channels.markRead(actor, channelId, body.seq);
   }

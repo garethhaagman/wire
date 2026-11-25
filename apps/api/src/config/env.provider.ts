@@ -1,5 +1,5 @@
 import { Global, Module } from "@nestjs/common";
-import { parseApiEnv, type ApiEnv } from "@wire/config";
+import { type ApiEnv, parseApiEnv } from "@wire/config";
 
 export const API_ENV = Symbol("API_ENV");
 

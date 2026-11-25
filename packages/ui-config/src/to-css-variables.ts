@@ -36,10 +36,11 @@ export function colorRoleVarName(role: string): string {
 }
 
 function camelToKebab(value: string): string {
-  return value.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+  return value.replace(/[A-Z]/gu, (letter) => `-${letter.toLowerCase()}`);
 }
 
 function radiusToRem(radius: UiConfig["theme"]["radius"]): string {
+  // biome-ignore lint/style/useDefaultSwitchClause: radius is a closed union and every case returns; TS exhaustiveness already covers a missing case
   switch (radius) {
     case "none":
       return "0px";

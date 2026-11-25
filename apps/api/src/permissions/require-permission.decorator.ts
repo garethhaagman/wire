@@ -1,5 +1,8 @@
 import { Reflector } from "@nestjs/core";
-import type { PermissionAction, PermissionSubject } from "./permission.types.js";
+import type {
+  PermissionAction,
+  PermissionSubject,
+} from "./permission.types.js";
 
 interface RequiredPermission {
   action: PermissionAction;
@@ -12,7 +15,8 @@ interface RequiredPermission {
  * Exported so the guard and the require-permission lint rule both have a single
  * source of truth for the metadata key.
  */
-export const PermissionMetadata = Reflector.createDecorator<RequiredPermission>();
+export const PermissionMetadata =
+  Reflector.createDecorator<RequiredPermission>();
 
 /**
  * Declares the CASL permission a route requires — checked against the caller's
@@ -22,6 +26,9 @@ export const PermissionMetadata = Reflector.createDecorator<RequiredPermission>(
  *
  * Usage: @RequirePermission("create", "Message")
  */
-export function RequirePermission(action: PermissionAction, subject: PermissionSubject) {
+export function RequirePermission(
+  action: PermissionAction,
+  subject: PermissionSubject
+) {
   return PermissionMetadata({ action, subject });
 }

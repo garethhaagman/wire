@@ -15,7 +15,9 @@ describe("baseUiConfig", () => {
   });
 
   test("activeLayoutId points at a shipped layout", () => {
-    expect(baseUiConfig.layouts.map((l) => l.id)).toContain(baseUiConfig.activeLayoutId);
+    expect(baseUiConfig.layouts.map((l) => l.id)).toContain(
+      baseUiConfig.activeLayoutId
+    );
   });
 
   test.each(baseUiConfig.layouts.map((l) => [l.id, l] as const))(
@@ -25,7 +27,7 @@ describe("baseUiConfig", () => {
         expect(layout.slots[slotId]).toBeDefined();
         expect(layout.slots[slotId]?.placement).not.toBe("hidden");
       }
-    },
+    }
   );
 
   test("resolves to itself with no layers and no warnings", () => {

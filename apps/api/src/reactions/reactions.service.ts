@@ -1,5 +1,11 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { appendEvents, Database, deleteReaction, insertReaction, listReactions } from "@wire/db";
+import {
+  appendEvents,
+  Database,
+  deleteReaction,
+  insertReaction,
+  listReactions,
+} from "@wire/db";
 import type { Reaction } from "@wire/types";
 import { ChannelAccessService } from "../channels/channel-access.service.js";
 import { ResourceConflictException } from "../common/errors/api-exception.js";
@@ -11,7 +17,7 @@ export class ReactionsService {
   constructor(
     @Inject(Database) private readonly db: Database,
     private readonly access: ChannelAccessService,
-    private readonly relay: OutboxRelayService,
+    private readonly relay: OutboxRelayService
   ) {}
 
   async list(actor: WorkspaceActor, messageId: string): Promise<Reaction[]> {
@@ -19,7 +25,11 @@ export class ReactionsService {
     return listReactions(this.db, messageId);
   }
 
-  async add(actor: WorkspaceActor, messageId: string, emoji: string): Promise<Reaction> {
+  async add(
+    actor: WorkspaceActor,
+    messageId: string,
+    emoji: string
+  ): Promise<Reaction> {
     const { message } = await this.access.readableMessage(actor, messageId);
     await this.access.writable(actor, message.channelId);
 
@@ -44,7 +54,7 @@ export class ReactionsService {
     });
     if (!reaction) {
       throw new ResourceConflictException(
-        `You already reacted to message ${messageId} with ${emoji}`,
+        `You already reacted to message ${messageId} with ${emoji}`
       );
     }
     this.relay.kick();
@@ -52,10 +62,18 @@ export class ReactionsService {
   }
 
   /** Idempotent: removing a reaction that isn't there succeeds without emitting an event. */
-  async remove(actor: WorkspaceActor, messageId: string, emoji: string): Promise<void> {
+  async remove(
+    actor: WorkspaceActor,
+    messageId: string,
+    emoji: string
+  ): Promise<void> {
     const { message } = await this.access.readableMessage(actor, messageId);
     const removed = await this.db.tx(async (tx) => {
-      const didRemove = await deleteReaction(tx, { messageId, actorId: actor.member.id, emoji });
+      const didRemove = await deleteReaction(tx, {
+        messageId,
+        actorId: actor.member.id,
+        emoji,
+      });
       if (didRemove) {
         await appendEvents(tx, [
           {
@@ -68,6 +86,8 @@ export class ReactionsService {
       }
       return didRemove;
     });
-    if (removed) this.relay.kick();
+    if (removed) {
+      this.relay.kick();
+    }
   }
 }

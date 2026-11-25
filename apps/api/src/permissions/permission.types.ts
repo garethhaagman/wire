@@ -5,7 +5,12 @@ import type { MongoAbility } from "@casl/ability";
  * controller; "all" is CASL's special wildcard subject used only for the admin
  * role's manage-everything rule. See internal-docs/api/permissions.md.
  */
-export type PermissionAction = "manage" | "create" | "read" | "update" | "delete";
+export type PermissionAction =
+  | "manage"
+  | "create"
+  | "read"
+  | "update"
+  | "delete";
 
 export type PermissionSubject =
   | "all"

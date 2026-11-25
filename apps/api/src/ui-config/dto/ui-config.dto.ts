@@ -1,9 +1,8 @@
 import { ApiExtraModels, ApiProperty, getSchemaPath } from "@nestjs/swagger";
-import { IsArray, IsIn, IsObject, IsOptional, IsString, MaxLength } from "class-validator";
 import type {
+  UiConfigResource,
   UpdateOrgUiConfigRequest,
   UpdateUserUiConfigRequest,
-  UiConfigResource,
 } from "@wire/types";
 import type {
   Branding,
@@ -21,6 +20,14 @@ import type {
   Typography,
   UiConfig,
 } from "@wire/ui-config";
+import {
+  IsArray,
+  IsIn,
+  IsObject,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from "class-validator";
 
 /**
  * Deviation from the usual per-field class-validator DTO convention (see
@@ -49,7 +56,10 @@ export class LockDto {
   @IsIn(["org"])
   lockedBy!: "org";
 
-  @ApiProperty({ required: false, example: "Brand color is fixed company-wide." })
+  @ApiProperty({
+    required: false,
+    example: "Brand color is fixed company-wide.",
+  })
   @IsOptional()
   @IsString()
   @MaxLength(280)
@@ -62,7 +72,9 @@ export class UpdateOrgUiConfigRequestDto implements UpdateOrgUiConfigRequest {
     additionalProperties: true,
     description:
       "Deep-partial UiConfig override, validated against @wire/ui-config's uiConfigOverrideSchema.",
-    example: { theme: { colors: { primary: { light: "#2563eb", dark: "#60a5fa" } } } },
+    example: {
+      theme: { colors: { primary: { light: "#2563eb", dark: "#60a5fa" } } },
+    },
   })
   @IsObject()
   override!: UpdateOrgUiConfigRequest["override"];
@@ -100,52 +112,100 @@ export class ColorModePairDto implements ColorModePair {
 }
 
 export class ColorRolesDto implements ColorRoles {
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#f2f1ed", dark: "#0d0d0c" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#f2f1ed", dark: "#0d0d0c" },
+  })
   background!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#151514", dark: "#ecebe8" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#151514", dark: "#ecebe8" },
+  })
   foreground!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#151514", dark: "#ecebe8" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#151514", dark: "#ecebe8" },
+  })
   primary!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#ffffff", dark: "#151514" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#ffffff", dark: "#151514" },
+  })
   primaryForeground!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#efeeea", dark: "#1c1c1a" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#efeeea", dark: "#1c1c1a" },
+  })
   secondary!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#151514", dark: "#ecebe8" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#151514", dark: "#ecebe8" },
+  })
   secondaryForeground!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#eceae5", dark: "#232320" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#eceae5", dark: "#232320" },
+  })
   accent!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#151514", dark: "#ecebe8" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#151514", dark: "#ecebe8" },
+  })
   accentForeground!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#f7f6f3", dark: "#161614" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#f7f6f3", dark: "#161614" },
+  })
   muted!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#6c6b66", dark: "#9c9b96" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#6c6b66", dark: "#9c9b96" },
+  })
   mutedForeground!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#c4322b", dark: "#f0786f" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#c4322b", dark: "#f0786f" },
+  })
   destructive!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#ffffff", dark: "#151514" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#ffffff", dark: "#151514" },
+  })
   destructiveForeground!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#e3e1db", dark: "#2a2a27" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#e3e1db", dark: "#2a2a27" },
+  })
   border!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#151514", dark: "#ecebe8" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#151514", dark: "#ecebe8" },
+  })
   ring!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#ffffff", dark: "#131312" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#ffffff", dark: "#131312" },
+  })
   card!: ColorModePair;
 
-  @ApiProperty({ type: () => ColorModePairDto, example: { light: "#151514", dark: "#ecebe8" } })
+  @ApiProperty({
+    type: () => ColorModePairDto,
+    example: { light: "#151514", dark: "#ecebe8" },
+  })
   cardForeground!: ColorModePair;
 }
 
@@ -209,7 +269,8 @@ export class TypographyDto implements Typography {
       { $ref: getSchemaPath(GoogleFontSourceDto) },
       { $ref: getSchemaPath(CustomFontSourceDto) },
     ],
-    description: "Headings/marketing type. Falls back to a system serif stack when unset.",
+    description:
+      "Headings/marketing type. Falls back to a system serif stack when unset.",
   })
   display?: FontSource;
 
@@ -221,7 +282,10 @@ export class TypographyDto implements Typography {
   })
   baseSizePx!: number;
 
-  @ApiProperty({ enum: ["compact", "comfortable", "spacious"], example: "comfortable" })
+  @ApiProperty({
+    enum: ["compact", "comfortable", "spacious"],
+    example: "comfortable",
+  })
   scale!: "compact" | "comfortable" | "spacious";
 }
 
@@ -247,16 +311,28 @@ export class CustomIconPackDto {
 }
 
 export class LogoDto implements Logo {
-  @ApiProperty({ required: false, example: "https://assets.example.com/logo/mark.svg" })
+  @ApiProperty({
+    required: false,
+    example: "https://assets.example.com/logo/mark.svg",
+  })
   mark?: string;
 
-  @ApiProperty({ required: false, example: "https://assets.example.com/logo/full.svg" })
+  @ApiProperty({
+    required: false,
+    example: "https://assets.example.com/logo/full.svg",
+  })
   full?: string;
 
-  @ApiProperty({ required: false, example: "https://assets.example.com/logo/mark-dark.svg" })
+  @ApiProperty({
+    required: false,
+    example: "https://assets.example.com/logo/mark-dark.svg",
+  })
   markDark?: string;
 
-  @ApiProperty({ required: false, example: "https://assets.example.com/logo/full-dark.svg" })
+  @ApiProperty({
+    required: false,
+    example: "https://assets.example.com/logo/full-dark.svg",
+  })
   fullDark?: string;
 }
 
@@ -267,7 +343,10 @@ export class ThemeDto implements Theme {
   @ApiProperty({ type: () => ColorRolesDto })
   colors!: ColorRoles;
 
-  @ApiProperty({ enum: ["none", "sm", "md", "lg", "xl", "full"], example: "md" })
+  @ApiProperty({
+    enum: ["none", "sm", "md", "lg", "xl", "full"],
+    example: "md",
+  })
   radius!: "none" | "sm" | "md" | "lg" | "xl" | "full";
 
   @ApiProperty({ type: () => TypographyDto })
@@ -291,14 +370,18 @@ export class BrandingDto implements Branding {
   @ApiProperty({ type: () => LogoDto })
   logo!: Logo;
 
-  @ApiProperty({ required: false, example: "https://assets.example.com/favicon.ico" })
+  @ApiProperty({
+    required: false,
+    example: "https://assets.example.com/favicon.ico",
+  })
   faviconUrl?: string;
 }
 
 export class MotionDto implements Motion {
   @ApiProperty({
     example: true,
-    description: "Global kill switch, respected even if a layout requests animation.",
+    description:
+      "Global kill switch, respected even if a layout requests animation.",
   })
   enabled!: boolean;
 
@@ -307,7 +390,8 @@ export class MotionDto implements Motion {
 
   @ApiProperty({
     example: true,
-    description: "Honor OS-level prefers-reduced-motion by forcing `enabled: false`.",
+    description:
+      "Honor OS-level prefers-reduced-motion by forcing `enabled: false`.",
   })
   respectReducedMotion!: boolean;
 }
@@ -316,14 +400,22 @@ const SLOT_ID_EXAMPLE: SlotId = "nav.primary";
 
 export class SlotConfigDto implements SlotConfig {
   @ApiProperty({
-    enum: ["sidebar-left", "sidebar-right", "top", "bottom", "floating", "hidden"],
+    enum: [
+      "sidebar-left",
+      "sidebar-right",
+      "top",
+      "bottom",
+      "floating",
+      "hidden",
+    ],
     example: "sidebar-left",
   })
   placement!: SlotPlacement;
 
   @ApiProperty({
     example: "default",
-    description: "Selects among the component variants the web app registers for this slot id.",
+    description:
+      "Selects among the component variants the web app registers for this slot id.",
   })
   variant!: string;
 
@@ -346,16 +438,22 @@ export class LayoutDto implements Layout {
 
   @ApiProperty({
     required: false,
-    example: "Standard three-pane layout: nav rail, channel sidebar, main content.",
+    example:
+      "Standard three-pane layout: nav rail, channel sidebar, main content.",
   })
   description?: string;
 
   @ApiProperty({
     type: "object",
     additionalProperties: { $ref: getSchemaPath(SlotConfigDto) },
-    description: `Keyed by slot id (one of: nav.primary, nav.workspaceSwitcher, sidebar.channelList, topbar, composer, thread.panel, search.trigger, command.palette). Must include every required slot: nav.primary, sidebar.channelList, composer.`,
+    description:
+      "Keyed by slot id (one of: nav.primary, nav.workspaceSwitcher, sidebar.channelList, topbar, composer, thread.panel, search.trigger, command.palette). Must include every required slot: nav.primary, sidebar.channelList, composer.",
     example: {
-      [SLOT_ID_EXAMPLE]: { placement: "sidebar-left", variant: "default", props: {} },
+      [SLOT_ID_EXAMPLE]: {
+        placement: "sidebar-left",
+        variant: "default",
+        props: {},
+      },
       composer: { placement: "bottom", variant: "default", props: {} },
     },
   })
@@ -365,7 +463,8 @@ export class LayoutDto implements Layout {
 export class UiConfigDto implements UiConfig {
   @ApiProperty({
     example: 1,
-    description: "Bumped on breaking shape changes; see @wire/ui-config's schema.ts.",
+    description:
+      "Bumped on breaking shape changes; see @wire/ui-config's schema.ts.",
   })
   schemaVersion!: 1;
 
@@ -381,7 +480,10 @@ export class UiConfigDto implements UiConfig {
   @ApiProperty({ type: [LayoutDto] })
   layouts!: Layout[];
 
-  @ApiProperty({ example: "default", description: "Which entry in `layouts` (by `id`) is active." })
+  @ApiProperty({
+    example: "default",
+    description: "Which entry in `layouts` (by `id`) is active.",
+  })
   activeLayoutId!: string;
 
   @ApiProperty({
@@ -402,7 +504,7 @@ export class UiConfigDto implements UiConfig {
   CustomFontSourceDto,
   LucideIconPackDto,
   PhosphorIconPackDto,
-  CustomIconPackDto,
+  CustomIconPackDto
 )
 export class UiConfigResourceDto implements UiConfigResource {
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })
@@ -410,7 +512,8 @@ export class UiConfigResourceDto implements UiConfigResource {
 
   @ApiProperty({
     type: () => UiConfigDto,
-    description: "Fully resolved UiConfig (base + org + user merged, locks applied).",
+    description:
+      "Fully resolved UiConfig (base + org + user merged, locks applied).",
   })
   resolved!: UiConfigResource["resolved"];
 

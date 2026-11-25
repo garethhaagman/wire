@@ -10,7 +10,9 @@ export class LruCache<K, V> {
 
   get(key: K): V | undefined {
     const value = this.map.get(key);
-    if (value === undefined) return undefined;
+    if (value === undefined) {
+      return undefined;
+    }
     this.map.delete(key);
     this.map.set(key, value);
     return value;
@@ -21,7 +23,9 @@ export class LruCache<K, V> {
     this.map.set(key, value);
     if (this.map.size > this.capacity) {
       const oldest = this.map.keys().next();
-      if (!oldest.done) this.map.delete(oldest.value);
+      if (!oldest.done) {
+        this.map.delete(oldest.value);
+      }
     }
   }
 }

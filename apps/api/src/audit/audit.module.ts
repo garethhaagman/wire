@@ -6,6 +6,9 @@ import { AuditService } from "./audit.service.js";
 
 @Module({
   controllers: [AuditController],
-  providers: [AuditService, { provide: APP_INTERCEPTOR, useClass: AuditInterceptor }],
+  providers: [
+    AuditService,
+    { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
+  ],
 })
 export class AuditModule {}

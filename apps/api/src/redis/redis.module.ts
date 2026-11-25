@@ -1,6 +1,12 @@
-import { Global, Inject, Logger, Module, type OnApplicationShutdown } from "@nestjs/common";
-import { Redis } from "ioredis";
+import {
+  Global,
+  Inject,
+  Logger,
+  Module,
+  type OnApplicationShutdown,
+} from "@nestjs/common";
 import type { ApiEnv } from "@wire/config";
+import { Redis } from "ioredis";
 import { API_ENV } from "../config/env.provider.js";
 
 export const REDIS = Symbol("REDIS");
@@ -14,9 +20,11 @@ export function warnRedisFailure(
   redis: Redis,
   logger: Logger,
   context: string,
-  err: unknown,
+  err: unknown
 ): void {
-  if (redis.status !== "ready") return;
+  if (redis.status !== "ready") {
+    return;
+  }
   logger.warn(`${context}: ${describeRedisError(err as Error)}`);
 }
 
@@ -50,14 +58,18 @@ export function describeRedisError(err: Error & { code?: string }): string {
         // ioredis emits an error per reconnect attempt; log the outage once and its recovery once.
         let down = false;
         client.on("error", (err: Error & { code?: string }) => {
-          if (down) return;
+          if (down) {
+            return;
+          }
           down = true;
           logger.warn(
-            `redis unavailable (${describeRedisError(err)}) — degrading: rate limits, idempotency and caches are bypassed until it returns`,
+            `redis unavailable (${describeRedisError(err)}) — degrading: rate limits, idempotency and caches are bypassed until it returns`
           );
         });
         client.on("ready", () => {
-          if (down) logger.log("redis reconnected");
+          if (down) {
+            logger.log("redis reconnected");
+          }
           down = false;
         });
         return client;
@@ -71,7 +83,10 @@ export class RedisModule implements OnApplicationShutdown {
   constructor(@Inject(REDIS) private readonly redis: Redis) {}
 
   async onApplicationShutdown(): Promise<void> {
-    if (this.redis.status === "ready") await this.redis.quit();
-    else this.redis.disconnect();
+    if (this.redis.status === "ready") {
+      await this.redis.quit();
+    } else {
+      this.redis.disconnect();
+    }
   }
 }

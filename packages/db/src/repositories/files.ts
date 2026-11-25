@@ -3,17 +3,17 @@ import { isoRequired, type Queryable } from "../database.js";
 import { newId } from "../ids.js";
 
 interface FileRow {
-  id: string;
-  workspace_id: string;
   channel_id: string;
-  uploaded_by: string;
-  name: string;
+  created_at: Date;
+  id: string;
   mime: string;
+  name: string;
   size_bytes: string;
   size_confirmed: boolean;
   storage_key: string;
+  uploaded_by: string;
   virus_scan_status: WireFile["virusScanStatus"];
-  created_at: Date;
+  workspace_id: string;
 }
 
 function toFile(row: FileRow): WireFile {
@@ -31,21 +31,29 @@ function toFile(row: FileRow): WireFile {
   };
 }
 
-export async function findFile(db: Queryable, id: string): Promise<WireFile | null> {
-  const { rows } = await db.query<FileRow>(`select * from files where id = $1`, [id]);
+export async function findFile(
+  db: Queryable,
+  id: string
+): Promise<WireFile | null> {
+  const { rows } = await db.query<FileRow>(
+    "select * from files where id = $1",
+    [id]
+  );
   return rows[0] ? toFile(rows[0]) : null;
 }
 
 /** Internal — the storage key is never exposed on WireFile; only confirmUpload/download-url flows need it. */
 export async function findFileStorageKey(
   db: Queryable,
-  id: string,
+  id: string
 ): Promise<{ storageKey: string; workspaceId: string } | null> {
-  const { rows } = await db.query<{ storage_key: string; workspace_id: string }>(
-    `select storage_key, workspace_id from files where id = $1`,
-    [id],
-  );
-  return rows[0] ? { storageKey: rows[0].storage_key, workspaceId: rows[0].workspace_id } : null;
+  const { rows } = await db.query<{
+    storage_key: string;
+    workspace_id: string;
+  }>("select storage_key, workspace_id from files where id = $1", [id]);
+  return rows[0]
+    ? { storageKey: rows[0].storage_key, workspaceId: rows[0].workspace_id }
+    : null;
 }
 
 export async function insertFile(
@@ -58,7 +66,7 @@ export async function insertFile(
     mime: string;
     sizeBytes: number;
     storageKey: string;
-  },
+  }
 ): Promise<WireFile> {
   const { rows } = await db.query<FileRow>(
     `insert into files (id, workspace_id, channel_id, uploaded_by, name, mime, size_bytes, storage_key)
@@ -72,7 +80,7 @@ export async function insertFile(
       input.mime,
       input.sizeBytes,
       input.storageKey,
-    ],
+    ]
   );
   return toFile(rows[0]!);
 }
@@ -81,11 +89,11 @@ export async function insertFile(
 export async function markFileUploaded(
   db: Queryable,
   id: string,
-  input: { sizeBytes: number },
+  input: { sizeBytes: number }
 ): Promise<WireFile | null> {
   const { rows } = await db.query<FileRow>(
-    `update files set size_confirmed = true, size_bytes = $2 where id = $1 returning *`,
-    [id, input.sizeBytes],
+    "update files set size_confirmed = true, size_bytes = $2 where id = $1 returning *",
+    [id, input.sizeBytes]
   );
   return rows[0] ? toFile(rows[0]) : null;
 }
@@ -93,11 +101,11 @@ export async function markFileUploaded(
 export async function updateVirusScanStatus(
   db: Queryable,
   id: string,
-  status: WireFile["virusScanStatus"],
+  status: WireFile["virusScanStatus"]
 ): Promise<WireFile | null> {
   const { rows } = await db.query<FileRow>(
-    `update files set virus_scan_status = $2 where id = $1 returning *`,
-    [id, status],
+    "update files set virus_scan_status = $2 where id = $1 returning *",
+    [id, status]
   );
   return rows[0] ? toFile(rows[0]) : null;
 }
@@ -106,16 +114,17 @@ export async function listChannelFiles(
   db: Queryable,
   channelId: string,
   page: number,
-  perPage: number,
+  perPage: number
 ): Promise<{ items: WireFile[]; total: number }> {
   const [rows, count] = await Promise.all([
     db.query<FileRow>(
-      `select * from files where channel_id = $1 order by created_at desc, id desc limit $2 offset $3`,
-      [channelId, perPage, (page - 1) * perPage],
+      "select * from files where channel_id = $1 order by created_at desc, id desc limit $2 offset $3",
+      [channelId, perPage, (page - 1) * perPage]
     ),
-    db.query<{ total: number }>(`select count(*)::int as total from files where channel_id = $1`, [
-      channelId,
-    ]),
+    db.query<{ total: number }>(
+      "select count(*)::int as total from files where channel_id = $1",
+      [channelId]
+    ),
   ]);
   return { items: rows.rows.map(toFile), total: count.rows[0]?.total ?? 0 };
 }

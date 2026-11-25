@@ -28,8 +28,12 @@ import { IdempotencyInterceptor } from "../common/interceptors/idempotency.inter
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
+import {
+  CreateMessageRequestDto,
+  MessageDto,
+  UpdateMessageRequestDto,
+} from "./dto/message.dto.js";
 import { MessagesService } from "./messages.service.js";
-import { CreateMessageRequestDto, MessageDto, UpdateMessageRequestDto } from "./dto/message.dto.js";
 
 @ApiTags("Messages")
 @ApiCookieAuth()
@@ -48,13 +52,13 @@ export class MessagesController {
   async list(
     @CurrentActor() actor: WorkspaceActor,
     @Param("channelId") channelId: string,
-    @Query() query: CursorQueryDto,
+    @Query() query: CursorQueryDto
   ): Promise<CursorPaginatedResult<Message>> {
     const { items, cursor } = await this.messages.list(
       actor,
       channelId,
       resolveCursor(query),
-      query.per_page ?? 50,
+      query.per_page ?? 50
     );
     return new CursorPaginatedResult(items, cursor);
   }
@@ -65,7 +69,7 @@ export class MessagesController {
   getById(
     @CurrentActor() actor: WorkspaceActor,
     @Param("channelId") channelId: string,
-    @Param("id") id: string,
+    @Param("id") id: string
   ): Promise<Message> {
     return this.messages.getById(actor, channelId, id);
   }
@@ -75,14 +79,15 @@ export class MessagesController {
   @ApiHeader({
     name: "Idempotency-Key",
     required: false,
-    description: "Send a client-generated key so a retried post never creates a duplicate message.",
+    description:
+      "Send a client-generated key so a retried post never creates a duplicate message.",
   })
   @ApiCreatedResponse({ type: MessageDto })
   @UseInterceptors(IdempotencyInterceptor)
   create(
     @CurrentActor() actor: WorkspaceActor,
     @Param("channelId") channelId: string,
-    @Body() body: CreateMessageRequestDto,
+    @Body() body: CreateMessageRequestDto
   ): Promise<Message> {
     return this.messages.post(actor, {
       channelId,
@@ -98,7 +103,7 @@ export class MessagesController {
     @CurrentActor() actor: WorkspaceActor,
     @Param("channelId") channelId: string,
     @Param("id") id: string,
-    @Body() body: UpdateMessageRequestDto,
+    @Body() body: UpdateMessageRequestDto
   ): Promise<Message> {
     return this.messages.update(actor, channelId, id, body);
   }
@@ -110,7 +115,7 @@ export class MessagesController {
   async remove(
     @CurrentActor() actor: WorkspaceActor,
     @Param("channelId") channelId: string,
-    @Param("id") id: string,
+    @Param("id") id: string
   ): Promise<null> {
     await this.messages.remove(actor, channelId, id);
     return null;

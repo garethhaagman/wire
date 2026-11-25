@@ -1,8 +1,8 @@
 import { Global, Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { SessionGuard } from "../auth/session.guard.js";
-import { PermissionsGuard } from "./permissions.guard.js";
 import { MemberResolverService } from "./member-resolver.service.js";
+import { PermissionsGuard } from "./permissions.guard.js";
 import { ScopeResolverService } from "./scope-resolver.service.js";
 
 /**

@@ -14,7 +14,8 @@ export interface RequestWithId extends Request {
 export class RequestIdMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction): void {
     const incoming = req.header("X-Request-ID");
-    const requestId = incoming && incoming.length > 0 ? incoming : `req_${randomUUID()}`;
+    const requestId =
+      incoming && incoming.length > 0 ? incoming : `req_${randomUUID()}`;
     (req as RequestWithId).requestId = requestId;
     res.setHeader("X-Request-ID", requestId);
     next();

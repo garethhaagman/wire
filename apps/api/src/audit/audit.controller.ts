@@ -1,9 +1,9 @@
 import { Controller, Get, Query } from "@nestjs/common";
 import { ApiCookieAuth, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import type { AuditEvent } from "@wire/types";
-import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
-import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
 import { PaginatedResult } from "../common/dto/paginated-result.js";
+import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
+import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { AuditService } from "./audit.service.js";
@@ -26,11 +26,18 @@ export class AuditController {
   @ApiOkResponse({ type: AuditEventDto, isArray: true })
   async list(
     @CurrentActor() actor: WorkspaceActor,
-    @Query() query: PaginationQueryDto,
+    @Query() query: PaginationQueryDto
   ): Promise<PaginatedResult<AuditEvent>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
-    const { items, total } = await this.audit.list(actor.workspaceId, page, perPage);
-    return new PaginatedResult(items, buildPaginationMeta(page, perPage, total));
+    const { items, total } = await this.audit.list(
+      actor.workspaceId,
+      page,
+      perPage
+    );
+    return new PaginatedResult(
+      items,
+      buildPaginationMeta(page, perPage, total)
+    );
   }
 }

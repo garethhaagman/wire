@@ -12,11 +12,11 @@ export interface SearchScope {
 }
 
 export interface SearchFilters {
-  query: string;
   channelId?: string | undefined;
-  threadRootId?: string | undefined;
   limit: number;
   offset: number;
+  query: string;
+  threadRootId?: string | undefined;
 }
 
 /**
@@ -28,7 +28,7 @@ export interface SearchFilters {
 export async function searchMessages(
   db: Queryable,
   scope: SearchScope,
-  filters: SearchFilters,
+  filters: SearchFilters
 ): Promise<{ items: SearchResult[]; total: number }> {
   const where = `
     m.search_vector @@ q.query
@@ -74,12 +74,12 @@ export async function searchMessages(
               ts_headline('simple', hits.body, q.query, 'MaxWords=30, MinWords=10, StartSel=<mark>, StopSel=</mark>') as excerpt
        from hits, q
        order by hits.score desc, hits.created_at desc`,
-      [...params, filters.limit, filters.offset],
+      [...params, filters.limit, filters.offset]
     ),
     db.query<{ total: number }>(
       `with q as (select websearch_to_tsquery('simple', $5) as query)
        select count(*)::int as total from (select 1 from messages m, q where ${where} limit ${SEARCH_COUNT_CAP}) capped`,
-      params,
+      params
     ),
   ]);
 
@@ -101,11 +101,19 @@ export async function searchMessages(
 /** The caller's active memberships — the input to SearchScope. */
 export async function listMembershipsForUser(
   db: Queryable,
-  userId: string,
+  userId: string
 ): Promise<{ workspaceId: string; memberId: string; role: string }[]> {
-  const { rows } = await db.query<{ workspace_id: string; id: string; role: string }>(
-    `select workspace_id, id, role from members where user_id = $1 and deactivated_at is null`,
-    [userId],
+  const { rows } = await db.query<{
+    workspace_id: string;
+    id: string;
+    role: string;
+  }>(
+    "select workspace_id, id, role from members where user_id = $1 and deactivated_at is null",
+    [userId]
   );
-  return rows.map((r) => ({ workspaceId: r.workspace_id, memberId: r.id, role: r.role }));
+  return rows.map((r) => ({
+    workspaceId: r.workspace_id,
+    memberId: r.id,
+    role: r.role,
+  }));
 }

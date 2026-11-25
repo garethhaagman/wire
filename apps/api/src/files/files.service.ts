@@ -1,4 +1,10 @@
-import { HttpStatus, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  HttpStatus,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import type { ApiEnv } from "@wire/config";
 import {
   appendEvents,
   Database,
@@ -10,7 +16,6 @@ import {
   newId,
   updateVirusScanStatus,
 } from "@wire/db";
-import type { ApiEnv } from "@wire/config";
 import type {
   CreateUploadRequest,
   CreateUploadResponse,
@@ -18,8 +23,8 @@ import type {
   WireFile,
 } from "@wire/types";
 import { ChannelAccessService } from "../channels/channel-access.service.js";
-import { API_ENV } from "../config/env.provider.js";
 import { ApiException } from "../common/errors/api-exception.js";
+import { API_ENV } from "../config/env.provider.js";
 import { OutboxRelayService } from "../events/outbox-relay.service.js";
 import type { WorkspaceActor } from "../permissions/actor.js";
 import { NoopScanAdapter } from "./scan/noop-scan-adapter.js";
@@ -49,7 +54,7 @@ export class FilesService {
     @Inject(Database) private readonly db: Database,
     @Inject(API_ENV) env: ApiEnv,
     private readonly access: ChannelAccessService,
-    private readonly relay: OutboxRelayService,
+    private readonly relay: OutboxRelayService
   ) {
     this.storage = selectStorageAdapter(env);
     this.scanner = new NoopScanAdapter();
@@ -68,7 +73,7 @@ export class FilesService {
     actor: WorkspaceActor,
     channelId: string,
     page: number,
-    perPage: number,
+    perPage: number
   ): Promise<{ items: WireFile[]; total: number }> {
     await this.access.readable(actor, channelId);
     return listChannelFiles(this.db, channelId, page, perPage);
@@ -77,7 +82,7 @@ export class FilesService {
   /** Creates the file row and issues a signed URL to PUT bytes to. No file.created event yet — the bytes don't exist. */
   async requestUpload(
     actor: WorkspaceActor,
-    input: CreateUploadRequest,
+    input: CreateUploadRequest
   ): Promise<CreateUploadResponse> {
     await this.access.writable(actor, input.channelId);
 
@@ -102,19 +107,24 @@ export class FilesService {
   }
 
   /** Verifies the blob exists before trusting it; only then does the file become visible as "created". */
-  async confirmUpload(actor: WorkspaceActor, fileId: string): Promise<WireFile> {
+  async confirmUpload(
+    actor: WorkspaceActor,
+    fileId: string
+  ): Promise<WireFile> {
     const file = await this.getById(actor, fileId);
     const stored = await findFileStorageKey(this.db, fileId);
     if (!stored) {
       throw new NotFoundException(`No file with id ${fileId}`);
     }
 
-    const { exists, sizeBytes } = await this.storage.confirmUpload({ key: stored.storageKey });
+    const { exists, sizeBytes } = await this.storage.confirmUpload({
+      key: stored.storageKey,
+    });
     if (!exists) {
       throw new ApiException(
         "RESOURCE_CONFLICT",
         `No upload found for file ${fileId}. PUT the bytes to the upload URL before confirming.`,
-        HttpStatus.CONFLICT,
+        HttpStatus.CONFLICT
       );
     }
 
@@ -122,8 +132,11 @@ export class FilesService {
 
     const confirmed = await this.db.tx(async (tx) => {
       const updated = await markFileUploaded(tx, fileId, { sizeBytes });
-      if (!updated) throw new NotFoundException(`No file with id ${fileId}`);
-      const scanned = (await updateVirusScanStatus(tx, fileId, scanStatus)) ?? updated;
+      if (!updated) {
+        throw new NotFoundException(`No file with id ${fileId}`);
+      }
+      const scanned =
+        (await updateVirusScanStatus(tx, fileId, scanStatus)) ?? updated;
       await appendEvents(tx, [
         {
           workspaceId: actor.workspaceId,
@@ -138,7 +151,10 @@ export class FilesService {
     return confirmed;
   }
 
-  async getDownloadUrl(actor: WorkspaceActor, fileId: string): Promise<DownloadUrlResponse> {
+  async getDownloadUrl(
+    actor: WorkspaceActor,
+    fileId: string
+  ): Promise<DownloadUrlResponse> {
     await this.getById(actor, fileId);
     const stored = await findFileStorageKey(this.db, fileId);
     if (!stored) {

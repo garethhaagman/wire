@@ -1,14 +1,14 @@
 /** Mirrors internal-docs/product/02-core-concepts.md § Member */
 export interface Member {
-  id: `mem_${string}`;
-  workspaceId: string;
-  /** Better Auth user id once the invite has been claimed; null for a pending invite. */
-  userId: string | null;
+  createdAt: string;
   displayName: string;
   email: string;
+  id: `mem_${string}`;
   role: "owner" | "admin" | "member" | "guest";
-  createdAt: string;
   updatedAt: string;
+  /** Better Auth user id once the invite has been claimed; null for a pending invite. */
+  userId: string | null;
+  workspaceId: string;
 }
 
 export interface CreateMemberRequest {
@@ -25,8 +25,8 @@ export interface UpdateMemberRequest {
 
 /** product/05-feature-parity.md § Starred channels, notification preferences */
 export interface MemberPreferences {
-  starredChannelIds: string[];
   mutedChannelIds: string[];
+  starredChannelIds: string[];
 }
 
 export type UpdateMemberPreferencesRequest = Partial<MemberPreferences>;

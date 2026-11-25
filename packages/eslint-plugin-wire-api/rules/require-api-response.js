@@ -1,7 +1,14 @@
 // @ts-check
 
-const HTTP_METHOD_DECORATORS = new Set(["Get", "Post", "Put", "Patch", "Delete"]);
-const RESPONSE_DECORATOR_PATTERN = /^Api(Ok|Created|Accepted|NoContent|Response)/;
+const HTTP_METHOD_DECORATORS = new Set([
+  "Get",
+  "Post",
+  "Put",
+  "Patch",
+  "Delete",
+]);
+const RESPONSE_DECORATOR_PATTERN =
+  /^Api(?<kind>Ok|Created|Accepted|NoContent|Response)/u;
 
 /**
  * Every HTTP-method-decorated controller handler must also carry at least one
@@ -16,7 +23,8 @@ export default {
   meta: {
     type: "problem",
     docs: {
-      description: "Controller handlers must declare an @Api*Response decorator for OpenAPI generation.",
+      description:
+        "Controller handlers must declare an @Api*Response decorator for OpenAPI generation.",
     },
     schema: [],
     messages: {
@@ -36,13 +44,22 @@ export default {
         const decorators = node.decorators ?? [];
         const names = decorators.map(decoratorName).filter(Boolean);
 
-        const httpDecorator = names.find((name) => HTTP_METHOD_DECORATORS.has(name));
-        if (!httpDecorator) return;
+        const httpDecorator = names.find((name) =>
+          HTTP_METHOD_DECORATORS.has(name)
+        );
+        if (!httpDecorator) {
+          return;
+        }
 
-        const hasResponseDecorator = names.some((name) => RESPONSE_DECORATOR_PATTERN.test(name));
-        if (hasResponseDecorator) return;
+        const hasResponseDecorator = names.some((name) =>
+          RESPONSE_DECORATOR_PATTERN.test(name)
+        );
+        if (hasResponseDecorator) {
+          return;
+        }
 
-        const methodName = node.key.type === "Identifier" ? node.key.name : "<unknown>";
+        const methodName =
+          node.key.type === "Identifier" ? node.key.name : "<unknown>";
         context.report({
           node,
           messageId: "missing",

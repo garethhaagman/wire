@@ -3,14 +3,14 @@ import { ValidationPipe } from "@nestjs/common";
 import { NestFactory, Reflector } from "@nestjs/core";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import { toNodeHandler } from "better-auth/node";
 import { parseApiEnv } from "@wire/config";
+import { toNodeHandler } from "better-auth/node";
 import { AppModule } from "./app.module.js";
-import { AUTH_INSTANCE } from "./auth/auth.module.js";
 import type { Auth } from "./auth/auth.config.js";
-import { ResponseEnvelopeInterceptor } from "./common/interceptors/response-envelope.interceptor.js";
-import { DeprecationHeadersInterceptor } from "./common/interceptors/deprecation-headers.interceptor.js";
+import { AUTH_INSTANCE } from "./auth/auth.module.js";
 import { ApiExceptionFilter } from "./common/filters/api-exception.filter.js";
+import { DeprecationHeadersInterceptor } from "./common/interceptors/deprecation-headers.interceptor.js";
+import { ResponseEnvelopeInterceptor } from "./common/interceptors/response-envelope.interceptor.js";
 import { validationExceptionFactory } from "./common/pipes/validation-exception-factory.js";
 
 /**
@@ -35,7 +35,7 @@ export async function createApp(): Promise<NestExpressApplication> {
   const reflector = app.get(Reflector);
   app.useGlobalInterceptors(
     new ResponseEnvelopeInterceptor(),
-    new DeprecationHeadersInterceptor(reflector),
+    new DeprecationHeadersInterceptor(reflector)
   );
   app.useGlobalFilters(new ApiExceptionFilter());
   app.useGlobalPipes(
@@ -44,7 +44,7 @@ export async function createApp(): Promise<NestExpressApplication> {
       whitelist: true,
       forbidNonWhitelisted: true,
       exceptionFactory: validationExceptionFactory,
-    }),
+    })
   );
 
   // Swagger UI is a dev/local convenience, never exposed in production.

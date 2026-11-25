@@ -8,9 +8,10 @@ const COLOR_UTILITY =
 // `bg-indigo-500`, `hover:text-gray-700/50`, `border-white`, `bg-[#fff]`, `text-[rgb(0,0,0)]`
 const TAILWIND_COLOR_CLASS = new RegExp(
   `(?:^|[\\s:!])((?:${COLOR_UTILITY})-(?:(?:${PALETTE})-\\d{2,3}|black|white|\\[(?:#|rgba?\\(|hsla?\\(|oklch\\(|oklab\\(|color\\()[^\\]]*\\]))(?:\\/\\S+)?(?=$|\\s)`,
-  "g",
+  "gu"
 );
-const CSS_COLOR_VALUE = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch|color)\(/i;
+const CSS_COLOR_VALUE =
+  /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch|color)\(/iu;
 
 /**
  * Every color must come from the theme tokens (`bg-primary`, `text-muted-foreground`,
@@ -27,7 +28,8 @@ export default {
   meta: {
     type: "problem",
     docs: {
-      description: "Colors must come from UiConfig theme tokens, never hardcoded palette classes or literals.",
+      description:
+        "Colors must come from UiConfig theme tokens, never hardcoded palette classes or literals.",
     },
     schema: [],
     messages: {
@@ -40,14 +42,21 @@ export default {
   create(context) {
     function checkClassString(node, text) {
       for (const match of text.matchAll(TAILWIND_COLOR_CLASS)) {
-        context.report({ node, messageId: "tailwindColor", data: { value: match[1] } });
+        context.report({
+          node,
+          messageId: "tailwindColor",
+          data: { value: match[1] },
+        });
       }
     }
 
     function isInsideStyleAttribute(node) {
       for (let current = node.parent; current; current = current.parent) {
         if (current.type === "JSXAttribute") {
-          return current.name.type === "JSXIdentifier" && current.name.name === "style";
+          return (
+            current.name.type === "JSXIdentifier" &&
+            current.name.name === "style"
+          );
         }
       }
       return false;
@@ -55,10 +64,16 @@ export default {
 
     return {
       Literal(node) {
-        if (typeof node.value !== "string") return;
+        if (typeof node.value !== "string") {
+          return;
+        }
         if (isInsideStyleAttribute(node)) {
           if (CSS_COLOR_VALUE.test(node.value)) {
-            context.report({ node, messageId: "styleColor", data: { value: node.value } });
+            context.report({
+              node,
+              messageId: "styleColor",
+              data: { value: node.value },
+            });
           }
           return;
         }

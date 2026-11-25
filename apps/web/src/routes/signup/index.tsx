@@ -1,13 +1,13 @@
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
-import { signUp, useSession } from "@/lib/auth-client.js";
 import { AuthLayout } from "@/components/auth/auth-layout.js";
 import { AuthDivider, GoogleButton } from "@/components/auth/google-button.js";
 import { PasswordInput } from "@/components/auth/password-input.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { Label } from "@/components/ui/label.js";
+import { signUp, useSession } from "@/lib/auth-client.js";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -20,7 +20,9 @@ export default function SignupRoute(): React.JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  if (session?.user) return <Navigate to="/workspaces" replace />;
+  if (session?.user) {
+    return <Navigate replace to="/workspaces" />;
+  }
 
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
@@ -37,71 +39,79 @@ export default function SignupRoute(): React.JSX.Element {
 
   return (
     <AuthLayout
-      title="Create account"
       description={
         <>
           Already have an account?{" "}
           <Link
+            className="text-foreground font-medium underline-offset-4 hover:underline"
             to="/login"
-            className="font-medium text-foreground underline-offset-4 hover:underline"
           >
             Sign in
           </Link>
         </>
       }
+      title="Create account"
     >
-      <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-5">
+      <form
+        className="flex flex-col gap-5"
+        onSubmit={(e) => void handleSubmit(e)}
+      >
         <div className="flex flex-col gap-2">
           <Label htmlFor="name">Full name</Label>
           <Input
-            id="name"
             autoComplete="name"
-            placeholder="Ada Lovelace"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
             autoFocus
+            id="name"
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Ada Lovelace"
             required
+            value={name}
           />
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="email">Email address</Label>
           <Input
-            id="email"
-            type="email"
             autoComplete="email"
-            placeholder="you@company.com"
-            value={email}
+            id="email"
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@company.com"
             required
+            type="email"
+            value={email}
           />
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="password">Password</Label>
           <PasswordInput
-            id="password"
-            autoComplete="new-password"
-            placeholder="Create a password"
-            minLength={MIN_PASSWORD_LENGTH}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
             aria-describedby="password-hint"
+            autoComplete="new-password"
+            id="password"
+            minLength={MIN_PASSWORD_LENGTH}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Create a password"
             required
+            value={password}
           />
-          <p id="password-hint" className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs" id="password-hint">
             At least {MIN_PASSWORD_LENGTH} characters.
           </p>
         </div>
 
         {error ? (
           <p
+            className="border-destructive/20 bg-destructive/5 text-destructive rounded-md border px-3 py-2 text-sm"
             role="alert"
-            className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive"
           >
             {error}
           </p>
         ) : null}
 
-        <Button type="submit" size="lg" disabled={submitting} className="mt-1 w-full">
+        <Button
+          className="mt-1 w-full"
+          disabled={submitting}
+          size="lg"
+          type="submit"
+        >
           {submitting ? <Loader2 className="animate-spin" /> : null}
           {submitting ? "Creating account" : "Create account"}
         </Button>

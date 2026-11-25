@@ -28,19 +28,23 @@ A duplicated `SKILL.md` drifts the moment one copy gets edited and the other doe
 
 1. Write the real file: `.claude/skills/<name>/SKILL.md`, with frontmatter (`name`, `description`, `version`) matching the style of an existing skill (see `.claude/skills/api-design/SKILL.md` for the reference shape).
 2. Symlink it into `.agents/skills/`:
+
    ```sh
    mkdir -p .agents/skills/<name>
    ln -s ../../../.claude/skills/<name>/SKILL.md .agents/skills/<name>/SKILL.md
    ```
 3. Symlink it into Cursor's rules directory:
+
    ```sh
    mkdir -p .cursor/rules
    ln -s ../../.claude/skills/<name>/SKILL.md .cursor/rules/<name>.mdc
    ```
 4. Verify every link resolves and nothing is a plain copy:
+
    ```sh
    find .claude/skills .agents/skills .cursor/rules -iname "*.md" -o -iname "*.mdc" | xargs -I{} sh -c 'test -L "{}" -o -f ".claude/skills/$(basename $(dirname {}))/SKILL.md" && echo "{}" "-> $(readlink {})"'
    ```
+
    Simpler check: `ls -la .agents/skills/<name>/ .cursor/rules/` and confirm both entries show `->` pointing back at `.claude/skills/<name>/SKILL.md`.
 
 ## Cursor's `.mdc` extension — a known limit, not a guess

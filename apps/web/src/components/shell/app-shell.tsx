@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import type { Layout, SlotId, SlotPlacement } from "@wire/ui-config";
+import type { ReactNode } from "react";
 import { useUiConfig } from "@/lib/ui-config/config-provider.js";
 import { resolveSlotComponent } from "./slot-registry.js";
 
@@ -10,7 +10,11 @@ import { resolveSlotComponent } from "./slot-registry.js";
  * `Layout` document drives this render, with zero code change. See
  * internal-docs/ui/theming-and-layout.md "The shell is generic".
  */
-export function AppShell({ children }: { children: ReactNode }): React.JSX.Element {
+export function AppShell({
+  children,
+}: {
+  children: ReactNode;
+}): React.JSX.Element {
   const { config } = useUiConfig();
   const layout = config.layouts.find((l) => l.id === config.activeLayoutId);
 
@@ -19,7 +23,7 @@ export function AppShell({ children }: { children: ReactNode }): React.JSX.Eleme
     // activeLayoutId back to a real layout) — this is a last-resort guard,
     // not an expected path.
     return (
-      <div className="flex h-dvh items-center justify-center text-muted-foreground">
+      <div className="text-muted-foreground flex h-dvh items-center justify-center">
         No layout available.
       </div>
     );
@@ -27,7 +31,7 @@ export function AppShell({ children }: { children: ReactNode }): React.JSX.Eleme
 
   return (
     <div
-      className="flex h-dvh w-full bg-background text-foreground"
+      className="bg-background text-foreground flex h-dvh w-full"
       data-motion-speed={config.motion.speed}
     >
       {renderSlotsFor(layout, "sidebar-left")}
@@ -43,13 +47,20 @@ export function AppShell({ children }: { children: ReactNode }): React.JSX.Eleme
 }
 
 function renderSlotsFor(layout: Layout, placement: SlotPlacement): ReactNode {
-  const entries = Object.entries(layout.slots) as [SlotId, Layout["slots"][SlotId]][];
+  const entries = Object.entries(layout.slots) as [
+    SlotId,
+    Layout["slots"][SlotId],
+  ][];
   return entries
     .filter(([, slot]) => slot?.placement === placement)
     .map(([slotId, slot]) => {
-      if (!slot) return null;
+      if (!slot) {
+        return null;
+      }
       const Component = resolveSlotComponent(slotId, slot.variant);
-      if (!Component) return null;
+      if (!Component) {
+        return null;
+      }
       return <Component key={slotId} props={slot.props} />;
     });
 }

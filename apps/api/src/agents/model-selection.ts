@@ -1,7 +1,7 @@
 import { anthropic } from "@ai-sdk/anthropic";
+import type { ApiEnv } from "@wire/config";
 import type { LanguageModel } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import type { ApiEnv } from "@wire/config";
 
 const MODEL_ID = "claude-sonnet-5";
 
@@ -17,13 +17,18 @@ export function selectModel(env: ApiEnv): LanguageModel {
   }
 
   return new MockLanguageModelV4({
-    // eslint-disable-next-line @typescript-eslint/require-await -- doGenerate's contract is always async (PromiseLike)
+    // biome-ignore lint/suspicious/useAwait: doGenerate's contract is always async (PromiseLike)
     doGenerate: async (options) => {
       const prompt = options.prompt
         .flatMap((message) => {
-          if (message.role === "system") return [message.content];
-          if (message.role === "user")
-            return message.content.map((part) => (part.type === "text" ? part.text : ""));
+          if (message.role === "system") {
+            return [message.content];
+          }
+          if (message.role === "user") {
+            return message.content.map((part) =>
+              part.type === "text" ? part.text : ""
+            );
+          }
           return [];
         })
         .join(" ")
@@ -39,7 +44,11 @@ export function selectModel(env: ApiEnv): LanguageModel {
             cacheRead: undefined,
             cacheWrite: undefined,
           },
-          outputTokens: { total: undefined, text: undefined, reasoning: undefined },
+          outputTokens: {
+            total: undefined,
+            text: undefined,
+            reasoning: undefined,
+          },
         },
         warnings: [],
       };

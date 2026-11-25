@@ -1,6 +1,9 @@
 // @ts-check
 
-const PROPERTY_DECORATOR_NAMES = new Set(["ApiProperty", "ApiPropertyOptional"]);
+const PROPERTY_DECORATOR_NAMES = new Set([
+  "ApiProperty",
+  "ApiPropertyOptional",
+]);
 
 /**
  * Self-documenting keys: any one of these on an @ApiProperty/@ApiPropertyOptional
@@ -26,30 +29,41 @@ export default {
     schema: [],
     messages: {
       missing:
-        "{{decorator}} on '{{name}}' has no example, enum, or typed reference (type: () => Dto / [Dto] / \"object\" with additionalProperties). The generated OpenAPI spec needs one of these so consumers see a real shape, not a bare object/string/number. See the api-design skill's \"DTO examples\" section.",
+        '{{decorator}} on \'{{name}}\' has no example, enum, or typed reference (type: () => Dto / [Dto] / "object" with additionalProperties). The generated OpenAPI spec needs one of these so consumers see a real shape, not a bare object/string/number. See the api-design skill\'s "DTO examples" section.',
     },
   },
   create(context) {
     function decoratorCallInfo(decorator) {
       const expr = decorator.expression;
-      if (expr.type !== "CallExpression") return null;
-      const callee = expr.callee;
+      if (expr.type !== "CallExpression") {
+        return null;
+      }
+      const { callee } = expr;
       const name = callee.type === "Identifier" ? callee.name : null;
-      if (!name || !PROPERTY_DECORATOR_NAMES.has(name)) return null;
+      if (!(name && PROPERTY_DECORATOR_NAMES.has(name))) {
+        return null;
+      }
       return { name, args: expr.arguments };
     }
 
     function hasOwnKey(objectExpression, key) {
       return objectExpression.properties.some(
-        (prop) => prop.type === "Property" && prop.key.type === "Identifier" && prop.key.name === key,
+        (prop) =>
+          prop.type === "Property" &&
+          prop.key.type === "Identifier" &&
+          prop.key.name === key
       );
     }
 
     function typeValueIsConcrete(typeValue) {
       // type: () => SomeDto  — arrow function referencing a class
-      if (typeValue.type === "ArrowFunctionExpression") return true;
+      if (typeValue.type === "ArrowFunctionExpression") {
+        return true;
+      }
       // type: [SomeDto]      — array-of-DTO shorthand
-      if (typeValue.type === "ArrayExpression") return true;
+      if (typeValue.type === "ArrayExpression") {
+        return true;
+      }
       // type: "object" paired with additionalProperties is checked by the caller;
       // a bare type: String / Number / Boolean / () is NOT concrete on its own —
       // it just restates what TS already infers from the property's own type
@@ -59,22 +73,39 @@ export default {
 
     function hasConcreteTypeProperty(objectExpression) {
       const typeProp = objectExpression.properties.find(
-        (prop) => prop.type === "Property" && prop.key.type === "Identifier" && prop.key.name === "type",
+        (prop) =>
+          prop.type === "Property" &&
+          prop.key.type === "Identifier" &&
+          prop.key.name === "type"
       );
-      if (!typeProp || typeProp.type !== "Property") return false;
+      if (typeProp?.type !== "Property") {
+        return false;
+      }
 
-      if (typeValueIsConcrete(typeProp.value)) return true;
+      if (typeValueIsConcrete(typeProp.value)) {
+        return true;
+      }
 
       const isObjectLiteral =
-        (typeProp.value.type === "Literal" && typeProp.value.value === "object") ||
-        (typeProp.value.type === "Identifier" && typeProp.value.name === "Object");
-      return isObjectLiteral && hasOwnKey(objectExpression, "additionalProperties");
+        (typeProp.value.type === "Literal" &&
+          typeProp.value.value === "object") ||
+        (typeProp.value.type === "Identifier" &&
+          typeProp.value.name === "Object");
+      return (
+        isObjectLiteral && hasOwnKey(objectExpression, "additionalProperties")
+      );
     }
 
     function hasDocumentingKey(objectExpression) {
-      if (hasOwnKey(objectExpression, "example")) return true;
-      if (hasOwnKey(objectExpression, "enum")) return true;
-      if (hasOwnKey(objectExpression, "oneOf")) return true;
+      if (hasOwnKey(objectExpression, "example")) {
+        return true;
+      }
+      if (hasOwnKey(objectExpression, "enum")) {
+        return true;
+      }
+      if (hasOwnKey(objectExpression, "oneOf")) {
+        return true;
+      }
       return hasConcreteTypeProperty(objectExpression);
     }
 
@@ -83,18 +114,29 @@ export default {
         const decorators = node.decorators ?? [];
         for (const decorator of decorators) {
           const info = decoratorCallInfo(decorator);
-          if (!info) continue;
+          if (!info) {
+            continue;
+          }
 
-          const name = node.key.type === "Identifier" ? node.key.name : "<unknown>";
-          const options = info.args[0];
+          const name =
+            node.key.type === "Identifier" ? node.key.name : "<unknown>";
+          const [options] = info.args;
 
-          if (!options || options.type !== "ObjectExpression") {
-            context.report({ node, messageId: "missing", data: { decorator: `@${info.name}()`, name } });
+          if (options?.type !== "ObjectExpression") {
+            context.report({
+              node,
+              messageId: "missing",
+              data: { decorator: `@${info.name}()`, name },
+            });
             continue;
           }
 
           if (!hasDocumentingKey(options)) {
-            context.report({ node, messageId: "missing", data: { decorator: `@${info.name}(...)`, name } });
+            context.report({
+              node,
+              messageId: "missing",
+              data: { decorator: `@${info.name}(...)`, name },
+            });
           }
         }
       },

@@ -3,14 +3,14 @@ import { isoRequired, type Queryable } from "../database.js";
 import { newId } from "../ids.js";
 
 interface EndpointRow {
-  id: string;
-  workspace_id: string;
-  url: string;
-  enabled_events: string[];
   channel_filter: string[] | null;
-  secret_ciphertext: string;
   created_at: Date;
+  enabled_events: string[];
+  id: string;
+  secret_ciphertext: string;
   updated_at: Date;
+  url: string;
+  workspace_id: string;
 }
 
 function toEndpoint(row: EndpointRow): WebhookEndpoint {
@@ -29,16 +29,16 @@ export async function listWebhookEndpoints(
   db: Queryable,
   workspaceId: string,
   page: number,
-  perPage: number,
+  perPage: number
 ): Promise<{ items: WebhookEndpoint[]; total: number }> {
   const [rows, count] = await Promise.all([
     db.query<EndpointRow>(
-      `select * from webhook_endpoints where workspace_id = $1 order by created_at desc, id limit $2 offset $3`,
-      [workspaceId, perPage, (page - 1) * perPage],
+      "select * from webhook_endpoints where workspace_id = $1 order by created_at desc, id limit $2 offset $3",
+      [workspaceId, perPage, (page - 1) * perPage]
     ),
     db.query<{ total: number }>(
-      `select count(*)::int as total from webhook_endpoints where workspace_id = $1`,
-      [workspaceId],
+      "select count(*)::int as total from webhook_endpoints where workspace_id = $1",
+      [workspaceId]
     ),
   ]);
   return { items: rows.rows.map(toEndpoint), total: count.rows[0]?.total ?? 0 };
@@ -47,11 +47,11 @@ export async function listWebhookEndpoints(
 export async function findWebhookEndpoint(
   db: Queryable,
   workspaceId: string,
-  id: string,
+  id: string
 ): Promise<WebhookEndpoint | null> {
   const { rows } = await db.query<EndpointRow>(
-    `select * from webhook_endpoints where workspace_id = $1 and id = $2`,
-    [workspaceId, id],
+    "select * from webhook_endpoints where workspace_id = $1 and id = $2",
+    [workspaceId, id]
   );
   return rows[0] ? toEndpoint(rows[0]) : null;
 }
@@ -64,7 +64,7 @@ export async function insertWebhookEndpoint(
     enabledEvents: string[];
     channelFilter: string[] | null;
     secretCiphertext: string;
-  },
+  }
 ): Promise<WebhookEndpoint> {
   const { rows } = await db.query<EndpointRow>(
     `insert into webhook_endpoints (id, workspace_id, url, enabled_events, channel_filter, secret_ciphertext)
@@ -76,7 +76,7 @@ export async function insertWebhookEndpoint(
       input.enabledEvents,
       input.channelFilter,
       input.secretCiphertext,
-    ],
+    ]
   );
   return toEndpoint(rows[0]!);
 }
@@ -84,11 +84,11 @@ export async function insertWebhookEndpoint(
 export async function deleteWebhookEndpoint(
   db: Queryable,
   workspaceId: string,
-  id: string,
+  id: string
 ): Promise<boolean> {
   const { rowCount } = await db.query(
-    `delete from webhook_endpoints where workspace_id = $1 and id = $2`,
-    [workspaceId, id],
+    "delete from webhook_endpoints where workspace_id = $1 and id = $2",
+    [workspaceId, id]
   );
   return (rowCount ?? 0) > 0;
 }
@@ -102,9 +102,11 @@ export async function deleteWebhookEndpoint(
 export async function enqueueWebhookDeliveries(
   tx: Queryable,
   events: WireEvent[],
-  apiVersion: string,
+  apiVersion: string
 ): Promise<void> {
-  if (events.length === 0) return;
+  if (events.length === 0) {
+    return;
+  }
   await tx.query(
     `insert into webhook_deliveries (endpoint_id, event_id, workspace_id, payload)
      select e.id, ev.id, ev.workspace_id,
@@ -125,21 +127,21 @@ export async function enqueueWebhookDeliveries(
       events.map((e) => JSON.stringify(e.data)),
       apiVersion,
       events.map((e) => e.createdAt),
-    ],
+    ]
   );
 }
 
 export interface ClaimedDelivery {
-  /** bigserial, kept as text end to end. */
-  id: string;
-  endpointId: string;
-  url: string;
-  secretCiphertext: string;
-  eventId: string;
-  eventType: string;
-  payload: unknown;
   attempts: number;
   createdAt: Date;
+  endpointId: string;
+  eventId: string;
+  eventType: string;
+  /** bigserial, kept as text end to end. */
+  id: string;
+  payload: unknown;
+  secretCiphertext: string;
+  url: string;
 }
 
 /**
@@ -150,7 +152,7 @@ export interface ClaimedDelivery {
 export async function claimDueDeliveries(
   db: Queryable,
   limit: number,
-  leaseSeconds: number,
+  leaseSeconds: number
 ): Promise<ClaimedDelivery[]> {
   const { rows } = await db.query<{
     id: string;
@@ -174,7 +176,7 @@ export async function claimDueDeliveries(
      from due, webhook_endpoints e
      where d.id = due.id and e.id = d.endpoint_id
      returning d.id, d.endpoint_id, e.url, e.secret_ciphertext, d.event_id, d.payload, d.attempts, d.created_at`,
-    [limit, leaseSeconds],
+    [limit, leaseSeconds]
   );
   return rows.map((r) => ({
     id: r.id,
@@ -192,18 +194,23 @@ export async function claimDueDeliveries(
 export async function completeDelivery(
   db: Queryable,
   id: string,
-  statusCode: number,
+  statusCode: number
 ): Promise<void> {
   await db.query(
     `update webhook_deliveries set status = 'succeeded', last_status_code = $2, last_error = null, updated_at = now()
      where id = $1`,
-    [id, statusCode],
+    [id, statusCode]
   );
 }
 
 export async function failDelivery(
   db: Queryable,
-  input: { id: string; statusCode: number | null; error: string; retryInSeconds: number | null },
+  input: {
+    id: string;
+    statusCode: number | null;
+    error: string;
+    retryInSeconds: number | null;
+  }
 ): Promise<void> {
   await db.query(
     `update webhook_deliveries set
@@ -212,14 +219,14 @@ export async function failDelivery(
                               else now() + make_interval(secs => $4) end,
        last_status_code = $2, last_error = left($3, 1000), updated_at = now()
      where id = $1`,
-    [input.id, input.statusCode, input.error, input.retryInSeconds],
+    [input.id, input.statusCode, input.error, input.retryInSeconds]
   );
 }
 
 export async function pruneDeliveries(
   db: Queryable,
   olderThanSeconds: number,
-  batchSize: number,
+  batchSize: number
 ): Promise<number> {
   const { rowCount } = await db.query(
     `delete from webhook_deliveries where id in (
@@ -227,7 +234,7 @@ export async function pruneDeliveries(
        where status <> 'pending' and updated_at < now() - make_interval(secs => $1)
        limit $2
      )`,
-    [olderThanSeconds, batchSize],
+    [olderThanSeconds, batchSize]
   );
   return rowCount ?? 0;
 }

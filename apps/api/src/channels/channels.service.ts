@@ -1,4 +1,9 @@
-import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import {
   addChannelMembers,
   appendEvents,
@@ -8,13 +13,13 @@ import {
   getChannelForViewer,
   insertChannel,
   isUniqueViolation,
+  type ListChannelsOptions,
   listChannelMembers,
   listChannelsForViewer,
   markChannelRead,
   removeChannelMember,
   setChannelArchived,
   updateChannel,
-  type ListChannelsOptions,
 } from "@wire/db";
 import type {
   Channel,
@@ -22,16 +27,19 @@ import type {
   CreateChannelRequest,
   UpdateChannelRequest,
 } from "@wire/types";
-import { ResourceConflictException, ValidationException } from "../common/errors/api-exception.js";
+import {
+  ResourceConflictException,
+  ValidationException,
+} from "../common/errors/api-exception.js";
 import { OutboxRelayService } from "../events/outbox-relay.service.js";
 import { isAdmin, type WorkspaceActor } from "../permissions/actor.js";
 import { ChannelAccessService } from "./channel-access.service.js";
 
 const MAX_GROUP_DM_MEMBERS = 8;
-const CHANNEL_NAME = /^[a-z0-9][a-z0-9_-]{0,79}$/;
+const CHANNEL_NAME = /^[a-z0-9][a-z0-9_-]{0,79}$/u;
 
 function normalizeName(name: string): string {
-  return name.trim().toLowerCase().replace(/\s+/g, "-");
+  return name.trim().toLowerCase().replace(/\s+/gu, "-");
 }
 
 @Injectable()
@@ -39,12 +47,12 @@ export class ChannelsService {
   constructor(
     @Inject(Database) private readonly db: Database,
     private readonly access: ChannelAccessService,
-    private readonly relay: OutboxRelayService,
+    private readonly relay: OutboxRelayService
   ) {}
 
   list(
     actor: WorkspaceActor,
-    options: Omit<ListChannelsOptions, "isGuest">,
+    options: Omit<ListChannelsOptions, "isGuest">
   ): Promise<{ items: Channel[]; total: number }> {
     return listChannelsForViewer(this.db, actor.workspaceId, actor.member.id, {
       ...options,
@@ -61,14 +69,23 @@ export class ChannelsService {
    * public/private: named, the creator joins. dm/group_dm: identified by member set
    * — opening an existing conversation returns it instead of creating a duplicate.
    */
-  async create(actor: WorkspaceActor, input: CreateChannelRequest): Promise<Channel> {
+  async create(
+    actor: WorkspaceActor,
+    input: CreateChannelRequest
+  ): Promise<Channel> {
     const isConversation = input.type === "dm" || input.type === "group_dm";
     if (actor.member.role === "guest" && !isConversation) {
       throw new ForbiddenException("Guests can only open direct messages.");
     }
 
-    const requested = [...new Set(input.memberIds ?? [])].filter((id) => id !== actor.member.id);
-    const memberIds = await filterActiveMemberIds(this.db, actor.workspaceId, requested);
+    const requested = [...new Set(input.memberIds ?? [])].filter(
+      (id) => id !== actor.member.id
+    );
+    const memberIds = await filterActiveMemberIds(
+      this.db,
+      actor.workspaceId,
+      requested
+    );
     if (memberIds.length !== requested.length) {
       throw new ValidationException([
         {
@@ -83,7 +100,8 @@ export class ChannelsService {
         {
           field: "memberIds",
           code: "INVALID_DM",
-          message: "A dm has exactly one other member (or none, for a self-DM).",
+          message:
+            "A dm has exactly one other member (or none, for a self-DM).",
         },
       ]);
     }
@@ -101,12 +119,13 @@ export class ChannelsService {
     }
 
     const name = isConversation ? input.type : normalizeName(input.name ?? "");
-    if (!isConversation && !CHANNEL_NAME.test(name)) {
+    if (!(isConversation || CHANNEL_NAME.test(name))) {
       throw new ValidationException([
         {
           field: "name",
           code: "INVALID_NAME",
-          message: "Channel names are lowercase letters, numbers, - and _, up to 80 characters.",
+          message:
+            "Channel names are lowercase letters, numbers, - and _, up to 80 characters.",
         },
       ]);
     }
@@ -142,7 +161,9 @@ export class ChannelsService {
       })
       .catch((err: unknown) => {
         if (isUniqueViolation(err, "UQ_channels_workspace_name")) {
-          throw new ResourceConflictException(`A channel named #${name} already exists.`);
+          throw new ResourceConflictException(
+            `A channel named #${name} already exists.`
+          );
         }
         throw err;
       });
@@ -151,30 +172,47 @@ export class ChannelsService {
     return this.viewerChannel(actor, result.id);
   }
 
-  async update(actor: WorkspaceActor, id: string, input: UpdateChannelRequest): Promise<Channel> {
+  async update(
+    actor: WorkspaceActor,
+    id: string,
+    input: UpdateChannelRequest
+  ): Promise<Channel> {
     const { channel, isMember } = await this.access.writable(actor, id);
-    if (!isMember && !isAdmin(actor)) {
+    if (!(isMember || isAdmin(actor))) {
       throw new ForbiddenException("Join the channel to change its details.");
     }
-    if ((channel.type === "dm" || channel.type === "group_dm") && input.name !== undefined) {
+    if (
+      (channel.type === "dm" || channel.type === "group_dm") &&
+      input.name !== undefined
+    ) {
       throw new ValidationException([
-        { field: "name", code: "IMMUTABLE", message: "Direct messages can't be renamed." },
+        {
+          field: "name",
+          code: "IMMUTABLE",
+          message: "Direct messages can't be renamed.",
+        },
       ]);
     }
-    const name = input.name !== undefined ? normalizeName(input.name) : undefined;
+    const name =
+      input.name === undefined ? undefined : normalizeName(input.name);
     if (name !== undefined && !CHANNEL_NAME.test(name)) {
       throw new ValidationException([
         {
           field: "name",
           code: "INVALID_NAME",
-          message: "Channel names are lowercase letters, numbers, - and _, up to 80 characters.",
+          message:
+            "Channel names are lowercase letters, numbers, - and _, up to 80 characters.",
         },
       ]);
     }
 
     await this.db
       .tx(async (tx) => {
-        await updateChannel(tx, id, { name, topic: input.topic, purpose: input.purpose });
+        await updateChannel(tx, id, {
+          name,
+          topic: input.topic,
+          purpose: input.purpose,
+        });
         await appendEvents(tx, [
           {
             workspaceId: actor.workspaceId,
@@ -186,7 +224,9 @@ export class ChannelsService {
       })
       .catch((err: unknown) => {
         if (isUniqueViolation(err, "UQ_channels_workspace_name")) {
-          throw new ResourceConflictException(`A channel named #${name} already exists.`);
+          throw new ResourceConflictException(
+            `A channel named #${name} already exists.`
+          );
         }
         throw err;
       });
@@ -195,7 +235,11 @@ export class ChannelsService {
     return this.viewerChannel(actor, id);
   }
 
-  async setArchived(actor: WorkspaceActor, id: string, archived: boolean): Promise<Channel> {
+  async setArchived(
+    actor: WorkspaceActor,
+    id: string,
+    archived: boolean
+  ): Promise<Channel> {
     await this.access.readable(actor, id);
     const changed = await this.db.tx(async (tx) => {
       const didChange = await setChannelArchived(tx, id, archived);
@@ -213,7 +257,7 @@ export class ChannelsService {
     });
     if (!changed) {
       throw new ResourceConflictException(
-        `Channel ${id} is already ${archived ? "archived" : "active"}.`,
+        `Channel ${id} is already ${archived ? "archived" : "active"}.`
       );
     }
     this.relay.kick();
@@ -224,7 +268,7 @@ export class ChannelsService {
     actor: WorkspaceActor,
     id: string,
     page: number,
-    perPage: number,
+    perPage: number
   ): Promise<{ items: ChannelMember[]; total: number }> {
     await this.access.readable(actor, id);
     return listChannelMembers(this.db, id, page, perPage);
@@ -237,25 +281,33 @@ export class ChannelsService {
   async addMember(
     actor: WorkspaceActor,
     channelId: string,
-    memberId: string,
+    memberId: string
   ): Promise<ChannelMember> {
     const { channel, isMember } = await this.access.writable(actor, channelId);
     if (channel.type === "dm" || channel.type === "group_dm") {
       throw new ResourceConflictException(
-        "Direct message membership is fixed — open a new conversation instead.",
+        "Direct message membership is fixed — open a new conversation instead."
       );
     }
     const self = memberId === actor.member.id;
-    if (!self && !isMember) {
-      throw new ForbiddenException("Join the channel before adding others to it.");
+    if (!(self || isMember)) {
+      throw new ForbiddenException(
+        "Join the channel before adding others to it."
+      );
     }
     if (!self) {
-      const [active] = await filterActiveMemberIds(this.db, actor.workspaceId, [memberId]);
-      if (!active) throw new NotFoundException(`No member with id ${memberId}`);
+      const [active] = await filterActiveMemberIds(this.db, actor.workspaceId, [
+        memberId,
+      ]);
+      if (!active) {
+        throw new NotFoundException(`No member with id ${memberId}`);
+      }
     }
 
     await this.db.tx(async (tx) => {
-      const added = await addChannelMembers(tx, channelId, actor.workspaceId, [memberId]);
+      const added = await addChannelMembers(tx, channelId, actor.workspaceId, [
+        memberId,
+      ]);
       if (added.length) {
         await appendEvents(tx, [
           {
@@ -270,17 +322,26 @@ export class ChannelsService {
     this.relay.kick();
 
     const membership = await findChannelMember(this.db, channelId, memberId);
-    if (!membership)
-      throw new NotFoundException(`Member ${memberId} is not in channel ${channelId}`);
+    if (!membership) {
+      throw new NotFoundException(
+        `Member ${memberId} is not in channel ${channelId}`
+      );
+    }
     return membership;
   }
 
   /** Leave (yourself) or remove (admin). Leaving a 1:1 dm isn't possible. */
-  async removeMember(actor: WorkspaceActor, channelId: string, memberId: string): Promise<void> {
+  async removeMember(
+    actor: WorkspaceActor,
+    channelId: string,
+    memberId: string
+  ): Promise<void> {
     const { channel } = await this.access.readable(actor, channelId);
     const self = memberId === actor.member.id;
-    if (!self && !isAdmin(actor)) {
-      throw new ForbiddenException("Only admins can remove other members from a channel.");
+    if (!(self || isAdmin(actor))) {
+      throw new ForbiddenException(
+        "Only admins can remove other members from a channel."
+      );
     }
     if (channel.type === "dm") {
       throw new ResourceConflictException("You can't leave a direct message.");
@@ -301,7 +362,9 @@ export class ChannelsService {
       return didRemove;
     });
     if (!removed) {
-      throw new NotFoundException(`Member ${memberId} is not in channel ${channelId}`);
+      throw new NotFoundException(
+        `Member ${memberId} is not in channel ${channelId}`
+      );
     }
     this.relay.kick();
   }
@@ -309,19 +372,31 @@ export class ChannelsService {
   async markRead(
     actor: WorkspaceActor,
     channelId: string,
-    seq: number | undefined,
+    seq: number | undefined
   ): Promise<ChannelMember> {
     await this.access.readable(actor, channelId);
-    const membership = await markChannelRead(this.db, channelId, actor.member.id, seq ?? null);
+    const membership = await markChannelRead(
+      this.db,
+      channelId,
+      actor.member.id,
+      seq ?? null
+    );
     if (!membership) {
-      throw new NotFoundException(`You are not a member of channel ${channelId}`);
+      throw new NotFoundException(
+        `You are not a member of channel ${channelId}`
+      );
     }
     return membership;
   }
 
-  private async viewerChannel(actor: WorkspaceActor, id: string): Promise<Channel> {
+  private async viewerChannel(
+    actor: WorkspaceActor,
+    id: string
+  ): Promise<Channel> {
     const channel = await getChannelForViewer(this.db, id, actor.member.id);
-    if (!channel) throw new NotFoundException(`No channel with id ${id}`);
+    if (!channel) {
+      throw new NotFoundException(`No channel with id ${id}`);
+    }
     return channel;
   }
 }

@@ -7,7 +7,11 @@ import {
   listWorkspacesForUser,
   updateWorkspace,
 } from "@wire/db";
-import type { CreateWorkspaceRequest, UpdateWorkspaceRequest, Workspace } from "@wire/types";
+import type {
+  CreateWorkspaceRequest,
+  UpdateWorkspaceRequest,
+  Workspace,
+} from "@wire/types";
 import type { RequestActor } from "../permissions/actor.js";
 import { MemberResolverService } from "../permissions/member-resolver.service.js";
 
@@ -15,14 +19,14 @@ import { MemberResolverService } from "../permissions/member-resolver.service.js
 export class WorkspacesService {
   constructor(
     @Inject(Database) private readonly db: Database,
-    private readonly members: MemberResolverService,
+    private readonly members: MemberResolverService
   ) {}
 
   /** Workspaces the caller belongs to; pending invites for their email are claimed first. */
   async list(
     actor: RequestActor,
     page: number,
-    perPage: number,
+    perPage: number
   ): Promise<{ items: Workspace[]; total: number }> {
     if (
       this.members.canClaim({
@@ -31,8 +35,14 @@ export class WorkspacesService {
         emailVerified: actor.emailVerified,
       })
     ) {
-      const claimed = await claimInvitesByEmail(this.db, actor.userId, actor.email);
-      await Promise.all(claimed.map((m) => this.members.invalidate(m.workspaceId, actor.userId)));
+      const claimed = await claimInvitesByEmail(
+        this.db,
+        actor.userId,
+        actor.email
+      );
+      await Promise.all(
+        claimed.map((m) => this.members.invalidate(m.workspaceId, actor.userId))
+      );
     }
     return listWorkspacesForUser(this.db.primary, actor.userId, page, perPage);
   }
@@ -50,14 +60,21 @@ export class WorkspacesService {
    * WorkspacesController). The creator becomes the owner member and joins #general
    * in the same transaction.
    */
-  async create(actor: RequestActor, input: CreateWorkspaceRequest): Promise<Workspace> {
+  async create(
+    actor: RequestActor,
+    input: CreateWorkspaceRequest
+  ): Promise<Workspace> {
     const { workspace } = await this.db.tx((tx) =>
       insertWorkspace(tx, {
         orgId: actor.userId,
         name: input.name,
         dataRegion: input.dataRegion,
-        owner: { userId: actor.userId, email: actor.email, displayName: actor.name },
-      }),
+        owner: {
+          userId: actor.userId,
+          email: actor.email,
+          displayName: actor.name,
+        },
+      })
     );
     await this.members.invalidate(workspace.id, actor.userId);
     return workspace;

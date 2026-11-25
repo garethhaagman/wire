@@ -1,15 +1,23 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Wire — Internal Docs</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
-  <style>
+  <head>
+    <meta charset="UTF-8">
+    <title>Wire — Internal Docs</title>
+    <meta
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
+      name="viewport"
+    >
+    <link
+      href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css"
+      rel="stylesheet"
+    >
+    <style>
     :root {
       --theme-color: #2f6f4f;
     }
     .sidebar {
+      top: 28px;
+      height: calc(100vh - 28px);
       padding-top: 0;
       border-right: 1px solid #eee;
     }
@@ -19,9 +27,9 @@
     /* kill all list markers in the sidebar */
     .sidebar-nav ul,
     .sidebar-nav ul ul {
-      list-style: none;
-      margin: 0;
       padding-left: 0;
+      margin: 0;
+      list-style: none;
     }
     /* top-level "Home" link, sits outside any section */
     .sidebar-nav > ul > li > a {
@@ -32,13 +40,13 @@
     }
     /* section label paragraphs, e.g. "**Product**" */
     .sidebar-nav p {
-      margin: 22px 0 4px 0;
       padding: 0 20px;
+      margin: 22px 0 4px 0;
       font-size: 0.72em;
       font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
       color: #8a94a6;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
     .sidebar-nav > ul > li:first-child p {
       margin-top: 4px;
@@ -51,18 +59,18 @@
       border-left: 2px solid transparent;
     }
     .sidebar-nav ul ul li a:hover {
-      background: #f5f7f6;
       color: var(--theme-color);
+      background: #f5f7f6;
     }
     .sidebar-nav ul ul li.active > a {
-      border-left-color: var(--theme-color);
-      background: #f0f6f2;
-      color: var(--theme-color);
       font-weight: 600;
+      color: var(--theme-color);
+      background: #f0f6f2;
+      border-left-color: var(--theme-color);
     }
     .search {
-      margin-bottom: 0;
       padding: 14px 20px 14px;
+      margin-bottom: 0;
       border-bottom: 1px solid #eee;
     }
     .search input {
@@ -70,50 +78,46 @@
     }
     .sidebar-title {
       display: flex;
-      align-items: center;
       gap: 8px;
+      align-items: center;
       padding: 16px 20px 2px;
       font-size: 0.95em;
       font-weight: 700;
       color: #2c3240;
     }
     .sidebar-title .dot {
+      flex-shrink: 0;
       width: 8px;
       height: 8px;
-      border-radius: 50%;
       background: var(--theme-color);
-      flex-shrink: 0;
+      border-radius: 50%;
     }
     .sidebar-title .badge {
+      padding: 2px 6px;
       margin-left: auto;
       font-size: 0.62em;
       font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
       color: #8a6d00;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
       background: #fff3cd;
       border: 1px solid #f0d98c;
       border-radius: 4px;
-      padding: 2px 6px;
     }
     .internal-banner {
       position: fixed;
       top: 0;
-      left: 0;
       right: 0;
+      left: 0;
       z-index: 20;
-      background: #fff3cd;
-      border-bottom: 1px solid #f0d98c;
-      color: #6b5500;
+      padding: 6px 12px;
       font-size: 0.78em;
       font-weight: 600;
+      color: #6b5500;
       text-align: center;
-      padding: 6px 12px;
       letter-spacing: 0.02em;
-    }
-    .sidebar {
-      top: 28px;
-      height: calc(100vh - 28px);
+      background: #fff3cd;
+      border-bottom: 1px solid #f0d98c;
     }
     .content {
       padding-top: 28px;
@@ -121,28 +125,33 @@
     body.ready .sidebar-toggle {
       top: 28px;
     }
-  </style>
-</head>
-<body>
-  <div class="internal-banner">Internal documentation — not for external distribution</div>
-  <div id="app"></div>
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      var tryInsert = setInterval(function () {
-        var sidebar = document.querySelector('.sidebar');
-        if (sidebar && !sidebar.querySelector('.sidebar-title')) {
-          var title = document.createElement('div');
-          title.className = 'sidebar-title';
-          title.innerHTML = '<span class="dot"></span>Wire docs<span class="badge">Internal</span>';
+    </style>
+  </head>
+  <body>
+    <div class="internal-banner">
+      Internal documentation — not for external distribution
+    </div>
+    <div id="app"></div>
+    <script>
+    "use strict";
+    document.addEventListener("DOMContentLoaded", () => {
+      const tryInsert = setInterval(() => {
+        const sidebar = document.querySelector(".sidebar");
+        if (sidebar && !sidebar.querySelector(".sidebar-title")) {
+          const title = document.createElement("div");
+          title.className = "sidebar-title";
+          title.innerHTML =
+            '<span class="dot"></span>Wire docs<span class="badge">Internal</span>';
           sidebar.insertBefore(title, sidebar.firstChild);
           clearInterval(tryInsert);
         }
       }, 50);
     });
-  </script>
-  <script>
+    </script>
+    <script>
+    "use strict";
     window.$docsify = {
-      repo: '',
+      repo: "",
       loadSidebar: true,
       loadNavbar: false,
       maxLevel: 0,
@@ -150,18 +159,25 @@
       auto2top: true,
       sidebarDisplayLevel: 1,
       search: {
-        paths: 'auto',
-        placeholder: 'Search docs...'
+        paths: "auto",
+        placeholder: "Search docs...",
       },
       alias: {
-        '/.*/_sidebar.md': '/_sidebar.md'
-      }
-    }
-  </script>
-  <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
-  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/docsify-mermaid@2.0.1/dist/docsify-mermaid.js"></script>
-  <script>mermaid.initialize({ startOnLoad: true });</script>
-</body>
+        "/.*/_sidebar.md": "/_sidebar.md",
+      },
+    };
+    </script>
+    <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+    <script
+      src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"
+    ></script>
+    <script src="//cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script
+      src="//cdn.jsdelivr.net/npm/docsify-mermaid@2.0.1/dist/docsify-mermaid.js"
+    ></script>
+    <script>
+    "use strict";
+    mermaid.initialize({ startOnLoad: true });
+    </script>
+  </body>
 </html>

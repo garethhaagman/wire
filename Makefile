@@ -82,7 +82,7 @@ install: ## Install JS dependencies
 typecheck: ## Typecheck every package/app (turbo, cached)
 	bun run typecheck
 
-lint: ## oxlint + type-aware eslint + generated-file checks (turbo, cached)
+lint: ## Biome (lint + format check) + wire-rules eslint + generated-file checks (turbo, cached)
 	bun run lint
 
 test: ## Run tests (turbo, cached)
@@ -91,5 +91,5 @@ test: ## Run tests (turbo, cached)
 knip: ## Find unused files, exports, and dependencies
 	bun run knip
 
-format: ## Format the repo with Prettier
-	bun run format
+format: ## Format the repo with Biome
+	bun run fix

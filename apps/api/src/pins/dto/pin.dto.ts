@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString } from "class-validator";
 import type { CreatePinRequest, Pin } from "@wire/types";
+import { IsString } from "class-validator";
 
 export class PinDto implements Pin {
   @ApiProperty({ example: "pin_64d9dea525ae84ef6f7bd361" })

@@ -1,14 +1,14 @@
 import { Controller, Get, Query } from "@nestjs/common";
 import { ApiCookieAuth, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import type { SearchResult } from "@wire/types";
-import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
 import { PaginatedResult } from "../common/dto/paginated-result.js";
+import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
 import { CurrentUser, type RequestActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
-import { SearchService } from "./search.service.js";
 import { SearchQueryDto } from "./dto/search-query.dto.js";
 import { SearchResultDto } from "./dto/search-result.dto.js";
+import { SearchService } from "./search.service.js";
 
 /**
  * Keyword search — internal-docs/product/05-feature-parity.md's "GET /search" row.
@@ -27,7 +27,7 @@ export class SearchController {
   @ApiOkResponse({ type: SearchResultDto, isArray: true })
   async list(
     @CurrentUser() actor: RequestActor,
-    @Query() query: SearchQueryDto,
+    @Query() query: SearchQueryDto
   ): Promise<PaginatedResult<SearchResult>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
@@ -38,6 +38,9 @@ export class SearchController {
       page,
       perPage,
     });
-    return new PaginatedResult(items, buildPaginationMeta(page, perPage, total));
+    return new PaginatedResult(
+      items,
+      buildPaginationMeta(page, perPage, total)
+    );
   }
 }

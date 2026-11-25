@@ -19,13 +19,12 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import type { Member, MemberPreferences } from "@wire/types";
-import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
-import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
 import { PaginatedResult } from "../common/dto/paginated-result.js";
+import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
+import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
 import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor.js";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
-import { MembersService } from "./members.service.js";
 import {
   CreateMemberRequestDto,
   MemberDto,
@@ -33,6 +32,7 @@ import {
   UpdateMemberPreferencesRequestDto,
   UpdateMemberRequestDto,
 } from "./dto/member.dto.js";
+import { MembersService } from "./members.service.js";
 
 @ApiTags("Members")
 @ApiCookieAuth()
@@ -45,12 +45,20 @@ export class MembersController {
   @ApiOkResponse({ type: MemberDto, isArray: true })
   async list(
     @CurrentActor() actor: WorkspaceActor,
-    @Query() query: PaginationQueryDto,
+    @Query() query: PaginationQueryDto
   ): Promise<PaginatedResult<Member>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
-    const { items, total } = await this.members.list(actor, page, perPage, query.search);
-    return new PaginatedResult(items, buildPaginationMeta(page, perPage, total));
+    const { items, total } = await this.members.list(
+      actor,
+      page,
+      perPage,
+      query.search
+    );
+    return new PaginatedResult(
+      items,
+      buildPaginationMeta(page, perPage, total)
+    );
   }
 
   @Get("me")
@@ -63,7 +71,9 @@ export class MembersController {
   @Get("me/preferences")
   @RequirePermission("read", "Member")
   @ApiOkResponse({ type: MemberPreferencesDto })
-  getPreferences(@CurrentActor() actor: WorkspaceActor): Promise<MemberPreferences> {
+  getPreferences(
+    @CurrentActor() actor: WorkspaceActor
+  ): Promise<MemberPreferences> {
     return this.members.getPreferences(actor);
   }
 
@@ -72,7 +82,7 @@ export class MembersController {
   @ApiOkResponse({ type: MemberPreferencesDto })
   updatePreferences(
     @CurrentActor() actor: WorkspaceActor,
-    @Body() body: UpdateMemberPreferencesRequestDto,
+    @Body() body: UpdateMemberPreferencesRequestDto
   ): Promise<MemberPreferences> {
     return this.members.updatePreferences(actor, body);
   }
@@ -80,7 +90,10 @@ export class MembersController {
   @Get(":id")
   @RequirePermission("read", "Member")
   @ApiOkResponse({ type: MemberDto })
-  getById(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<Member> {
+  getById(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("id") id: string
+  ): Promise<Member> {
     return this.members.getById(actor, id);
   }
 
@@ -95,7 +108,7 @@ export class MembersController {
   @UseInterceptors(IdempotencyInterceptor)
   create(
     @CurrentActor() actor: WorkspaceActor,
-    @Body() body: CreateMemberRequestDto,
+    @Body() body: CreateMemberRequestDto
   ): Promise<Member> {
     return this.members.create(actor, body);
   }
@@ -106,7 +119,7 @@ export class MembersController {
   update(
     @CurrentActor() actor: WorkspaceActor,
     @Param("id") id: string,
-    @Body() body: UpdateMemberRequestDto,
+    @Body() body: UpdateMemberRequestDto
   ): Promise<Member> {
     return this.members.update(actor, id, body);
   }
@@ -115,7 +128,10 @@ export class MembersController {
   @RequirePermission("delete", "Member")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })
-  async remove(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<null> {
+  async remove(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("id") id: string
+  ): Promise<null> {
     await this.members.remove(actor, id);
     return null;
   }

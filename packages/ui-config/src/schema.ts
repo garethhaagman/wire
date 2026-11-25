@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { extensionsSchema } from "./extensions.js";
 import {
   colorRolesSchema,
   iconPackSchema,
@@ -8,7 +9,6 @@ import {
   typographySchema,
 } from "./primitives.js";
 import { layoutSchema } from "./slots.js";
-import { extensionsSchema } from "./extensions.js";
 
 /**
  * Bumped whenever a breaking shape change lands (field removed/retyped, not
@@ -49,7 +49,9 @@ export type Branding = z.infer<typeof brandingSchema>;
  * field without a base-layer default.
  */
 export const uiConfigSchema = z.object({
-  schemaVersion: z.literal(UI_CONFIG_SCHEMA_VERSION).default(UI_CONFIG_SCHEMA_VERSION),
+  schemaVersion: z
+    .literal(UI_CONFIG_SCHEMA_VERSION)
+    .default(UI_CONFIG_SCHEMA_VERSION),
   theme: themeSchema,
   branding: brandingSchema,
   motion: motionSchema,

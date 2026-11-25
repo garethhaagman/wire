@@ -16,7 +16,8 @@ export default {
   meta: {
     type: "problem",
     docs: {
-      description: "Throw HttpException/ApiException instead of a bare Error in API code.",
+      description:
+        "Throw HttpException/ApiException instead of a bare Error in API code.",
     },
     schema: [],
     messages: {
@@ -28,9 +29,15 @@ export default {
     return {
       ThrowStatement(node) {
         const arg = node.argument;
-        if (!arg || arg.type !== "NewExpression") return;
-        if (arg.callee.type !== "Identifier") return;
-        if (!BARE_ERROR_CONSTRUCTORS.has(arg.callee.name)) return;
+        if (arg?.type !== "NewExpression") {
+          return;
+        }
+        if (arg.callee.type !== "Identifier") {
+          return;
+        }
+        if (!BARE_ERROR_CONSTRUCTORS.has(arg.callee.name)) {
+          return;
+        }
 
         context.report({
           node,

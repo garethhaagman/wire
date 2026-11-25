@@ -1,6 +1,13 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsInt, IsObject, IsOptional, IsString, Max, Min } from "class-validator";
+import {
+  IsInt,
+  IsObject,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from "class-validator";
 
 /**
  * Shared query params for every collection endpoint — internal-docs/api/pagination.md.
@@ -51,25 +58,38 @@ export class PaginationQueryDto {
   filter?: Record<string, string>;
 }
 
-export function parseFilterQuery(rawQuery: Record<string, unknown>): Record<string, string> {
-  const filter = rawQuery["filter"];
-  if (!filter || typeof filter !== "object") return {};
+export function parseFilterQuery(
+  rawQuery: Record<string, unknown>
+): Record<string, string> {
+  const { filter } = rawQuery;
+  if (!filter || typeof filter !== "object") {
+    return {};
+  }
 
   const result: Record<string, string> = {};
-  for (const [key, value] of Object.entries(filter as Record<string, unknown>)) {
-    if (typeof value === "string") result[key] = value;
+  for (const [key, value] of Object.entries(
+    filter as Record<string, unknown>
+  )) {
+    if (typeof value === "string") {
+      result[key] = value;
+    }
   }
   return result;
 }
 
 export const SORT_DIRECTION = { ASC: "ASC", DESC: "DESC" } as const;
-export type SortDirection = (typeof SORT_DIRECTION)[keyof typeof SORT_DIRECTION];
+export type SortDirection =
+  (typeof SORT_DIRECTION)[keyof typeof SORT_DIRECTION];
 
 export function parseSort(
-  sort: string | undefined,
+  sort: string | undefined
 ): { field: string; direction: SortDirection } | null {
-  if (!sort) return null;
-  const direction: SortDirection = sort.startsWith("-") ? SORT_DIRECTION.DESC : SORT_DIRECTION.ASC;
+  if (!sort) {
+    return null;
+  }
+  const direction: SortDirection = sort.startsWith("-")
+    ? SORT_DIRECTION.DESC
+    : SORT_DIRECTION.ASC;
   const field = sort.startsWith("-") ? sort.slice(1) : sort;
   return { field, direction };
 }

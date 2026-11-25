@@ -22,9 +22,11 @@ const postgresPort = config.requireNumber("postgresPort");
 
 // Dev-only default; production stacks must set wire:postgresPassword / wire:authSecret
 // as Pulumi secrets (`pulumi config set --secret`), never commit real values here.
-const postgresPassword = config.getSecret("postgresPassword") ?? pulumi.secret("wire_dev_password");
+const postgresPassword =
+  config.getSecret("postgresPassword") ?? pulumi.secret("wire_dev_password");
 const authSecret =
-  config.getSecret("authSecret") ?? pulumi.secret("dev-only-secret-change-me-32chars-min");
+  config.getSecret("authSecret") ??
+  pulumi.secret("dev-only-secret-change-me-32chars-min");
 
 const network = createNetwork(name);
 
@@ -58,7 +60,7 @@ const migrate = new docker.Container(
     logs: true,
     mustRun: false,
   },
-  { dependsOn: [postgres.container] },
+  { dependsOn: [postgres.container] }
 );
 
 const api = createApiService(name, {

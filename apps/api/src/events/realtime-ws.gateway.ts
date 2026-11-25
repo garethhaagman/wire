@@ -1,29 +1,41 @@
-import { Inject, Logger } from "@nestjs/common";
-import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway } from "@nestjs/websockets";
 import type { IncomingMessage } from "node:http";
 import { parse as parseQuery } from "node:querystring";
-import type { WebSocket } from "ws";
+import { Inject, Logger } from "@nestjs/common";
+import {
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  WebSocketGateway,
+} from "@nestjs/websockets";
 import { Database, findMemberByUser } from "@wire/db";
-import { AUTH_INSTANCE } from "../auth/auth.module.js";
+import type { WebSocket } from "ws";
 import type { Auth } from "../auth/auth.config.js";
+import { AUTH_INSTANCE } from "../auth/auth.module.js";
 import { defineAbilityFor } from "../permissions/ability.factory.js";
 import type { WorkspaceActor } from "../permissions/actor.js";
 import { HEARTBEAT_MS, RealtimeService } from "./realtime.service.js";
 import { WsSink } from "./ws-sink.js";
 
 const POLICY_VIOLATION = 1008;
+const DIGITS_PATTERN = /^\d+$/u;
 
 function headersFrom(req: IncomingMessage): Headers {
   const headers = new Headers();
   for (const [key, value] of Object.entries(req.headers)) {
-    if (typeof value === "string") headers.set(key, value);
-    else if (Array.isArray(value)) headers.set(key, value.join(", "));
+    if (typeof value === "string") {
+      headers.set(key, value);
+    } else if (Array.isArray(value)) {
+      headers.set(key, value.join(", "));
+    }
   }
   return headers;
 }
 
-function toStringArray(value: string | string[] | undefined): string[] | undefined {
-  if (value === undefined) return undefined;
+function toStringArray(
+  value: string | string[] | undefined
+): string[] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
   const values = Array.isArray(value) ? value : value.split(",");
   const filtered = values.filter((v) => v.length > 0);
   return filtered.length ? filtered : undefined;
@@ -43,18 +55,26 @@ function toStringArray(value: string | string[] | undefined): string[] | undefin
  * Connect with ?workspaceId=<id>&after_seq=<seq>&types=a,b&channel_ids=c,d
  */
 @WebSocketGateway({ path: "/v1/ws" })
-export class RealtimeWsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class RealtimeWsGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   private readonly logger = new Logger(RealtimeWsGateway.name);
   private readonly closers = new WeakMap<WebSocket, () => void>();
-  private readonly timers = new WeakMap<WebSocket, ReturnType<typeof setInterval>>();
+  private readonly timers = new WeakMap<
+    WebSocket,
+    ReturnType<typeof setInterval>
+  >();
 
   constructor(
     @Inject(AUTH_INSTANCE) private readonly auth: Auth,
     @Inject(Database) private readonly db: Database,
-    private readonly realtime: RealtimeService,
+    private readonly realtime: RealtimeService
   ) {}
 
-  async handleConnection(client: WebSocket, req: IncomingMessage): Promise<void> {
+  async handleConnection(
+    client: WebSocket,
+    req: IncomingMessage
+  ): Promise<void> {
     try {
       const actor = await this.authenticate(req);
       if (!actor) {
@@ -65,9 +85,13 @@ export class RealtimeWsGateway implements OnGatewayConnection, OnGatewayDisconne
       const query = parseQuery(req.url?.split("?")[1] ?? "");
       const types = toStringArray(query.types);
       const channelIds = toStringArray(query.channel_ids);
-      const afterSeqRaw = Array.isArray(query.after_seq) ? query.after_seq[0] : query.after_seq;
+      const afterSeqRaw = Array.isArray(query.after_seq)
+        ? query.after_seq[0]
+        : query.after_seq;
       const afterSeq =
-        afterSeqRaw !== undefined && /^\d+$/.test(afterSeqRaw) ? Number(afterSeqRaw) : null;
+        afterSeqRaw !== undefined && DIGITS_PATTERN.test(afterSeqRaw)
+          ? Number(afterSeqRaw)
+          : null;
 
       const sink = new WsSink(client);
       const { close } = await this.realtime.attachSink(actor, sink, {
@@ -90,7 +114,9 @@ export class RealtimeWsGateway implements OnGatewayConnection, OnGatewayDisconne
 
   handleDisconnect(client: WebSocket): void {
     const timer = this.timers.get(client);
-    if (timer) clearInterval(timer);
+    if (timer) {
+      clearInterval(timer);
+    }
     this.timers.delete(client);
 
     const close = this.closers.get(client);
@@ -99,20 +125,39 @@ export class RealtimeWsGateway implements OnGatewayConnection, OnGatewayDisconne
   }
 
   /** Mirrors SessionGuard + PermissionsGuard's resolution for a single workspace-scoped request. */
-  private async authenticate(req: IncomingMessage): Promise<WorkspaceActor | null> {
+  private async authenticate(
+    req: IncomingMessage
+  ): Promise<WorkspaceActor | null> {
     const query = parseQuery(req.url?.split("?")[1] ?? "");
-    const workspaceId = Array.isArray(query.workspaceId) ? query.workspaceId[0] : query.workspaceId;
-    if (!workspaceId) return null;
+    const workspaceId = Array.isArray(query.workspaceId)
+      ? query.workspaceId[0]
+      : query.workspaceId;
+    if (!workspaceId) {
+      return null;
+    }
 
-    const session = await this.auth.api.getSession({ headers: headersFrom(req) });
-    if (!session) return null;
+    const session = await this.auth.api.getSession({
+      headers: headersFrom(req),
+    });
+    if (!session) {
+      return null;
+    }
 
-    const member = await findMemberByUser(this.db, workspaceId, session.user.id);
-    if (!member) return null;
+    const member = await findMemberByUser(
+      this.db,
+      workspaceId,
+      session.user.id
+    );
+    if (!member) {
+      return null;
+    }
 
-    const role = member.role === "owner" || member.role === "admin" ? "admin" : "member";
+    const role =
+      member.role === "owner" || member.role === "admin" ? "admin" : "member";
     const ability = defineAbilityFor(role);
-    if (!ability.can("read", "Event")) return null;
+    if (!ability.can("read", "Event")) {
+      return null;
+    }
 
     return {
       userId: session.user.id,
@@ -120,7 +165,11 @@ export class RealtimeWsGateway implements OnGatewayConnection, OnGatewayDisconne
       name: session.user.name,
       emailVerified: session.user.emailVerified,
       workspaceId,
-      member: { id: member.id, role: member.role, displayName: member.displayName },
+      member: {
+        id: member.id,
+        role: member.role,
+        displayName: member.displayName,
+      },
       role,
     };
   }

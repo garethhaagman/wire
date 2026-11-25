@@ -14,26 +14,35 @@ import {
   Req,
   Res,
 } from "@nestjs/common";
-import { ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
-import type { Request, Response } from "express";
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { ApiEnv } from "@wire/config";
-import type { CreateUploadResponse, DownloadUrlResponse, WireFile } from "@wire/types";
-import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
-import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
-import { PaginatedResult } from "../common/dto/paginated-result.js";
+import type {
+  CreateUploadResponse,
+  DownloadUrlResponse,
+  WireFile,
+} from "@wire/types";
+import type { Request, Response } from "express";
 import { Public } from "../auth/public.decorator.js";
+import { PaginatedResult } from "../common/dto/paginated-result.js";
+import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
+import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
 import { API_ENV } from "../config/env.provider.js";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
-import { FilesService } from "./files.service.js";
-import { LocalDiskAdapter } from "./storage/local-disk-adapter.js";
 import {
   CreateUploadRequestDto,
   CreateUploadResponseDto,
   DownloadUrlResponseDto,
   FileDto,
 } from "./dto/file.dto.js";
+import { FilesService } from "./files.service.js";
+import { LocalDiskAdapter } from "./storage/local-disk-adapter.js";
 
 /**
  * Signed-upload-URL flow (see files.service.ts). The `_local-upload` routes only
@@ -51,7 +60,7 @@ export class FilesController {
 
   constructor(
     private readonly files: FilesService,
-    @Inject(API_ENV) env: ApiEnv,
+    @Inject(API_ENV) env: ApiEnv
   ) {
     this.localDisk = new LocalDiskAdapter(env);
   }
@@ -60,7 +69,10 @@ export class FilesController {
   @WorkspaceScope({ from: "file", param: "id" })
   @RequirePermission("read", "File")
   @ApiOkResponse({ type: FileDto })
-  getById(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<WireFile> {
+  getById(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("id") id: string
+  ): Promise<WireFile> {
     return this.files.getById(actor, id);
   }
 
@@ -70,7 +82,7 @@ export class FilesController {
   @ApiCreatedResponse({ type: CreateUploadResponseDto })
   createUploadRequest(
     @CurrentActor() actor: WorkspaceActor,
-    @Body() body: CreateUploadRequestDto,
+    @Body() body: CreateUploadRequestDto
   ): Promise<CreateUploadResponse> {
     return this.files.requestUpload(actor, body);
   }
@@ -81,7 +93,7 @@ export class FilesController {
   @ApiOkResponse({ type: FileDto })
   createUploadConfirmation(
     @CurrentActor() actor: WorkspaceActor,
-    @Param("id") id: string,
+    @Param("id") id: string
   ): Promise<WireFile> {
     return this.files.confirmUpload(actor, id);
   }
@@ -92,7 +104,7 @@ export class FilesController {
   @ApiOkResponse({ type: DownloadUrlResponseDto })
   getDownloadUrl(
     @CurrentActor() actor: WorkspaceActor,
-    @Param("id") id: string,
+    @Param("id") id: string
   ): Promise<DownloadUrlResponse> {
     return this.files.getDownloadUrl(actor, id);
   }
@@ -104,12 +116,20 @@ export class FilesController {
   async list(
     @CurrentActor() actor: WorkspaceActor,
     @Param("channelId") channelId: string,
-    @Query() query: PaginationQueryDto,
+    @Query() query: PaginationQueryDto
   ): Promise<PaginatedResult<WireFile>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
-    const { items, total } = await this.files.listForChannel(actor, channelId, page, perPage);
-    return new PaginatedResult(items, buildPaginationMeta(page, perPage, total));
+    const { items, total } = await this.files.listForChannel(
+      actor,
+      channelId,
+      page,
+      perPage
+    );
+    return new PaginatedResult(
+      items,
+      buildPaginationMeta(page, perPage, total)
+    );
   }
 
   @Put("files/_local-upload/:key")
@@ -119,7 +139,7 @@ export class FilesController {
   async setLocalUpload(
     @Param("key") key: string,
     @Query("token") token: string | undefined,
-    @Req() req: Request,
+    @Req() req: Request
   ): Promise<null> {
     if (!this.localDisk.verifyToken(key, token)) {
       throw new NotFoundException("Invalid or expired upload URL.");
@@ -135,7 +155,7 @@ export class FilesController {
   getLocalDownload(
     @Param("key") key: string,
     @Query("token") token: string | undefined,
-    @Res() res: Response,
+    @Res() res: Response
   ): void {
     if (!this.localDisk.verifyToken(key, token)) {
       throw new NotFoundException("Invalid or expired download URL.");

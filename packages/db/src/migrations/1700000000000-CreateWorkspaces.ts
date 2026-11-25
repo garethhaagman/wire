@@ -4,7 +4,7 @@ export class CreateWorkspaces1700000000000 implements MigrationInterface {
   name = "CreateWorkspaces1700000000000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`create extension if not exists pgcrypto`);
+    await queryRunner.query("create extension if not exists pgcrypto");
     await queryRunner.query(`
       create table "workspaces" (
         "id" text not null default ('ws_' || encode(gen_random_bytes(12), 'hex')),
@@ -17,7 +17,9 @@ export class CreateWorkspaces1700000000000 implements MigrationInterface {
         constraint "PK_workspaces" primary key ("id")
       )
     `);
-    await queryRunner.query(`create index "IDX_workspaces_org_id" on "workspaces" ("org_id")`);
+    await queryRunner.query(
+      `create index "IDX_workspaces_org_id" on "workspaces" ("org_id")`
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

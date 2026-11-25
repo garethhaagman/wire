@@ -28,10 +28,10 @@ export class CreateAgentRuns1700000000002 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `create index "IDX_agent_runs_agent_created" on "agent_runs" ("agent_id", "created_at" desc)`,
+      `create index "IDX_agent_runs_agent_created" on "agent_runs" ("agent_id", "created_at" desc)`
     );
     await queryRunner.query(
-      `create index "IDX_agent_runs_workspace" on "agent_runs" ("workspace_id")`,
+      `create index "IDX_agent_runs_workspace" on "agent_runs" ("workspace_id")`
     );
 
     await queryRunner.query(`
@@ -46,7 +46,7 @@ export class CreateAgentRuns1700000000002 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `create index "IDX_agent_run_steps_run" on "agent_run_steps" ("run_id", "seq")`,
+      `create index "IDX_agent_run_steps_run" on "agent_run_steps" ("run_id", "seq")`
     );
   }
 

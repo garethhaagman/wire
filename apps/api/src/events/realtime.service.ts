@@ -1,13 +1,23 @@
 import { randomUUID } from "node:crypto";
-import { Inject, Injectable, Logger, type OnApplicationShutdown } from "@nestjs/common";
-import type { Redis } from "ioredis";
-import { Database, findChannelRecord, listChannelMemberIds, listEventsAfter } from "@wire/db";
+import {
+  Inject,
+  Injectable,
+  Logger,
+  type OnApplicationShutdown,
+} from "@nestjs/common";
+import {
+  Database,
+  findChannelRecord,
+  listChannelMemberIds,
+  listEventsAfter,
+} from "@wire/db";
 import type { Channel, WireEvent } from "@wire/types";
+import type { Redis } from "ioredis";
 import { LruCache } from "../common/cache/lru-cache.js";
 import type { WorkspaceActor } from "../permissions/actor.js";
 import { describeRedisError, REDIS } from "../redis/redis.module.js";
 import { PresenceService } from "./presence.service.js";
-import { workspaceChannel, type RealtimeEnvelope } from "./realtime-channel.js";
+import { type RealtimeEnvelope, workspaceChannel } from "./realtime-channel.js";
 
 export const HEARTBEAT_MS = 15_000;
 const MEMBERSHIP_TTL_MS = 30_000;
@@ -15,12 +25,15 @@ const MEMBERSHIP_TTL_MS = 30_000;
 const MAX_REPLAY_EVENTS = 5000;
 const REPLAY_PAGE = 500;
 
-const MEMBERSHIP_EVENTS = new Set(["channel.member.joined", "channel.member.left"]);
+const MEMBERSHIP_EVENTS = new Set([
+  "channel.member.joined",
+  "channel.member.left",
+]);
 
 export interface StreamFilters {
-  types: Set<string> | null;
-  channelIds: Set<string> | null;
   afterSeq: number | null;
+  channelIds: Set<string> | null;
+  types: Set<string> | null;
 }
 
 /**
@@ -31,24 +44,28 @@ export interface StreamFilters {
  * in exactly one place regardless of how many transports exist.
  */
 export interface StreamSink {
+  end: () => void;
   readonly ended: boolean;
-  sendEvent(event: WireEvent): void;
-  sendEphemeral(type: string, channelId: string | null, data: Record<string, unknown>): void;
-  sendResync(): void;
-  ping(): void;
-  end(): void;
+  ping: () => void;
+  sendEphemeral: (
+    type: string,
+    channelId: string | null,
+    data: Record<string, unknown>
+  ) => void;
+  sendEvent: (event: WireEvent) => void;
+  sendResync: () => void;
 }
 
 interface Connection {
-  id: string;
-  workspaceId: string;
-  memberId: string;
-  isGuest: boolean;
-  sink: StreamSink;
-  filters: StreamFilters;
   /** Live events that arrive while the backlog replays; flushed (deduped by seq) afterwards. */
   backlog: WireEvent[] | null;
+  filters: StreamFilters;
+  id: string;
+  isGuest: boolean;
   lastSeq: number;
+  memberId: string;
+  sink: StreamSink;
+  workspaceId: string;
 }
 
 /**
@@ -67,7 +84,9 @@ interface Connection {
 export class RealtimeService implements OnApplicationShutdown {
   private readonly logger = new Logger(RealtimeService.name);
   private readonly byWorkspace = new Map<string, Set<Connection>>();
-  private readonly channelTypes = new LruCache<string, Channel["type"]>(100_000);
+  private readonly channelTypes = new LruCache<string, Channel["type"]>(
+    100_000
+  );
   private readonly channelMembers = new Map<
     string,
     { members: Promise<Set<string>>; expiresAt: number }
@@ -77,7 +96,7 @@ export class RealtimeService implements OnApplicationShutdown {
   constructor(
     @Inject(REDIS) private readonly redis: Redis,
     @Inject(Database) private readonly db: Database,
-    private readonly presence: PresenceService,
+    private readonly presence: PresenceService
   ) {}
 
   /**
@@ -89,7 +108,7 @@ export class RealtimeService implements OnApplicationShutdown {
   async attachSink(
     actor: WorkspaceActor,
     sink: StreamSink,
-    filters: StreamFilters,
+    filters: StreamFilters
   ): Promise<{ close: () => void }> {
     const conn: Connection = {
       id: randomUUID(),
@@ -98,14 +117,16 @@ export class RealtimeService implements OnApplicationShutdown {
       isGuest: actor.member.role === "guest",
       sink,
       filters,
-      backlog: filters.afterSeq !== null ? [] : null,
+      backlog: filters.afterSeq === null ? null : [],
       lastSeq: filters.afterSeq ?? 0,
     };
 
     await this.attach(conn);
     void this.presence.heartbeat(actor.workspaceId, actor.member.id);
 
-    if (filters.afterSeq !== null) await this.replay(conn, filters.afterSeq);
+    if (filters.afterSeq !== null) {
+      await this.replay(conn, filters.afterSeq);
+    }
 
     return { close: () => void this.detach(conn) };
   }
@@ -118,14 +139,22 @@ export class RealtimeService implements OnApplicationShutdown {
   /** Ends every open stream for a member (e.g. after removal from the workspace). */
   disconnectMember(workspaceId: string, memberId: string): void {
     for (const conn of this.byWorkspace.get(workspaceId) ?? []) {
-      if (conn.memberId === memberId) conn.sink.end();
+      if (conn.memberId === memberId) {
+        conn.sink.end();
+      }
     }
   }
 
   onApplicationShutdown(): void {
-    for (const conns of this.byWorkspace.values()) for (const conn of conns) conn.sink.end();
+    for (const conns of this.byWorkspace.values()) {
+      for (const conn of conns) {
+        conn.sink.end();
+      }
+    }
     this.byWorkspace.clear();
-    if (this.subscriber) this.subscriber.disconnect();
+    if (this.subscriber) {
+      this.subscriber.disconnect();
+    }
   }
 
   private async attach(conn: Connection): Promise<void> {
@@ -135,36 +164,51 @@ export class RealtimeService implements OnApplicationShutdown {
       this.byWorkspace.set(conn.workspaceId, conns);
       await this.ensureSubscriber()
         .subscribe(workspaceChannel(conn.workspaceId))
-        .catch((err: Error) => this.logger.warn(`subscribe failed: ${err.message}`));
+        .catch((err: Error) =>
+          this.logger.warn(`subscribe failed: ${err.message}`)
+        );
     }
     conns.add(conn);
   }
 
   private async detach(conn: Connection): Promise<void> {
     const conns = this.byWorkspace.get(conn.workspaceId);
-    if (!conns) return;
+    if (!conns) {
+      return;
+    }
     conns.delete(conn);
     if (conns.size === 0) {
       this.byWorkspace.delete(conn.workspaceId);
       await this.subscriber
         ?.unsubscribe(workspaceChannel(conn.workspaceId))
-        .catch((err: Error) => this.logger.warn(`unsubscribe failed: ${err.message}`));
+        .catch((err: Error) =>
+          this.logger.warn(`unsubscribe failed: ${err.message}`)
+        );
     }
   }
 
   private ensureSubscriber(): Redis {
-    if (this.subscriber) return this.subscriber;
+    if (this.subscriber) {
+      return this.subscriber;
+    }
     // Queued while disconnected: ioredis only re-subscribes channels whose SUBSCRIBE
     // was accepted, so a rejected one would be lost for good after a reconnect.
-    const subscriber = this.redis.duplicate({ lazyConnect: false, enableOfflineQueue: true });
+    const subscriber = this.redis.duplicate({
+      lazyConnect: false,
+      enableOfflineQueue: true,
+    });
     subscriber.on("message", (_channel: string, payload: string) => {
       void this.onMessage(payload).catch((err: Error) =>
-        this.logger.warn(`dispatch failed: ${err.message}`),
+        this.logger.warn(`dispatch failed: ${err.message}`)
       );
     });
     let down = false;
     subscriber.on("error", (err: Error) => {
-      if (!down) this.logger.warn(`realtime subscriber unavailable: ${describeRedisError(err)}`);
+      if (!down) {
+        this.logger.warn(
+          `realtime subscriber unavailable: ${describeRedisError(err)}`
+        );
+      }
       down = true;
     });
     subscriber.on("ready", () => {
@@ -181,37 +225,48 @@ export class RealtimeService implements OnApplicationShutdown {
       return;
     }
 
-    const event = envelope.event;
-    if (event.channelId && MEMBERSHIP_EVENTS.has(event.type))
+    const { event } = envelope;
+    if (event.channelId && MEMBERSHIP_EVENTS.has(event.type)) {
       this.channelMembers.delete(event.channelId);
+    }
     if (event.type === "member.removed") {
       this.disconnectMember(
         event.workspaceId,
-        String((event.data as { memberId?: string }).memberId),
+        String((event.data as { memberId?: string }).memberId)
       );
     }
 
     const conns = this.byWorkspace.get(event.workspaceId);
-    if (!conns) return;
+    if (!conns) {
+      return;
+    }
     const audience = await this.audienceFor(event.channelId, event, conns);
     for (const conn of conns) {
       if (conn.backlog) {
         conn.backlog.push(event);
         continue;
       }
-      if (this.visible(conn, event.type, event.channelId, audience)) this.sendEvent(conn, event);
+      if (this.visible(conn, event.type, event.channelId, audience)) {
+        this.sendEvent(conn, event);
+      }
     }
   }
 
   private async dispatchEphemeral(
-    envelope: Extract<RealtimeEnvelope, { kind: "ephemeral" }>,
+    envelope: Extract<RealtimeEnvelope, { kind: "ephemeral" }>
   ): Promise<void> {
     const conns = this.byWorkspace.get(envelope.workspaceId);
-    if (!conns) return;
+    if (!conns) {
+      return;
+    }
     const audience = await this.audienceFor(envelope.channelId, null, conns);
     for (const conn of conns) {
       if (this.visible(conn, envelope.type, envelope.channelId, audience)) {
-        conn.sink.sendEphemeral(envelope.type, envelope.channelId, envelope.data);
+        conn.sink.sendEphemeral(
+          envelope.type,
+          envelope.channelId,
+          envelope.data
+        );
       }
     }
   }
@@ -223,9 +278,15 @@ export class RealtimeService implements OnApplicationShutdown {
   private async audienceFor(
     channelId: string | null,
     event: WireEvent | null,
-    conns: Iterable<Connection>,
-  ): Promise<{ type: Channel["type"] | null; members: Set<string> | null; extra: string | null }> {
-    if (!channelId) return { type: null, members: null, extra: null };
+    conns: Iterable<Connection>
+  ): Promise<{
+    type: Channel["type"] | null;
+    members: Set<string> | null;
+    extra: string | null;
+  }> {
+    if (!channelId) {
+      return { type: null, members: null, extra: null };
+    }
     const type = await this.channelType(channelId);
     // Public channels only need the member set when a guest is listening — large
     // public channels would otherwise reload huge sets for no benefit.
@@ -242,21 +303,40 @@ export class RealtimeService implements OnApplicationShutdown {
     conn: Connection,
     type: string,
     channelId: string | null,
-    audience: { type: Channel["type"] | null; members: Set<string> | null; extra: string | null },
+    audience: {
+      type: Channel["type"] | null;
+      members: Set<string> | null;
+      extra: string | null;
+    }
   ): boolean {
-    if (conn.filters.types && !conn.filters.types.has(type)) return false;
-    if (channelId && conn.filters.channelIds && !conn.filters.channelIds.has(channelId))
+    if (conn.filters.types && !conn.filters.types.has(type)) {
       return false;
-    if (!channelId) return true;
-    if (audience.extra === conn.memberId) return true;
-    if (audience.type === "public" && !conn.isGuest) return true;
+    }
+    if (
+      channelId &&
+      conn.filters.channelIds &&
+      !conn.filters.channelIds.has(channelId)
+    ) {
+      return false;
+    }
+    if (!channelId) {
+      return true;
+    }
+    if (audience.extra === conn.memberId) {
+      return true;
+    }
+    if (audience.type === "public" && !conn.isGuest) {
+      return true;
+    }
     return audience.members?.has(conn.memberId) ?? false;
   }
 
   private async replay(conn: Connection, afterSeq: number): Promise<void> {
     let cursor = afterSeq;
     let sent = 0;
-    for (;;) {
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: intentional loop-with-break, clearer than a sentinel boolean
+    while (true) {
+      // biome-ignore lint/performance/noAwaitInLoops: each page's cursor depends on the previous page's last seq
       const page = await listEventsAfter(this.db, {
         workspaceId: conn.workspaceId,
         afterSeq: cursor,
@@ -265,12 +345,17 @@ export class RealtimeService implements OnApplicationShutdown {
         viewerIsGuest: conn.isGuest,
       });
       for (const event of page.items) {
+        // biome-ignore lint/performance/noAwaitInLoops: events must be delivered to the client in seq order, so resolution can't be parallelized
         const audience = await this.audienceFor(event.channelId, event, [conn]);
-        if (this.visible(conn, event.type, event.channelId, audience)) this.sendEvent(conn, event);
+        if (this.visible(conn, event.type, event.channelId, audience)) {
+          this.sendEvent(conn, event);
+        }
         cursor = event.seq;
       }
       sent += page.items.length;
-      if (!page.hasMore) break;
+      if (!page.hasMore) {
+        break;
+      }
       if (sent >= MAX_REPLAY_EVENTS) {
         conn.sink.sendResync();
         break;
@@ -280,23 +365,38 @@ export class RealtimeService implements OnApplicationShutdown {
     const backlog = conn.backlog ?? [];
     conn.backlog = null;
     for (const event of backlog) {
-      if (event.seq <= conn.lastSeq) continue;
+      if (event.seq <= conn.lastSeq) {
+        continue;
+      }
+      // biome-ignore lint/performance/noAwaitInLoops: events must be delivered to the client in seq order, so resolution can't be parallelized
       const audience = await this.audienceFor(event.channelId, event, [conn]);
-      if (this.visible(conn, event.type, event.channelId, audience)) this.sendEvent(conn, event);
+      if (this.visible(conn, event.type, event.channelId, audience)) {
+        this.sendEvent(conn, event);
+      }
     }
   }
 
   private sendEvent(conn: Connection, event: WireEvent): void {
-    if (conn.sink.ended) return;
-    if (event.seq > conn.lastSeq) conn.lastSeq = event.seq;
+    if (conn.sink.ended) {
+      return;
+    }
+    if (event.seq > conn.lastSeq) {
+      conn.lastSeq = event.seq;
+    }
     conn.sink.sendEvent(event);
   }
 
-  private async channelType(channelId: string): Promise<Channel["type"] | null> {
+  private async channelType(
+    channelId: string
+  ): Promise<Channel["type"] | null> {
     const cached = this.channelTypes.get(channelId);
-    if (cached) return cached;
+    if (cached) {
+      return cached;
+    }
     const channel = await findChannelRecord(this.db, channelId);
-    if (!channel) return null;
+    if (!channel) {
+      return null;
+    }
     this.channelTypes.set(channelId, channel.type);
     return channel.type;
   }
@@ -304,17 +404,29 @@ export class RealtimeService implements OnApplicationShutdown {
   private membersOf(channelId: string): Promise<Set<string>> {
     const now = Date.now();
     const cached = this.channelMembers.get(channelId);
-    if (cached && cached.expiresAt > now) return cached.members;
+    if (cached && cached.expiresAt > now) {
+      return cached.members;
+    }
 
-    const members = listChannelMemberIds(this.db, channelId).then((ids) => new Set(ids));
-    this.channelMembers.set(channelId, { members, expiresAt: now + MEMBERSHIP_TTL_MS });
+    const members = listChannelMemberIds(this.db, channelId).then(
+      (ids) => new Set(ids)
+    );
+    this.channelMembers.set(channelId, {
+      members,
+      expiresAt: now + MEMBERSHIP_TTL_MS,
+    });
     members.catch(() => this.channelMembers.delete(channelId));
-    if (this.channelMembers.size > 50_000) this.evictExpired(now);
+    if (this.channelMembers.size > 50_000) {
+      this.evictExpired(now);
+    }
     return members;
   }
 
   private evictExpired(now: number): void {
-    for (const [key, value] of this.channelMembers)
-      if (value.expiresAt <= now) this.channelMembers.delete(key);
+    for (const [key, value] of this.channelMembers) {
+      if (value.expiresAt <= now) {
+        this.channelMembers.delete(key);
+      }
+    }
   }
 }

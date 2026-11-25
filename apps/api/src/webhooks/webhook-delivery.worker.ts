@@ -8,12 +8,12 @@ import {
 } from "@nestjs/common";
 import type { ApiEnv } from "@wire/config";
 import {
+  type ClaimedDelivery,
   claimDueDeliveries,
   completeDelivery,
   Database,
   failDelivery,
   pruneDeliveries,
-  type ClaimedDelivery,
 } from "@wire/db";
 import { RepeatErrorLogger } from "../common/logging/repeat-error-logger.js";
 import { API_ENV } from "../config/env.provider.js";
@@ -39,41 +39,54 @@ const DELIVERY_RETENTION_SECONDS = 7 * 24 * 60 * 60;
  * backoff for up to 72h. Every replica may run this — claims use SKIP LOCKED.
  */
 @Injectable()
-export class WebhookDeliveryWorker implements OnApplicationBootstrap, OnApplicationShutdown {
+export class WebhookDeliveryWorker
+  implements OnApplicationBootstrap, OnApplicationShutdown
+{
   private readonly logger = new Logger(WebhookDeliveryWorker.name);
-  private readonly errors = new RepeatErrorLogger(this.logger, "webhook delivery tick failed");
+  private readonly errors = new RepeatErrorLogger(
+    this.logger,
+    "webhook delivery tick failed"
+  );
   private readonly enabled: boolean;
   private readonly checkSsrf: boolean;
   private running = false;
   private stopped = false;
-  private timers: NodeJS.Timeout[] = [];
+  private readonly timers: NodeJS.Timeout[] = [];
 
   constructor(
     @Inject(Database) private readonly db: Database,
     @Inject(API_ENV) env: ApiEnv,
-    private readonly secrets: WebhookSecretBox,
+    private readonly secrets: WebhookSecretBox
   ) {
     this.enabled = env.RUN_WORKERS;
     this.checkSsrf = env.NODE_ENV === "production";
   }
 
   onApplicationBootstrap(): void {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+      return;
+    }
     this.timers.push(setInterval(() => void this.tick(), POLL_INTERVAL_MS));
     this.timers.push(setInterval(() => void this.prune(), PRUNE_INTERVAL_MS));
   }
 
   onApplicationShutdown(): void {
     this.stopped = true;
-    for (const timer of this.timers) clearInterval(timer);
+    for (const timer of this.timers) {
+      clearInterval(timer);
+    }
   }
 
   private async tick(): Promise<void> {
-    if (this.running || this.stopped) return;
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: setInterval can re-enter tick() while a prior tick() is still running, and onApplicationShutdown() sets this.stopped externally
+    if (this.running || this.stopped) {
+      return;
+    }
     this.running = true;
     try {
       let claimed: ClaimedDelivery[];
       do {
+        // biome-ignore lint/performance/noAwaitInLoops: drains batches until empty; each batch depends on the previous one finishing
         claimed = await claimDueDeliveries(this.db, BATCH_SIZE, LEASE_SECONDS);
         await Promise.all(claimed.map((delivery) => this.deliver(delivery)));
       } while (claimed.length === BATCH_SIZE && !this.stopped);
@@ -89,11 +102,16 @@ export class WebhookDeliveryWorker implements OnApplicationBootstrap, OnApplicat
     let statusCode: number | null = null;
     try {
       const url = new URL(delivery.url);
-      if (this.checkSsrf) await assertPublicHost(url.hostname);
+      if (this.checkSsrf) {
+        await assertPublicHost(url.hostname);
+      }
 
       const body = JSON.stringify(delivery.payload);
       const timestamp = Math.floor(Date.now() / 1000);
-      const signature = createHmac("sha256", this.secrets.open(delivery.secretCiphertext))
+      const signature = createHmac(
+        "sha256",
+        this.secrets.open(delivery.secretCiphertext)
+      )
         .update(`${timestamp}.${body}`)
         .digest("hex");
 
@@ -125,7 +143,9 @@ export class WebhookDeliveryWorker implements OnApplicationBootstrap, OnApplicat
         error: (err as Error).message,
         retryInSeconds: this.retryDelay(delivery),
       }).catch((dbErr: unknown) =>
-        this.logger.error(`recording webhook failure: ${(dbErr as Error).message}`),
+        this.logger.error(
+          `recording webhook failure: ${(dbErr as Error).message}`
+        )
       );
     }
   }
@@ -145,13 +165,17 @@ export class WebhookDeliveryWorker implements OnApplicationBootstrap, OnApplicat
   private async prune(): Promise<void> {
     try {
       while (
+        // biome-ignore lint/suspicious/noUnnecessaryConditions: onApplicationShutdown() sets this.stopped externally, invisible to this method's own analysis
         !this.stopped &&
+        // biome-ignore lint/performance/noAwaitInLoops: deletes in bounded batches until none remain; each batch depends on the previous one finishing
         (await pruneDeliveries(this.db, DELIVERY_RETENTION_SECONDS, 5000)) > 0
       ) {
         // keep deleting in bounded batches
       }
     } catch (err) {
-      this.logger.warn(`webhook delivery prune failed: ${(err as Error).message}`);
+      this.logger.warn(
+        `webhook delivery prune failed: ${(err as Error).message}`
+      );
     }
   }
 }

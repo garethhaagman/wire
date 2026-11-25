@@ -1,12 +1,12 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import type { Redis } from "ioredis";
 import type { PresenceEntry } from "@wire/types";
+import type { Redis } from "ioredis";
 import { REDIS, warnRedisFailure } from "../redis/redis.module.js";
-import { workspaceChannel, type RealtimeEnvelope } from "./realtime-channel.js";
+import { type RealtimeEnvelope, workspaceChannel } from "./realtime-channel.js";
 
 /** A member is "active" if they heartbeated within this window. */
 const ACTIVE_WINDOW_MS = 60_000;
-const TYPING_THROTTLE_MS = 3_000;
+const TYPING_THROTTLE_MS = 3000;
 
 /**
  * Records the heartbeat and reports whether this is an offline→online transition,
@@ -46,7 +46,7 @@ export class PresenceService {
         memberId,
         now,
         ACTIVE_WINDOW_MS,
-        24 * 60 * 60_000,
+        24 * 60 * 60_000
       );
       if (cameOnline === 1) {
         await this.publish({
@@ -58,7 +58,12 @@ export class PresenceService {
         });
       }
     } catch (err) {
-      warnRedisFailure(this.redis, this.logger, "presence heartbeat failed", err);
+      warnRedisFailure(
+        this.redis,
+        this.logger,
+        "presence heartbeat failed",
+        err
+      );
     }
   }
 
@@ -67,14 +72,19 @@ export class PresenceService {
       presenceKey(workspaceId),
       Date.now() - ACTIVE_WINDOW_MS,
       "+inf",
-      "WITHSCORES",
+      "WITHSCORES"
     );
     const entries: PresenceEntry[] = [];
     for (let i = 0; i < raw.length; i += 2) {
+      const memberId = raw[i];
+      const score = raw[i + 1];
+      if (memberId === undefined || score === undefined) {
+        continue;
+      }
       entries.push({
-        memberId: raw[i]!,
+        memberId,
         status: "active",
-        lastSeenAt: new Date(Number(raw[i + 1])).toISOString(),
+        lastSeenAt: new Date(Number(score)).toISOString(),
       });
     }
     return entries;
@@ -85,16 +95,18 @@ export class PresenceService {
     workspaceId: string,
     channelId: string,
     memberId: string,
-    threadRootId: string | null,
+    threadRootId: string | null
   ): Promise<void> {
     const acquired = await this.redis.set(
       `wire:typing:${channelId}:${memberId}`,
       "1",
       "PX",
       TYPING_THROTTLE_MS,
-      "NX",
+      "NX"
     );
-    if (acquired !== "OK") return;
+    if (acquired !== "OK") {
+      return;
+    }
     await this.publish({
       kind: "ephemeral",
       type: "typing",
@@ -104,7 +116,12 @@ export class PresenceService {
     });
   }
 
-  private async publish(envelope: Extract<RealtimeEnvelope, { kind: "ephemeral" }>): Promise<void> {
-    await this.redis.publish(workspaceChannel(envelope.workspaceId), JSON.stringify(envelope));
+  private async publish(
+    envelope: Extract<RealtimeEnvelope, { kind: "ephemeral" }>
+  ): Promise<void> {
+    await this.redis.publish(
+      workspaceChannel(envelope.workspaceId),
+      JSON.stringify(envelope)
+    );
   }
 }

@@ -1,5 +1,10 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { Database, deleteBookmark, insertBookmark, listBookmarks } from "@wire/db";
+import {
+  Database,
+  deleteBookmark,
+  insertBookmark,
+  listBookmarks,
+} from "@wire/db";
 import type { Bookmark } from "@wire/types";
 import { ChannelAccessService } from "../channels/channel-access.service.js";
 import { ResourceConflictException } from "../common/errors/api-exception.js";
@@ -10,13 +15,13 @@ import type { WorkspaceActor } from "../permissions/actor.js";
 export class BookmarksService {
   constructor(
     @Inject(Database) private readonly db: Database,
-    private readonly access: ChannelAccessService,
+    private readonly access: ChannelAccessService
   ) {}
 
   list(
     actor: WorkspaceActor,
     page: number,
-    perPage: number,
+    perPage: number
   ): Promise<{ items: Bookmark[]; total: number }> {
     return listBookmarks(this.db, actor.member.id, page, perPage);
   }
@@ -29,7 +34,9 @@ export class BookmarksService {
       messageId,
     });
     if (!bookmark) {
-      throw new ResourceConflictException(`Message ${messageId} is already bookmarked`);
+      throw new ResourceConflictException(
+        `Message ${messageId} is already bookmarked`
+      );
     }
     return bookmark;
   }

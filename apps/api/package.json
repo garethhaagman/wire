@@ -4,14 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --watch src/main.ts",
     "build": "echo 'no build step — bun runs src/main.ts directly' && exit 0",
-    "start": "bun src/main.ts",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
+    "dev": "bun --watch src/main.ts",
     "generate": "nest generate",
+    "lint:wire-rules": "eslint .",
     "openapi:export": "bun scripts/export-openapi.ts",
-    "seed": "bun scripts/seed-dev.ts"
+    "seed": "bun scripts/seed-dev.ts",
+    "start": "bun src/main.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.107",
@@ -33,6 +33,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "ioredis": "^5.4.2",
+    "pg": "^8.13.1",
     "reflect-metadata": "^0.2.2",
     "resend": "^6.39.0",
     "rxjs": "^7.8.1",

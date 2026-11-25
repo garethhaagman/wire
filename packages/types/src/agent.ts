@@ -1,13 +1,13 @@
 /** Mirrors internal-docs/data-model/data-model.md `agents` table */
 export interface Agent {
-  id: `agt_${string}`;
-  workspaceId: string;
+  createdAt: string;
   handle: string;
   harnessId: string;
+  id: `agt_${string}`;
   permissionSetId: string | null;
   status: "active" | "paused" | "deleted";
-  createdAt: string;
   updatedAt: string;
+  workspaceId: string;
 }
 
 export interface CreateAgentRequest {
@@ -22,32 +22,32 @@ export interface UpdateAgentRequest {
 
 /** Mirrors internal-docs/data-model/data-model.md `agent_runs` table */
 export interface AgentRun {
-  id: `run_${string}`;
-  workspaceId: string;
   agentId: `agt_${string}`;
-  triggeredByMessageId: `msg_${string}` | null;
   channelId: string | null;
-  status: "queued" | "running" | "succeeded" | "failed";
+  createdAt: string;
+  error: string | null;
+  finishedAt: string | null;
+  id: `run_${string}`;
   input: { prompt: string; context?: Record<string, unknown> };
   output: string | null;
-  error: string | null;
   startedAt: string | null;
-  finishedAt: string | null;
-  createdAt: string;
+  status: "queued" | "running" | "succeeded" | "failed";
+  triggeredByMessageId: `msg_${string}` | null;
   updatedAt: string;
+  workspaceId: string;
 }
 
 /** Mirrors internal-docs/data-model/data-model.md `agent_run_steps` table */
 export interface AgentRunStep {
+  createdAt: string;
+  data: unknown;
   id: `step_${string}`;
   runId: `run_${string}`;
   seq: number;
   type: "model_call" | "tool_call" | "tool_result" | "final";
-  data: unknown;
-  createdAt: string;
 }
 
 export interface CreateAgentRunRequest {
-  prompt: string;
   channelId?: string;
+  prompt: string;
 }

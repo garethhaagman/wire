@@ -53,16 +53,37 @@ export const baseUiConfig: UiConfig = {
     {
       id: "default",
       name: "Default",
-      description: "Standard three-pane layout: nav rail, channel sidebar, main content.",
+      description:
+        "Standard three-pane layout: nav rail, channel sidebar, main content.",
       slots: {
-        "nav.primary": { placement: "sidebar-left", variant: "default", props: {} },
-        "nav.workspaceSwitcher": { placement: "sidebar-left", variant: "default", props: {} },
-        "sidebar.channelList": { placement: "sidebar-left", variant: "default", props: {} },
+        "nav.primary": {
+          placement: "sidebar-left",
+          variant: "default",
+          props: {},
+        },
+        "nav.workspaceSwitcher": {
+          placement: "sidebar-left",
+          variant: "default",
+          props: {},
+        },
+        "sidebar.channelList": {
+          placement: "sidebar-left",
+          variant: "default",
+          props: {},
+        },
         topbar: { placement: "top", variant: "default", props: {} },
         composer: { placement: "bottom", variant: "default", props: {} },
-        "thread.panel": { placement: "sidebar-right", variant: "default", props: {} },
+        "thread.panel": {
+          placement: "sidebar-right",
+          variant: "default",
+          props: {},
+        },
         "search.trigger": { placement: "top", variant: "default", props: {} },
-        "command.palette": { placement: "floating", variant: "default", props: {} },
+        "command.palette": {
+          placement: "floating",
+          variant: "default",
+          props: {},
+        },
       },
     },
   ],

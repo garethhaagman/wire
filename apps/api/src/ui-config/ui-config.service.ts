@@ -1,5 +1,4 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { ZodError } from "zod";
 import {
   Database,
   getOrgUiConfig,
@@ -7,23 +6,33 @@ import {
   setOrgUiConfig,
   setUiConfigOverride,
 } from "@wire/db";
-import { resolveUiConfig, uiConfigOverrideSchema, lockSetSchema } from "@wire/ui-config";
 import type { UiConfigResource } from "@wire/types";
+import {
+  lockSetSchema,
+  resolveUiConfig,
+  uiConfigOverrideSchema,
+} from "@wire/ui-config";
+import { ZodError } from "zod";
 import { ValidationException } from "../common/errors/api-exception.js";
 import type { WorkspaceActor } from "../permissions/actor.js";
 
-function parseOrThrow<T>(schema: { parse: (input: unknown) => T }, input: unknown): T {
+function parseOrThrow<T>(
+  schema: { parse: (input: unknown) => T },
+  input: unknown
+): T {
   try {
     return schema.parse(input);
   } catch (err) {
     if (err instanceof ZodError) {
-      throw new ValidationException(
+      const validationException = new ValidationException(
         err.issues.map((issue) => ({
           field: issue.path.join("."),
           code: issue.code.toUpperCase(),
           message: issue.message,
-        })),
+        }))
       );
+      validationException.cause = err;
+      throw validationException;
     }
     throw err;
   }
@@ -48,16 +57,27 @@ export class UiConfigService {
     ]);
 
     const { config, warnings } = resolveUiConfig({
-      org: org ? this.stored(uiConfigOverrideSchema, org.override, "org override") : undefined,
-      locks: org ? this.stored(lockSetSchema, org.locks, "org locks") : undefined,
-      user: user === null ? undefined : this.stored(uiConfigOverrideSchema, user, "user override"),
+      org: org
+        ? this.stored(uiConfigOverrideSchema, org.override, "org override")
+        : undefined,
+      locks: org
+        ? this.stored(lockSetSchema, org.locks, "org locks")
+        : undefined,
+      user:
+        user === null
+          ? undefined
+          : this.stored(uiConfigOverrideSchema, user, "user override"),
     });
 
     return { workspaceId: actor.workspaceId, resolved: config, warnings };
   }
 
   /** Admin-only — see @RequirePermission("manage", "UiConfig") on the controller route. */
-  async setOrgLayer(actor: WorkspaceActor, override: unknown, locks: unknown): Promise<void> {
+  async setOrgLayer(
+    actor: WorkspaceActor,
+    override: unknown,
+    locks: unknown
+  ): Promise<void> {
     await setOrgUiConfig(this.db, actor.workspaceId, {
       override: parseOrThrow(uiConfigOverrideSchema, override),
       locks: parseOrThrow(lockSetSchema, locks),
@@ -69,14 +89,18 @@ export class UiConfigService {
     await setUiConfigOverride(
       this.db,
       actor.member.id,
-      parseOrThrow(uiConfigOverrideSchema, override),
+      parseOrThrow(uiConfigOverrideSchema, override)
     );
   }
 
   private stored<T>(
-    schema: { safeParse: (input: unknown) => { success: true; data: T } | { success: false } },
+    schema: {
+      safeParse: (
+        input: unknown
+      ) => { success: true; data: T } | { success: false };
+    },
     value: unknown,
-    label: string,
+    label: string
   ): T | undefined {
     const result = schema.safeParse(value);
     if (!result.success) {

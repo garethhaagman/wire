@@ -13,18 +13,21 @@ export function ChannelListDefault(_props: SlotProps): React.JSX.Element {
   const Icon = useIcon();
 
   return (
-    <div className="flex h-full w-60 flex-col border-r border-border bg-muted px-3 py-4">
-      <h2 className="mb-3 px-1 text-sm font-semibold text-foreground">
+    <div className="border-border bg-muted flex h-full w-60 flex-col border-r px-3 py-4">
+      <h2 className="text-foreground mb-3 px-1 text-sm font-semibold">
         {config.branding.productName}
       </h2>
       <ul className="flex flex-col gap-0.5">
         {PLACEHOLDER_CHANNELS.map((channel) => (
           <li key={channel.id}>
             <button
+              className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors"
               type="button"
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             >
-              <Icon name={channel.private ? "lock" : "hash"} className="h-4 w-4 shrink-0" />
+              <Icon
+                className="h-4 w-4 shrink-0"
+                name={channel.private ? "lock" : "hash"}
+              />
               <span className="truncate">{channel.name}</span>
             </button>
           </li>

@@ -36,16 +36,16 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `create unique index "UQ_members_workspace_email" on "members" ("workspace_id", lower("email"))`,
+      `create unique index "UQ_members_workspace_email" on "members" ("workspace_id", lower("email"))`
     );
     await queryRunner.query(
-      `create unique index "UQ_members_workspace_user" on "members" ("workspace_id", "user_id") where "user_id" is not null`,
+      `create unique index "UQ_members_workspace_user" on "members" ("workspace_id", "user_id") where "user_id" is not null`
     );
     await queryRunner.query(
-      `create index "IDX_members_user" on "members" ("user_id") where "user_id" is not null`,
+      `create index "IDX_members_user" on "members" ("user_id") where "user_id" is not null`
     );
     await queryRunner.query(
-      `create index "IDX_members_unclaimed_email" on "members" (lower("email")) where "user_id" is null`,
+      `create index "IDX_members_unclaimed_email" on "members" (lower("email")) where "user_id" is null`
     );
 
     await queryRunner.query(`
@@ -67,13 +67,13 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `create unique index "UQ_channels_workspace_name" on "channels" ("workspace_id", lower("name")) where "type" in ('public', 'private')`,
+      `create unique index "UQ_channels_workspace_name" on "channels" ("workspace_id", lower("name")) where "type" in ('public', 'private')`
     );
     await queryRunner.query(
-      `create unique index "UQ_channels_workspace_dm_key" on "channels" ("workspace_id", "dm_key") where "dm_key" is not null`,
+      `create unique index "UQ_channels_workspace_dm_key" on "channels" ("workspace_id", "dm_key") where "dm_key" is not null`
     );
     await queryRunner.query(
-      `create index "IDX_channels_workspace_type" on "channels" ("workspace_id", "type")`,
+      `create index "IDX_channels_workspace_type" on "channels" ("workspace_id", "type")`
     );
 
     await queryRunner.query(`
@@ -87,7 +87,7 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `create index "IDX_channel_members_member" on "channel_members" ("member_id")`,
+      `create index "IDX_channel_members_member" on "channel_members" ("member_id")`
     );
 
     await queryRunner.query(`
@@ -117,13 +117,13 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
     // Channel history reads only top-level messages and thread broadcasts; a partial
     // index keeps that keyset scan from walking every thread reply.
     await queryRunner.query(
-      `create index "IDX_messages_channel_history" on "messages" ("channel_id", "seq") where "thread_root_id" is null or "broadcast"`,
+      `create index "IDX_messages_channel_history" on "messages" ("channel_id", "seq") where "thread_root_id" is null or "broadcast"`
     );
     await queryRunner.query(
-      `create index "IDX_messages_thread" on "messages" ("thread_root_id", "seq") where "thread_root_id" is not null`,
+      `create index "IDX_messages_thread" on "messages" ("thread_root_id", "seq") where "thread_root_id" is not null`
     );
     await queryRunner.query(
-      `create index "IDX_messages_search" on "messages" using gin ("search_vector")`,
+      `create index "IDX_messages_search" on "messages" using gin ("search_vector")`
     );
 
     await queryRunner.query(`
@@ -147,7 +147,7 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `create index "IDX_thread_participants_member" on "thread_participants" ("member_id")`,
+      `create index "IDX_thread_participants_member" on "thread_participants" ("member_id")`
     );
 
     await queryRunner.query(`
@@ -185,7 +185,7 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `create index "IDX_bookmarks_member_created" on "bookmarks" ("member_id", "created_at" desc)`,
+      `create index "IDX_bookmarks_member_created" on "bookmarks" ("member_id", "created_at" desc)`
     );
 
     await queryRunner.query(`
@@ -201,7 +201,7 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `create unique index "UQ_agents_workspace_handle" on "agents" ("workspace_id", "handle") where "status" <> 'deleted'`,
+      `create unique index "UQ_agents_workspace_handle" on "agents" ("workspace_id", "handle") where "status" <> 'deleted'`
     );
 
     await queryRunner.query(`
@@ -218,7 +218,7 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `create index "IDX_files_channel_created" on "files" ("channel_id", "created_at" desc)`,
+      `create index "IDX_files_channel_created" on "files" ("channel_id", "created_at" desc)`
     );
 
     await queryRunner.query(`
@@ -234,7 +234,7 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `create index "IDX_webhook_endpoints_workspace" on "webhook_endpoints" ("workspace_id")`,
+      `create index "IDX_webhook_endpoints_workspace" on "webhook_endpoints" ("workspace_id")`
     );
 
     // Transactional outbox: written in the same transaction as the mutation it
@@ -252,10 +252,10 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `create index "IDX_events_unpublished" on "events" ("seq") where "published_at" is null`,
+      `create index "IDX_events_unpublished" on "events" ("seq") where "published_at" is null`
     );
     await queryRunner.query(
-      `create index "IDX_events_workspace_seq" on "events" ("workspace_id", "seq")`,
+      `create index "IDX_events_workspace_seq" on "events" ("workspace_id", "seq")`
     );
 
     await queryRunner.query(`
@@ -276,7 +276,7 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `create index "IDX_webhook_deliveries_due" on "webhook_deliveries" ("next_attempt_at") where "status" = 'pending'`,
+      `create index "IDX_webhook_deliveries_due" on "webhook_deliveries" ("next_attempt_at") where "status" = 'pending'`
     );
 
     await queryRunner.query(`
@@ -294,7 +294,7 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `create index "IDX_audit_events_workspace_created" on "audit_events" ("workspace_id", "created_at" desc)`,
+      `create index "IDX_audit_events_workspace_created" on "audit_events" ("workspace_id", "created_at" desc)`
     );
 
     // Backfill: workspaces created before members existed get their creator (org_id
@@ -334,6 +334,7 @@ export class CreateMessagingSchema1700000000001 implements MigrationInterface {
       "channels",
       "members",
     ]) {
+      // biome-ignore lint/performance/noAwaitInLoops: drop order must respect FK dependencies, and queries on one QueryRunner connection can't run concurrently
       await queryRunner.query(`drop table if exists "${table}"`);
     }
     await queryRunner.query(`

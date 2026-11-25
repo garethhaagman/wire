@@ -17,7 +17,9 @@ export class AddFileStorageKey1700000000003 implements MigrationInterface {
         add column "storage_key" text not null default '',
         add column "size_confirmed" boolean not null default false
     `);
-    await queryRunner.query(`alter table "files" alter column "storage_key" drop default`);
+    await queryRunner.query(
+      `alter table "files" alter column "storage_key" drop default`
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

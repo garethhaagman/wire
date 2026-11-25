@@ -11,6 +11,8 @@ export function newId<P extends string>(prefix: P): `${P}_${string}` {
   let time = Date.now();
   const timeChars: string[] = [];
   for (let i = 0; i < 10; i++) {
+    // `% 32` is always in [0, 31], CROCKFORD has exactly 32 chars.
+    // biome-ignore lint/style/noNonNullAssertion: index is mathematically in-bounds
     timeChars.unshift(CROCKFORD[time % 32]!);
     time = Math.floor(time / 32);
   }

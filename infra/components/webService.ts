@@ -3,15 +3,18 @@ import * as docker from "@pulumi/docker";
 import * as pulumi from "@pulumi/pulumi";
 
 export interface WebServiceArgs {
-  networkName: pulumi.Input<string>;
-  port: pulumi.Input<number>;
   apiUrl: pulumi.Input<string>;
   dependsOn?: pulumi.Resource[];
+  networkName: pulumi.Input<string>;
+  port: pulumi.Input<number>;
 }
 
 const repoRoot = path.resolve(__dirname, "..", "..");
 
-export function createWebService(name: string, args: WebServiceArgs): docker.Container {
+export function createWebService(
+  name: string,
+  args: WebServiceArgs
+): docker.Container {
   const image = new docker.Image(`${name}-web-image`, {
     build: {
       context: repoRoot,
@@ -30,6 +33,6 @@ export function createWebService(name: string, args: WebServiceArgs): docker.Con
       networksAdvanced: [{ name: args.networkName, aliases: ["web"] }],
       restart: "unless-stopped",
     },
-    args.dependsOn ? { dependsOn: args.dependsOn } : undefined,
+    args.dependsOn ? { dependsOn: args.dependsOn } : undefined
   );
 }

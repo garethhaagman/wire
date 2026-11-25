@@ -1,7 +1,7 @@
-import { InternalServerErrorException } from "@nestjs/common";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { mkdir, open, stat } from "node:fs/promises";
 import path from "node:path";
+import { InternalServerErrorException } from "@nestjs/common";
 import type { ApiEnv } from "@wire/config";
 import type { StorageAdapter } from "./storage-adapter.interface.js";
 
@@ -26,7 +26,11 @@ export class LocalDiskAdapter implements StorageAdapter {
     this.baseUrl = `http://localhost:${env.PORT}`;
   }
 
-  createUploadUrl(input: { key: string; mime: string; sizeBytes: number }): Promise<{
+  createUploadUrl(input: {
+    key: string;
+    mime: string;
+    sizeBytes: number;
+  }): Promise<{
     uploadUrl: string;
     method: "PUT";
     headers?: Record<string, string>;
@@ -45,7 +49,9 @@ export class LocalDiskAdapter implements StorageAdapter {
     });
   }
 
-  async confirmUpload(input: { key: string }): Promise<{ exists: boolean; sizeBytes: number }> {
+  async confirmUpload(input: {
+    key: string;
+  }): Promise<{ exists: boolean; sizeBytes: number }> {
     try {
       const info = await stat(this.resolveKey(input.key));
       return { exists: info.isFile(), sizeBytes: info.size };
@@ -56,15 +62,22 @@ export class LocalDiskAdapter implements StorageAdapter {
 
   /** Verifies an incoming request's `?token=` query param. Format: `<expiresAtMs>.<hmacHex>`. */
   verifyToken(key: string, token: string | undefined): boolean {
-    if (!token) return false;
+    if (!token) {
+      return false;
+    }
     const [expiresAtRaw, mac] = token.split(".");
     const expiresAt = Number(expiresAtRaw);
-    if (!mac || !Number.isFinite(expiresAt) || expiresAt < Date.now()) return false;
+    if (!(mac && Number.isFinite(expiresAt)) || expiresAt < Date.now()) {
+      return false;
+    }
 
     const expected = this.hmac(key, expiresAt);
     const expectedBuf = Buffer.from(expected, "hex");
     const macBuf = Buffer.from(mac, "hex");
-    return expectedBuf.length === macBuf.length && timingSafeEqual(expectedBuf, macBuf);
+    return (
+      expectedBuf.length === macBuf.length &&
+      timingSafeEqual(expectedBuf, macBuf)
+    );
   }
 
   /** Streams a raw PUT body straight to disk. Caller (controller) owns the Express request stream. */
@@ -88,7 +101,9 @@ export class LocalDiskAdapter implements StorageAdapter {
   resolveKey(key: string): string {
     const resolved = path.resolve(this.dir, key);
     if (!resolved.startsWith(this.dir + path.sep) && resolved !== this.dir) {
-      throw new InternalServerErrorException(`Rejected storage key escaping upload dir: ${key}`);
+      throw new InternalServerErrorException(
+        `Rejected storage key escaping upload dir: ${key}`
+      );
     }
     return resolved;
   }
@@ -98,6 +113,8 @@ export class LocalDiskAdapter implements StorageAdapter {
   }
 
   private hmac(key: string, expiresAt: number): string {
-    return createHmac("sha256", this.secret).update(`${key}:${expiresAt}`).digest("hex");
+    return createHmac("sha256", this.secret)
+      .update(`${key}:${expiresAt}`)
+      .digest("hex");
   }
 }

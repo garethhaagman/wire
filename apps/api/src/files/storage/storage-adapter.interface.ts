@@ -6,14 +6,21 @@
  * agents/model-selection.ts's selectModel()).
  */
 export interface StorageAdapter {
-  createUploadUrl(input: { key: string; mime: string; sizeBytes: number }): Promise<{
+  /** Verifies the object exists post-upload and returns its actual size — never trust the client-claimed size. */
+  confirmUpload: (input: {
+    key: string;
+  }) => Promise<{ exists: boolean; sizeBytes: number }>;
+
+  createDownloadUrl: (input: {
+    key: string;
+  }) => Promise<{ downloadUrl: string }>;
+  createUploadUrl: (input: {
+    key: string;
+    mime: string;
+    sizeBytes: number;
+  }) => Promise<{
     uploadUrl: string;
     method: "PUT";
     headers?: Record<string, string>;
   }>;
-
-  createDownloadUrl(input: { key: string }): Promise<{ downloadUrl: string }>;
-
-  /** Verifies the object exists post-upload and returns its actual size — never trust the client-claimed size. */
-  confirmUpload(input: { key: string }): Promise<{ exists: boolean; sizeBytes: number }>;
 }

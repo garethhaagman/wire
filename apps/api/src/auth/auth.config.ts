@@ -1,7 +1,7 @@
+import type { ApiEnv } from "@wire/config";
+import type { Pool } from "@wire/db";
 import { betterAuth } from "better-auth";
 import type { Redis } from "ioredis";
-import type { Pool } from "@wire/db";
-import type { ApiEnv } from "@wire/config";
 
 /**
  * Better Auth owns its own schema (packages/db/migrations/0002_create_auth_tables.sql)
@@ -21,7 +21,12 @@ export function createAuth(env: ApiEnv, pool: Pool, redis?: Redis) {
     },
     socialProviders:
       env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
-        ? { google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET } }
+        ? {
+            google: {
+              clientId: env.GOOGLE_CLIENT_ID,
+              clientSecret: env.GOOGLE_CLIENT_SECRET,
+            },
+          }
         : {},
     ...(redis
       ? {
@@ -29,8 +34,10 @@ export function createAuth(env: ApiEnv, pool: Pool, redis?: Redis) {
           // session checks fall through to Postgres. `delete` must not: a swallowed
           // delete would resurrect a revoked session from the cache once Redis returns.
           secondaryStorage: {
-            get: (key: string) => redis.get(`wire:auth:${key}`).catch(() => null),
-            getAndDelete: (key: string) => redis.getdel(`wire:auth:${key}`).catch(() => null),
+            get: (key: string) =>
+              redis.get(`wire:auth:${key}`).catch(() => null),
+            getAndDelete: (key: string) =>
+              redis.getdel(`wire:auth:${key}`).catch(() => null),
             increment: async (key: string, ttl: number) => {
               try {
                 const [[, count]] = (await redis

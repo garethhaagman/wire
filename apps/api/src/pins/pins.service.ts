@@ -1,5 +1,11 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { appendEvents, Database, deletePin, insertPin, listPins } from "@wire/db";
+import {
+  appendEvents,
+  Database,
+  deletePin,
+  insertPin,
+  listPins,
+} from "@wire/db";
 import type { Pin } from "@wire/types";
 import { ChannelAccessService } from "../channels/channel-access.service.js";
 import { ResourceConflictException } from "../common/errors/api-exception.js";
@@ -11,7 +17,7 @@ export class PinsService {
   constructor(
     @Inject(Database) private readonly db: Database,
     private readonly access: ChannelAccessService,
-    private readonly relay: OutboxRelayService,
+    private readonly relay: OutboxRelayService
   ) {}
 
   async list(actor: WorkspaceActor, channelId: string): Promise<Pin[]> {
@@ -19,7 +25,11 @@ export class PinsService {
     return listPins(this.db, channelId);
   }
 
-  async add(actor: WorkspaceActor, channelId: string, messageId: string): Promise<Pin> {
+  async add(
+    actor: WorkspaceActor,
+    channelId: string,
+    messageId: string
+  ): Promise<Pin> {
     await this.access.writable(actor, channelId);
     await this.access.readableMessage(actor, messageId, { channelId });
 
@@ -32,33 +42,49 @@ export class PinsService {
       });
       if (inserted) {
         await appendEvents(tx, [
-          { workspaceId: actor.workspaceId, type: "pin.added", channelId, data: { pin: inserted } },
+          {
+            workspaceId: actor.workspaceId,
+            type: "pin.added",
+            channelId,
+            data: { pin: inserted },
+          },
         ]);
       }
       return inserted;
     });
     if (!pin) {
       throw new ResourceConflictException(
-        `Message ${messageId} is already pinned in channel ${channelId}`,
+        `Message ${messageId} is already pinned in channel ${channelId}`
       );
     }
     this.relay.kick();
     return pin;
   }
 
-  async remove(actor: WorkspaceActor, channelId: string, pinId: string): Promise<void> {
+  async remove(
+    actor: WorkspaceActor,
+    channelId: string,
+    pinId: string
+  ): Promise<void> {
     await this.access.writable(actor, channelId);
     const removed = await this.db.tx(async (tx) => {
       const pin = await deletePin(tx, channelId, pinId);
       if (pin) {
         await appendEvents(tx, [
-          { workspaceId: actor.workspaceId, type: "pin.removed", channelId, data: { pin } },
+          {
+            workspaceId: actor.workspaceId,
+            type: "pin.removed",
+            channelId,
+            data: { pin },
+          },
         ]);
       }
       return pin;
     });
     if (!removed) {
-      throw new NotFoundException(`No pin with id ${pinId} in channel ${channelId}`);
+      throw new NotFoundException(
+        `No pin with id ${pinId} in channel ${channelId}`
+      );
     }
     this.relay.kick();
   }

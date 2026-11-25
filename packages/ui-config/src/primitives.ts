@@ -46,7 +46,11 @@ export type ColorRoles = z.infer<typeof colorRolesSchema>;
 export const fontSourceSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("system") }),
   z.object({ kind: z.literal("google"), family: z.string().min(1) }),
-  z.object({ kind: z.literal("custom"), family: z.string().min(1), url: z.string().url() }),
+  z.object({
+    kind: z.literal("custom"),
+    family: z.string().min(1),
+    url: z.string().url(),
+  }),
 ]);
 
 export type FontSource = z.infer<typeof fontSourceSchema>;
@@ -75,7 +79,11 @@ export const radiusSchema = z.enum(["none", "sm", "md", "lg", "xl", "full"]);
 export const iconPackSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("lucide") }),
   z.object({ kind: z.literal("phosphor") }),
-  z.object({ kind: z.literal("custom"), id: z.string().min(1), spriteUrl: z.string().url() }),
+  z.object({
+    kind: z.literal("custom"),
+    id: z.string().min(1),
+    spriteUrl: z.string().url(),
+  }),
 ]);
 
 export type IconPack = z.infer<typeof iconPackSchema>;

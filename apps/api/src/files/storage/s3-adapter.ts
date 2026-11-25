@@ -1,11 +1,11 @@
-import { InternalServerErrorException } from "@nestjs/common";
 import {
-  HeadObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { InternalServerErrorException } from "@nestjs/common";
 import type { ApiEnv } from "@wire/config";
 import type { StorageAdapter } from "./storage-adapter.interface.js";
 
@@ -21,9 +21,16 @@ export class S3Adapter implements StorageAdapter {
   private readonly bucket: string;
 
   constructor(env: ApiEnv) {
-    if (!env.S3_BUCKET || !env.S3_REGION || !env.S3_ACCESS_KEY_ID || !env.S3_SECRET_ACCESS_KEY) {
+    if (
+      !(
+        env.S3_BUCKET &&
+        env.S3_REGION &&
+        env.S3_ACCESS_KEY_ID &&
+        env.S3_SECRET_ACCESS_KEY
+      )
+    ) {
       throw new InternalServerErrorException(
-        "S3Adapter requires S3_BUCKET, S3_REGION, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY.",
+        "S3Adapter requires S3_BUCKET, S3_REGION, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY."
       );
     }
     this.bucket = env.S3_BUCKET;
@@ -45,7 +52,11 @@ export class S3Adapter implements StorageAdapter {
     });
   }
 
-  async createUploadUrl(input: { key: string; mime: string; sizeBytes: number }): Promise<{
+  async createUploadUrl(input: {
+    key: string;
+    mime: string;
+    sizeBytes: number;
+  }): Promise<{
     uploadUrl: string;
     method: "PUT";
     headers?: Record<string, string>;
@@ -59,21 +70,32 @@ export class S3Adapter implements StorageAdapter {
     const uploadUrl = await getSignedUrl(this.client, command, {
       expiresIn: SIGNED_URL_TTL_SECONDS,
     });
-    return { uploadUrl, method: "PUT", headers: { "Content-Type": input.mime } };
+    return {
+      uploadUrl,
+      method: "PUT",
+      headers: { "Content-Type": input.mime },
+    };
   }
 
-  async createDownloadUrl(input: { key: string }): Promise<{ downloadUrl: string }> {
-    const command = new GetObjectCommand({ Bucket: this.bucket, Key: input.key });
+  async createDownloadUrl(input: {
+    key: string;
+  }): Promise<{ downloadUrl: string }> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: input.key,
+    });
     const downloadUrl = await getSignedUrl(this.client, command, {
       expiresIn: SIGNED_URL_TTL_SECONDS,
     });
     return { downloadUrl };
   }
 
-  async confirmUpload(input: { key: string }): Promise<{ exists: boolean; sizeBytes: number }> {
+  async confirmUpload(input: {
+    key: string;
+  }): Promise<{ exists: boolean; sizeBytes: number }> {
     try {
       const head = await this.client.send(
-        new HeadObjectCommand({ Bucket: this.bucket, Key: input.key }),
+        new HeadObjectCommand({ Bucket: this.bucket, Key: input.key })
       );
       return { exists: true, sizeBytes: head.ContentLength ?? 0 };
     } catch {

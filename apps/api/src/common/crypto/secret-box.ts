@@ -1,4 +1,9 @@
-import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from "node:crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  hkdfSync,
+  randomBytes,
+} from "node:crypto";
 
 const VERSION = "v1";
 const IV_BYTES = 12;
@@ -16,13 +21,18 @@ export class SecretBox {
   private readonly key: Buffer;
 
   constructor(rootSecret: string, purpose: string) {
-    this.key = Buffer.from(hkdfSync("sha256", rootSecret, "wire-secret-box", purpose, 32));
+    this.key = Buffer.from(
+      hkdfSync("sha256", rootSecret, "wire-secret-box", purpose, 32)
+    );
   }
 
   seal(plaintext: string): string {
     const iv = randomBytes(IV_BYTES);
     const cipher = createCipheriv("aes-256-gcm", this.key, iv);
-    const ciphertext = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
+    const ciphertext = Buffer.concat([
+      cipher.update(plaintext, "utf8"),
+      cipher.final(),
+    ]);
     return [VERSION, iv, cipher.getAuthTag(), ciphertext]
       .map((p) => (typeof p === "string" ? p : p.toString("base64url")))
       .join(".");
@@ -33,9 +43,14 @@ export class SecretBox {
     if (version !== VERSION || !iv || !tag || ciphertext === undefined) {
       throw new SecretBoxError("Malformed sealed secret");
     }
-    const decipher = createDecipheriv("aes-256-gcm", this.key, Buffer.from(iv, "base64url"), {
-      authTagLength: TAG_BYTES,
-    });
+    const decipher = createDecipheriv(
+      "aes-256-gcm",
+      this.key,
+      Buffer.from(iv, "base64url"),
+      {
+        authTagLength: TAG_BYTES,
+      }
+    );
     decipher.setAuthTag(Buffer.from(tag, "base64url"));
     return Buffer.concat([
       decipher.update(Buffer.from(ciphertext, "base64url")),

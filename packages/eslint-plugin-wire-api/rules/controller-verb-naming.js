@@ -9,18 +9,19 @@
  * @type {import("eslint").Rule.RuleModule}
  */
 const ALLOWED_NAMES = {
-  Get: /^(list|get|getById|find)([A-Z]\w*)?$/,
-  Post: /^(create|add|execute|run|reply|approve|reject)([A-Z]\w*)?$/,
-  Put: /^(replace|set)([A-Z]\w*)?$/,
-  Patch: /^(update|patch)([A-Z]\w*)?$/,
-  Delete: /^(remove|delete)([A-Z]\w*)?$/,
+  Get: /^(?<verb>list|get|getById|find)(?<suffix>[A-Z]\w*)?$/u,
+  Post: /^(?<verb>create|add|execute|run|reply|approve|reject)(?<suffix>[A-Z]\w*)?$/u,
+  Put: /^(?<verb>replace|set)(?<suffix>[A-Z]\w*)?$/u,
+  Patch: /^(?<verb>update|patch)(?<suffix>[A-Z]\w*)?$/u,
+  Delete: /^(?<verb>remove|delete)(?<suffix>[A-Z]\w*)?$/u,
 };
 
 export default {
   meta: {
     type: "suggestion",
     docs: {
-      description: "Controller handler names must match the REST verb they implement.",
+      description:
+        "Controller handler names must match the REST verb they implement.",
     },
     schema: [],
     messages: {
@@ -40,13 +41,20 @@ export default {
         const decorators = node.decorators ?? [];
         const names = decorators.map(decoratorName).filter(Boolean);
         const httpDecorator = names.find((name) => name in ALLOWED_NAMES);
-        if (!httpDecorator) return;
+        if (!httpDecorator) {
+          return;
+        }
 
-        const methodName = node.key.type === "Identifier" ? node.key.name : null;
-        if (!methodName) return;
+        const methodName =
+          node.key.type === "Identifier" ? node.key.name : null;
+        if (!methodName) {
+          return;
+        }
 
         const pattern = ALLOWED_NAMES[httpDecorator];
-        if (pattern.test(methodName)) return;
+        if (pattern.test(methodName)) {
+          return;
+        }
 
         context.report({
           node,

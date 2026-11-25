@@ -7,15 +7,21 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import type { AuthedRequest } from "../auth/session.guard.js";
 import { Public } from "../auth/public.decorator.js";
+import type { AuthedRequest } from "../auth/session.guard.js";
 import { ApiException } from "../common/errors/api-exception.js";
 import { defineAbilityFor } from "./ability.factory.js";
-import { PermissionMetadata } from "./require-permission.decorator.js";
-import { MemberResolverService } from "./member-resolver.service.js";
-import { ScopeResolverService } from "./scope-resolver.service.js";
-import { WorkspaceScope, type WorkspaceScopeSource } from "./workspace-scope.decorator.js";
+import {
+  MemberResolverService,
+  type ResolvedMember,
+} from "./member-resolver.service.js";
 import type { Role } from "./permission.types.js";
+import { PermissionMetadata } from "./require-permission.decorator.js";
+import { ScopeResolverService } from "./scope-resolver.service.js";
+import {
+  WorkspaceScope,
+  type WorkspaceScopeSource,
+} from "./workspace-scope.decorator.js";
 
 /**
  * Registered globally (app.module.ts), after SessionGuard, so req.session is
@@ -35,7 +41,7 @@ export class PermissionsGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly scopes: ScopeResolverService,
-    private readonly members: MemberResolverService,
+    private readonly members: MemberResolverService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -43,30 +49,36 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    const required = this.reflector.get(PermissionMetadata, context.getHandler());
+    const required = this.reflector.get(
+      PermissionMetadata,
+      context.getHandler()
+    );
 
     if (!required) {
       this.logger.error(
-        `${context.getClass().name}.${context.getHandler().name} has no @RequirePermission — denying by default`,
+        `${context.getClass().name}.${context.getHandler().name} has no @RequirePermission — denying by default`
       );
       throw new ApiException(
         "INTERNAL_ERROR",
         "This endpoint is missing a required permission declaration.",
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
 
     const req = context.switchToHttp().getRequest<AuthedRequest>();
-    const user = req.session!.user;
+    // biome-ignore lint/style/noNonNullAssertion: SessionGuard runs first (app.module.ts) and always populates req.session
+    const { user } = req.session!;
     const source = this.scopeSource(context, req);
-    const workspaceId = source ? await this.scopes.resolve(source, req) : undefined;
+    const workspaceId = source
+      ? await this.scopes.resolve(source, req)
+      : undefined;
 
     if (workspaceId === null) {
       throw new NotFoundException("The requested resource does not exist.");
     }
 
     let role: Role = "member";
-    let member = null;
+    let member: ResolvedMember | null = null;
     if (workspaceId) {
       member = await this.members.resolve(workspaceId, {
         id: user.id,
@@ -76,7 +88,8 @@ export class PermissionsGuard implements CanActivate {
       if (!member) {
         throw new NotFoundException("The requested resource does not exist.");
       }
-      role = member.role === "owner" || member.role === "admin" ? "admin" : "member";
+      role =
+        member.role === "owner" || member.role === "admin" ? "admin" : "member";
     }
 
     req.actor = {
@@ -94,19 +107,26 @@ export class PermissionsGuard implements CanActivate {
       throw new ApiException(
         "PERMISSION_DENIED",
         `Role '${role}' cannot ${required.action} ${required.subject}.`,
-        HttpStatus.FORBIDDEN,
+        HttpStatus.FORBIDDEN
       );
     }
 
     return true;
   }
 
-  private scopeSource(context: ExecutionContext, req: AuthedRequest): WorkspaceScopeSource | null {
+  private scopeSource(
+    context: ExecutionContext,
+    req: AuthedRequest
+  ): WorkspaceScopeSource | null {
     const declared = this.reflector.getAllAndOverride(WorkspaceScope, [
       context.getHandler(),
       context.getClass(),
     ]);
-    if (declared) return declared;
-    return req.params["workspaceId"] ? { from: "workspace", param: "workspaceId" } : null;
+    if (declared) {
+      return declared;
+    }
+    return req.params.workspaceId
+      ? { from: "workspace", param: "workspaceId" }
+      : null;
   }
 }

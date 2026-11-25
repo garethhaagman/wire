@@ -1,0 +1,155 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": ["ultracite/biome/core", "ultracite/biome/nestjs"],
+  "files": {
+    "includes": [
+      "!.agents/skills/deploy-to-vercel",
+      "!.agents/skills/vercel-cli-with-tokens",
+      "!.agents/skills/vercel-composition-patterns",
+      "!.agents/skills/vercel-optimize",
+      "!.agents/skills/vercel-react-best-practices",
+      "!.agents/skills/vercel-react-native-skills",
+      "!.agents/skills/vercel-react-view-transitions",
+      "!.agents/skills/web-design-guidelines",
+      "!.agents/skills/writing-guidelines"
+    ]
+  },
+  "overrides": [
+    // --- apps/api (NestJS) + packages/db/src/migrations (TypeORM): both are
+    // decorator/DI-driven frameworks with fixed method and constructor
+    // shapes that the rules below assume are always avoidable style choices.
+    {
+      "includes": ["apps/api/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            // DTO files group one resource's request/response shapes as
+            // sibling classes (see api-design skill); other files colocate a
+            // small error class with the class that throws it
+            // (SecretBox/SecretBoxError, ApiException/ValidationException/
+            // ResourceConflictException). Both are deliberate groupings, not
+            // files that grew too large.
+            "noExcessiveClassesPerFile": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/api/src/**", "packages/db/src/migrations/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            // Nest DI, DTOs, and exception subclasses use constructor
+            // parameter properties (public/private/readonly on a constructor
+            // param) to declare the field — the `public` keyword there isn't
+            // optional noise, it's what creates the property (the nestjs
+            // preset already allows the pattern via noParameterProperties:
+            // off; this is the matching allowance for its public modifier).
+            // TypeORM's migration generator emits `public async up/down`.
+            "useConsistentMemberAccessibility": "off",
+            // Nest lifecycle hooks, controller handlers, and interface
+            // implementations (ScanAdapter, filters/interceptors/middleware)
+            // all implement a fixed method shape; TypeORM migrations
+            // implement a fixed up/down signature. Not every implementation
+            // needs `this`.
+            "useThisInClassMethods": "off"
+          }
+        }
+      }
+    },
+
+    // --- infra (Pulumi, compiled to CommonJS)
+    {
+      "includes": ["infra/**"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            // infra/tsconfig.json compiles to CommonJS (Pulumi's Node SDK
+            // runs the compiled output, not the ESM source directly), so
+            // `import.meta.dirname` isn't available at runtime here —
+            // `__dirname` is the correct spelling for this package.
+            "noGlobalDirnameFilename": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["infra/components/*.ts", "packages/db/src/migrations/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            // infra/components/*Service.ts is camelCase matching the
+            // exported Pulumi construct name; migration filenames are
+            // emitted verbatim by `typeorm migration:generate`
+            // (<timestamp>-<Name>.ts) and must match what TypeORM recorded
+            // as already-run in the migrations table.
+            "useFilenamingConvention": "off"
+          }
+        }
+      }
+    },
+
+    // --- apps/docs (unbundled Docsify viewer, no typecheck/build step)
+    {
+      "includes": ["apps/docs/serve.ts"],
+      "javascript": {
+        // apps/docs has no @types/bun dependency (no typecheck step either —
+        // see its package.json); `Bun` is the Bun runtime global this script
+        // relies on when run via `bun --watch serve.ts`.
+        "globals": ["Bun"]
+      }
+    },
+    {
+      "includes": ["apps/docs/index.html"],
+      "linter": {
+        "rules": {
+          "performance": {
+            // Docsify is a runtime markdown renderer, not bundled: it reads
+            // window.$docsify and the DOM in document order as each <script>
+            // tag executes, so these must stay synchronous, in this order.
+            "noSyncScripts": "off"
+          },
+          "correctness": {
+            // `mermaid` is a CDN-loaded global (see the docsify-mermaid
+            // <script> tags above it), not a module import Biome can see.
+            "noUndeclaredVariables": "off"
+          }
+        }
+      }
+    },
+
+    // --- packages/db: algorithmic/SQL-guarantee exceptions, not general style
+    {
+      "includes": ["packages/db/src/ids.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            // Loop counters in ULID generation (time-to-base32, byte-to-5-bit packing).
+            "noIncrementDecrement": "off"
+          },
+          "suspicious": {
+            // Bit-packing random bytes into 5-bit Crockford base32 groups is the
+            // actual algorithm here, not an obscure trick to avoid.
+            "noBitwiseOperators": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/db/src/repositories/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            // `rows[0]!` right after `insert ... returning *` (or an
+            // `update ... where id = $1` on a row looked up earlier in the
+            // same function) is guaranteed exactly one row by SQL semantics
+            // — not an unchecked assumption. A genuinely-optional lookup
+            // (e.g. select-by-id that may miss) still destructures and
+            // null-checks rather than asserting.
+            "noNonNullAssertion": "off"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -19,14 +19,18 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import type { Agent } from "@wire/types";
-import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
-import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
 import { PaginatedResult } from "../common/dto/paginated-result.js";
+import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
+import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
 import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor.js";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { AgentsService } from "./agents.service.js";
-import { AgentDto, CreateAgentRequestDto, UpdateAgentRequestDto } from "./dto/agent.dto.js";
+import {
+  AgentDto,
+  CreateAgentRequestDto,
+  UpdateAgentRequestDto,
+} from "./dto/agent.dto.js";
 
 @ApiTags("Agents")
 @ApiCookieAuth()
@@ -39,18 +43,24 @@ export class AgentsController {
   @ApiOkResponse({ type: AgentDto, isArray: true })
   async list(
     @CurrentActor() actor: WorkspaceActor,
-    @Query() query: PaginationQueryDto,
+    @Query() query: PaginationQueryDto
   ): Promise<PaginatedResult<Agent>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
     const { items, total } = await this.agents.list(actor, page, perPage);
-    return new PaginatedResult(items, buildPaginationMeta(page, perPage, total));
+    return new PaginatedResult(
+      items,
+      buildPaginationMeta(page, perPage, total)
+    );
   }
 
   @Get(":id")
   @RequirePermission("read", "Agent")
   @ApiOkResponse({ type: AgentDto })
-  getById(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<Agent> {
+  getById(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("id") id: string
+  ): Promise<Agent> {
     return this.agents.getById(actor, id);
   }
 
@@ -65,7 +75,7 @@ export class AgentsController {
   @UseInterceptors(IdempotencyInterceptor)
   create(
     @CurrentActor() actor: WorkspaceActor,
-    @Body() body: CreateAgentRequestDto,
+    @Body() body: CreateAgentRequestDto
   ): Promise<Agent> {
     return this.agents.create(actor, body);
   }
@@ -76,7 +86,7 @@ export class AgentsController {
   update(
     @CurrentActor() actor: WorkspaceActor,
     @Param("id") id: string,
-    @Body() body: UpdateAgentRequestDto,
+    @Body() body: UpdateAgentRequestDto
   ): Promise<Agent> {
     return this.agents.update(actor, id, body);
   }
@@ -85,7 +95,10 @@ export class AgentsController {
   @RequirePermission("delete", "Agent")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })
-  async remove(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<null> {
+  async remove(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("id") id: string
+  ): Promise<null> {
     await this.agents.remove(actor, id);
     return null;
   }

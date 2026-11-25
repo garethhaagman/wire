@@ -1,11 +1,18 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsBoolean, IsInt, IsOptional, IsString, Length, Min } from "class-validator";
 import type {
   CreateMessageRequest,
   CreateThreadReplyRequest,
   Message,
   UpdateMessageRequest,
 } from "@wire/types";
+import {
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  Length,
+  Min,
+} from "class-validator";
 
 export class MessageDto implements Message {
   @ApiProperty({ example: "msg_01jd5x0k8f3v8q2m7n4r6t9w1y" })
@@ -17,13 +24,23 @@ export class MessageDto implements Message {
   @ApiProperty({ example: "ch_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   channelId!: string;
 
-  @ApiProperty({ description: "Per-channel monotonically increasing sequence", example: 42 })
+  @ApiProperty({
+    description: "Per-channel monotonically increasing sequence",
+    example: 42,
+  })
   seq!: number;
 
-  @ApiProperty({ nullable: true, type: String, example: "msg_01jd5x0k8f3v8q2m7n4r6t9w1y" })
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    example: "msg_01jd5x0k8f3v8q2m7n4r6t9w1y",
+  })
   threadRootId!: string | null;
 
-  @ApiProperty({ description: "Thread reply also shown in the channel", example: false })
+  @ApiProperty({
+    description: "Thread reply also shown in the channel",
+    example: false,
+  })
   broadcast!: boolean;
 
   @ApiProperty({ example: "mem_01jd5x0k8f3v8q2m7n4r6t9w1y" })
@@ -41,13 +58,25 @@ export class MessageDto implements Message {
   @ApiProperty({ example: 3 })
   replyCount!: number;
 
-  @ApiProperty({ nullable: true, type: String, example: "2026-01-15T09:30:00.000Z" })
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    example: "2026-01-15T09:30:00.000Z",
+  })
   lastReplyAt!: string | null;
 
-  @ApiProperty({ type: "object", additionalProperties: { type: "integer" }, example: { "👍": 3 } })
+  @ApiProperty({
+    type: "object",
+    additionalProperties: { type: "integer" },
+    example: { "👍": 3 },
+  })
   reactionCounts!: Record<string, number>;
 
-  @ApiProperty({ nullable: true, type: String, example: "2026-01-15T09:35:00.000Z" })
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    example: "2026-01-15T09:35:00.000Z",
+  })
   editedAt!: string | null;
 
   @ApiProperty({ nullable: true, type: String, example: null })
@@ -60,7 +89,9 @@ export class MessageDto implements Message {
   updatedAt!: string;
 }
 
-export class CreateMessageRequestDto implements Omit<CreateMessageRequest, "channelId"> {
+export class CreateMessageRequestDto
+  implements Omit<CreateMessageRequest, "channelId">
+{
   @ApiProperty({ example: "Shipping the v2 config schema today." })
   @IsString()
   @Length(1, 8000)
@@ -73,13 +104,16 @@ export class CreateMessageRequestDto implements Omit<CreateMessageRequest, "chan
 }
 
 export class UpdateMessageRequestDto implements UpdateMessageRequest {
-  @ApiProperty({ example: "Shipping the v2 config schema today — now with examples." })
+  @ApiProperty({
+    example: "Shipping the v2 config schema today — now with examples.",
+  })
   @IsString()
   @Length(1, 8000)
   body!: string;
 
   @ApiPropertyOptional({
-    description: "Expected current revision; 409 if the message has changed since",
+    description:
+      "Expected current revision; 409 if the message has changed since",
     example: 1,
   })
   @IsOptional()

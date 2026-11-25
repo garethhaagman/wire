@@ -5,29 +5,29 @@
  * handler because every response follows this contract.
  */
 export interface ApiResponse<T> {
-  success: boolean;
   data: T | null;
   error: ApiError | null;
   meta: ApiMeta;
+  success: boolean;
 }
 
 export interface ApiErrorDetail {
-  field?: string;
   code: string;
+  field?: string;
   message: string;
 }
 
 export interface ApiError {
   code: ApiErrorCode;
-  message: string;
   details?: ApiErrorDetail[];
+  message: string;
 }
 
 export interface ApiMeta {
-  request_id: string;
   api_version: string;
-  pagination?: ApiPagination;
   cursor?: ApiCursorPagination;
+  pagination?: ApiPagination;
+  request_id: string;
 }
 
 export interface ApiPagination {
@@ -43,9 +43,9 @@ export interface ApiPagination {
  * `next_cursor` back as `cursor` to fetch the next page.
  */
 export interface ApiCursorPagination {
-  per_page: number;
   has_more: boolean;
   next_cursor: string | null;
+  per_page: number;
 }
 
 /**
@@ -67,7 +67,7 @@ export function successEnvelope<T>(
   meta: Omit<ApiMeta, "request_id" | "api_version"> &
     Partial<Pick<ApiMeta, "request_id" | "api_version">>,
   requestId: string,
-  apiVersion: string,
+  apiVersion: string
 ): ApiResponse<T> {
   return {
     success: true,
@@ -84,7 +84,7 @@ export function successEnvelope<T>(
 export function errorEnvelope(
   error: ApiError,
   requestId: string,
-  apiVersion: string,
+  apiVersion: string
 ): ApiResponse<null> {
   return {
     success: false,

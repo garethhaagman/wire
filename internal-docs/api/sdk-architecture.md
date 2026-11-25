@@ -5,10 +5,17 @@ An SDK should never need to understand individual endpoints' response structures
 ## Reference client shape
 
 ```typescript
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+async function request<T>(
+  method: string,
+  path: string,
+  body?: unknown
+): Promise<T> {
   const res = await fetch(`${BASE_URL}/v1${path}`, {
     method,
-    headers: { Authorization: `Bearer ${API_KEY}`, "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+      "Content-Type": "application/json",
+    },
     body: body ? JSON.stringify(body) : undefined,
   });
 
@@ -28,7 +35,8 @@ In production this handler should additionally: handle non-JSON and empty respon
 const workspaces = {
   list: () => request<Workspace[]>("GET", "/workspaces"),
   get: (id: string) => request<Workspace>("GET", `/workspaces/${id}`),
-  create: (data: CreateWorkspaceRequest) => request<Workspace>("POST", "/workspaces", data),
+  create: (data: CreateWorkspaceRequest) =>
+    request<Workspace>("POST", "/workspaces", data),
 };
 ```
 

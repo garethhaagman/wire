@@ -6,11 +6,11 @@ import { newId } from "../ids.js";
 const MAX_REACTIONS_LISTED = 1000;
 
 interface ReactionRow {
+  actor_id: string;
+  created_at: Date;
+  emoji: string;
   id: string;
   message_id: string;
-  actor_id: string;
-  emoji: string;
-  created_at: Date;
 }
 
 function toReaction(row: ReactionRow): Reaction {
@@ -23,10 +23,13 @@ function toReaction(row: ReactionRow): Reaction {
   };
 }
 
-export async function listReactions(db: Queryable, messageId: string): Promise<Reaction[]> {
+export async function listReactions(
+  db: Queryable,
+  messageId: string
+): Promise<Reaction[]> {
   const { rows } = await db.query<ReactionRow>(
-    `select * from reactions where message_id = $1 order by created_at, id limit $2`,
-    [messageId, MAX_REACTIONS_LISTED],
+    "select * from reactions where message_id = $1 order by created_at, id limit $2",
+    [messageId, MAX_REACTIONS_LISTED]
   );
   return rows.map(toReaction);
 }
@@ -38,33 +41,48 @@ export async function listReactions(db: Queryable, messageId: string): Promise<R
  */
 export async function insertReaction(
   tx: Queryable,
-  input: { workspaceId: string; messageId: string; actorId: string; emoji: string },
+  input: {
+    workspaceId: string;
+    messageId: string;
+    actorId: string;
+    emoji: string;
+  }
 ): Promise<Reaction | null> {
   const { rows } = await tx.query<ReactionRow>(
     `insert into reactions (id, workspace_id, message_id, actor_id, emoji) values ($1, $2, $3, $4, $5)
      on conflict (message_id, actor_id, emoji) do nothing returning *`,
-    [newId("rxn"), input.workspaceId, input.messageId, input.actorId, input.emoji],
+    [
+      newId("rxn"),
+      input.workspaceId,
+      input.messageId,
+      input.actorId,
+      input.emoji,
+    ]
   );
-  if (!rows[0]) return null;
+  if (!rows[0]) {
+    return null;
+  }
 
   await tx.query(
     `update messages
      set reaction_counts = jsonb_set(reaction_counts, array[$2::text], to_jsonb(coalesce((reaction_counts ->> $2)::int, 0) + 1))
      where id = $1`,
-    [input.messageId, input.emoji],
+    [input.messageId, input.emoji]
   );
   return toReaction(rows[0]);
 }
 
 export async function deleteReaction(
   tx: Queryable,
-  input: { messageId: string; actorId: string; emoji: string },
+  input: { messageId: string; actorId: string; emoji: string }
 ): Promise<boolean> {
   const { rowCount } = await tx.query(
-    `delete from reactions where message_id = $1 and actor_id = $2 and emoji = $3`,
-    [input.messageId, input.actorId, input.emoji],
+    "delete from reactions where message_id = $1 and actor_id = $2 and emoji = $3",
+    [input.messageId, input.actorId, input.emoji]
   );
-  if (!rowCount) return false;
+  if (!rowCount) {
+    return false;
+  }
 
   await tx.query(
     `update messages
@@ -73,17 +91,17 @@ export async function deleteReaction(
        else jsonb_set(reaction_counts, array[$2::text], to_jsonb((reaction_counts ->> $2)::int - 1))
      end
      where id = $1`,
-    [input.messageId, input.emoji],
+    [input.messageId, input.emoji]
   );
   return true;
 }
 
 interface PinRow {
-  id: string;
   channel_id: string;
+  created_at: Date;
+  id: string;
   message_id: string;
   pinned_by: string;
-  created_at: Date;
 }
 
 function toPin(row: PinRow): Pin {
@@ -96,10 +114,13 @@ function toPin(row: PinRow): Pin {
   };
 }
 
-export async function listPins(db: Queryable, channelId: string): Promise<Pin[]> {
+export async function listPins(
+  db: Queryable,
+  channelId: string
+): Promise<Pin[]> {
   const { rows } = await db.query<PinRow>(
-    `select * from pins where channel_id = $1 order by created_at desc limit 1000`,
-    [channelId],
+    "select * from pins where channel_id = $1 order by created_at desc limit 1000",
+    [channelId]
   );
   return rows.map(toPin);
 }
@@ -107,12 +128,23 @@ export async function listPins(db: Queryable, channelId: string): Promise<Pin[]>
 /** Returns null when the message is already pinned (unique on channel + message). */
 export async function insertPin(
   db: Queryable,
-  input: { workspaceId: string; channelId: string; messageId: string; pinnedBy: string },
+  input: {
+    workspaceId: string;
+    channelId: string;
+    messageId: string;
+    pinnedBy: string;
+  }
 ): Promise<Pin | null> {
   const { rows } = await db.query<PinRow>(
     `insert into pins (id, workspace_id, channel_id, message_id, pinned_by) values ($1, $2, $3, $4, $5)
      on conflict (channel_id, message_id) do nothing returning *`,
-    [newId("pin"), input.workspaceId, input.channelId, input.messageId, input.pinnedBy],
+    [
+      newId("pin"),
+      input.workspaceId,
+      input.channelId,
+      input.messageId,
+      input.pinnedBy,
+    ]
   );
   return rows[0] ? toPin(rows[0]) : null;
 }
@@ -120,11 +152,11 @@ export async function insertPin(
 export async function deletePin(
   db: Queryable,
   channelId: string,
-  pinId: string,
+  pinId: string
 ): Promise<Pin | null> {
   const { rows } = await db.query<PinRow>(
-    `delete from pins where channel_id = $1 and id = $2 returning *`,
-    [channelId, pinId],
+    "delete from pins where channel_id = $1 and id = $2 returning *",
+    [channelId, pinId]
   );
   return rows[0] ? toPin(rows[0]) : null;
 }

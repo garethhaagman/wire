@@ -5,12 +5,12 @@ export function TopbarDefault(_props: SlotProps): React.JSX.Element {
   const Icon = useIcon();
 
   return (
-    <div className="flex h-12 items-center justify-between border-b border-border bg-background px-4">
-      <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-        <Icon name="hash" className="h-4 w-4 text-muted-foreground" />
+    <div className="border-border bg-background flex h-12 items-center justify-between border-b px-4">
+      <div className="text-foreground flex items-center gap-2 text-sm font-medium">
+        <Icon className="text-muted-foreground h-4 w-4" name="hash" />
         general
       </div>
-      <Icon name="search" className="h-4 w-4 text-muted-foreground" />
+      <Icon className="text-muted-foreground h-4 w-4" name="search" />
     </div>
   );
 }

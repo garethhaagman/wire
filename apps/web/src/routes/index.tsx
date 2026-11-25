@@ -4,6 +4,8 @@ import { useSession } from "@/lib/auth-client.js";
 export default function HomeRoute(): React.JSX.Element {
   const { data: session, isPending } = useSession();
 
-  if (isPending) return <div className="min-h-dvh bg-background" />;
-  return <Navigate to={session?.user ? "/workspaces" : "/login"} replace />;
+  if (isPending) {
+    return <div className="bg-background min-h-dvh" />;
+  }
+  return <Navigate replace to={session?.user ? "/workspaces" : "/login"} />;
 }

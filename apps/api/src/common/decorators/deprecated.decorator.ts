@@ -4,12 +4,12 @@ import { ApiHeader } from "@nestjs/swagger";
 export const DEPRECATED_METADATA_KEY = "wire:deprecated";
 
 export interface DeprecationMetadata {
+  /** Migration documentation URL. */
+  migrationUrl: string;
   /** Unix timestamp (seconds) the route became deprecated. */
   since: number;
   /** ISO 8601 date the route stops being served. */
   sunset: string;
-  /** Migration documentation URL. */
-  migrationUrl: string;
 }
 
 /**
@@ -24,11 +24,12 @@ export function Deprecated(metadata: DeprecationMetadata) {
     SetMetadata(DEPRECATED_METADATA_KEY, metadata)(
       target,
       key as string,
-      descriptor as PropertyDescriptor,
+      descriptor as PropertyDescriptor
     );
     ApiHeader({
       name: "Deprecation",
-      description: "RFC 9745 deprecation marker; see Sunset and Link headers for details.",
+      description:
+        "RFC 9745 deprecation marker; see Sunset and Link headers for details.",
       required: false,
     })(target, key as string, descriptor as PropertyDescriptor);
   };

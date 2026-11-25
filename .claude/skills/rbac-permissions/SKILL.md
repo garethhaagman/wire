@@ -21,6 +21,7 @@ You're writing a new controller method (new resource or new action on an existin
 1. **Does the subject already exist?** Check `PermissionSubject` in `apps/api/src/permissions/permission.types.ts`. If your resource (e.g. `"Invoice"`) isn't listed, go to **Scenario 3** first, then come back here.
 2. **Pick the action**: `create` (POST), `read` (GET), `update` (PUT/PATCH), `delete` (DELETE). Use `manage` only inside the admin branch of the ability factory — never put `manage` on a single endpoint.
 3. **Add the decorator**, directly above the HTTP method decorator:
+
    ```typescript
    @Post()
    @RequirePermission("create", "Message")

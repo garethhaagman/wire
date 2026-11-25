@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "bun --watch serve.ts",
-    "typecheck": "echo 'no typecheck for docs' && exit 0",
-    "lint": "echo 'no lint for docs' && exit 0"
+    "typecheck": "echo 'no typecheck for docs' && exit 0"
   }
 }

@@ -10,7 +10,12 @@ import { createPgPool } from "./pg-pool.js";
  * file idempotently; app-table migrations go through TypeORM (`migration:run`).
  */
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const authSchemaFile = path.join(__dirname, "..", "migrations", "0002_create_auth_tables.sql");
+const authSchemaFile = path.join(
+  __dirname,
+  "..",
+  "migrations",
+  "0002_create_auth_tables.sql"
+);
 
 async function main(): Promise<void> {
   const databaseUrl = process.env.DATABASE_URL;
@@ -22,7 +27,7 @@ async function main(): Promise<void> {
 
   const [row] = (
     await pool.query<{ exists: boolean }>(
-      `select exists (select from information_schema.tables where table_name = 'user') as exists`,
+      `select exists (select from information_schema.tables where table_name = 'user') as exists`
     )
   ).rows;
 

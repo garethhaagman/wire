@@ -12,29 +12,35 @@ import {
   Database,
   editMessage,
   findAgentByHandle,
+  insertMessage,
   listChannelMessages,
   listThreadReplies,
   markThreadRead,
-  softDeleteMessage,
-  insertMessage,
   type NewEvent,
+  softDeleteMessage,
 } from "@wire/db";
 import type { ApiCursorPagination, Message } from "@wire/types";
 import { AgentRunnerService } from "../agents/agent-runner.service.js";
 import { ChannelAccessService } from "../channels/channel-access.service.js";
-import { encodeCursor, type CursorDirection } from "../common/dto/cursor-paginated-result.js";
-import { ApiException, ResourceConflictException } from "../common/errors/api-exception.js";
+import {
+  type CursorDirection,
+  encodeCursor,
+} from "../common/dto/cursor-paginated-result.js";
+import {
+  ApiException,
+  ResourceConflictException,
+} from "../common/errors/api-exception.js";
 import { OutboxRelayService } from "../events/outbox-relay.service.js";
 import { isAdmin, type WorkspaceActor } from "../permissions/actor.js";
 
 /** Matches the handle charset enforced on creation — apps/api/src/agents/dto/agent.dto.ts's @Matches. */
-const MENTION_PATTERN = /@([a-z0-9-]+)/g;
+const MENTION_PATTERN = /@(?<handle>[a-z0-9-]+)/gu;
 
 interface PostMessageInput {
-  channelId: string;
   body: string;
-  threadRootId?: string | undefined;
   broadcast?: boolean | undefined;
+  channelId: string;
+  threadRootId?: string | undefined;
 }
 
 @Injectable()
@@ -45,14 +51,14 @@ export class MessagesService {
     @Inject(Database) private readonly db: Database,
     private readonly access: ChannelAccessService,
     private readonly relay: OutboxRelayService,
-    private readonly agentRunner: AgentRunnerService,
+    private readonly agentRunner: AgentRunnerService
   ) {}
 
   async list(
     actor: WorkspaceActor,
     channelId: string,
     bound: { direction: CursorDirection; seq: number | undefined },
-    perPage: number,
+    perPage: number
   ): Promise<{ items: Message[]; cursor: ApiCursorPagination }> {
     await this.access.readable(actor, channelId);
     const page = await listChannelMessages(this.db.primary, channelId, {
@@ -66,13 +72,20 @@ export class MessagesService {
       cursor: {
         per_page: perPage,
         has_more: page.hasMore,
-        next_cursor: page.hasMore && last ? encodeCursor(bound.direction, last.seq) : null,
+        next_cursor:
+          page.hasMore && last ? encodeCursor(bound.direction, last.seq) : null,
       },
     };
   }
 
-  async getById(actor: WorkspaceActor, channelId: string, id: string): Promise<Message> {
-    const { message } = await this.access.readableMessage(actor, id, { channelId });
+  async getById(
+    actor: WorkspaceActor,
+    channelId: string,
+    id: string
+  ): Promise<Message> {
+    const { message } = await this.access.readableMessage(actor, id, {
+      channelId,
+    });
     return message;
   }
 
@@ -86,9 +99,12 @@ export class MessagesService {
     const message = await this.db.tx(async (tx) => {
       const events: NewEvent[] = [];
       if (!isMember) {
-        const joined = await addChannelMembers(tx, input.channelId, actor.workspaceId, [
-          actor.member.id,
-        ]);
+        const joined = await addChannelMembers(
+          tx,
+          input.channelId,
+          actor.workspaceId,
+          [actor.member.id]
+        );
         if (joined.length) {
           events.push({
             workspaceId: actor.workspaceId,
@@ -113,10 +129,12 @@ export class MessagesService {
           throw new ApiException(
             "RESOURCE_CONFLICT",
             `Channel ${input.channelId} is archived.`,
-            HttpStatus.CONFLICT,
+            HttpStatus.CONFLICT
           );
         }
-        throw new NotFoundException(`No thread root message with id ${input.threadRootId}`);
+        throw new NotFoundException(
+          `No thread root message with id ${input.threadRootId}`
+        );
       }
 
       events.push({
@@ -132,7 +150,10 @@ export class MessagesService {
     this.relay.kick();
 
     this.triggerMentionedAgents(actor, message).catch((err: unknown) => {
-      this.logger.error(`mention parsing failed for message ${message.id}`, err);
+      this.logger.error(
+        `mention parsing failed for message ${message.id}`,
+        err
+      );
     });
 
     return message;
@@ -144,19 +165,34 @@ export class MessagesService {
    * data-integrity problem). Only human-authored messages are scanned, so an
    * agent's own reply can't re-trigger itself or another agent in a loop.
    */
-  private async triggerMentionedAgents(actor: WorkspaceActor, message: Message): Promise<void> {
-    const handles = new Set([...message.body.matchAll(MENTION_PATTERN)].map((match) => match[1]!));
-    for (const handle of handles) {
-      const agent = await findAgentByHandle(this.db, actor.workspaceId, handle);
-      if (!agent) continue;
-      await this.agentRunner.trigger({
-        workspaceId: actor.workspaceId,
-        agent,
-        prompt: message.body,
-        channelId: message.channelId,
-        triggeredByMessageId: message.id,
-      });
-    }
+  private async triggerMentionedAgents(
+    actor: WorkspaceActor,
+    message: Message
+  ): Promise<void> {
+    const handles = new Set(
+      [...message.body.matchAll(MENTION_PATTERN)]
+        .map((match) => match.groups?.handle)
+        .filter((handle): handle is string => handle !== undefined)
+    );
+    await Promise.all(
+      [...handles].map(async (handle) => {
+        const agent = await findAgentByHandle(
+          this.db,
+          actor.workspaceId,
+          handle
+        );
+        if (!agent) {
+          return;
+        }
+        await this.agentRunner.trigger({
+          workspaceId: actor.workspaceId,
+          agent,
+          prompt: message.body,
+          channelId: message.channelId,
+          triggeredByMessageId: message.id,
+        });
+      })
+    );
   }
 
   /** Authors edit their own messages — admins can delete others' but never put words in their mouth. */
@@ -164,9 +200,11 @@ export class MessagesService {
     actor: WorkspaceActor,
     channelId: string,
     id: string,
-    input: { body: string; revision?: number },
+    input: { body: string; revision?: number }
   ): Promise<Message> {
-    const { message } = await this.access.readableMessage(actor, id, { channelId });
+    const { message } = await this.access.readableMessage(actor, id, {
+      channelId,
+    });
     if (message.actorId !== actor.member.id) {
       throw new ForbiddenException("You can only edit your own messages.");
     }
@@ -182,7 +220,7 @@ export class MessagesService {
       if (!result.ok) {
         if (result.reason === "revision_conflict") {
           throw new ResourceConflictException(
-            `Message ${id} is at revision ${result.currentRevision}, not ${input.revision}. Refetch and retry.`,
+            `Message ${id} is at revision ${result.currentRevision}, not ${input.revision}. Refetch and retry.`
           );
         }
         throw new NotFoundException(`No message with id ${id}`);
@@ -202,8 +240,14 @@ export class MessagesService {
     return updated;
   }
 
-  async remove(actor: WorkspaceActor, channelId: string, id: string): Promise<void> {
-    const { message } = await this.access.readableMessage(actor, id, { channelId });
+  async remove(
+    actor: WorkspaceActor,
+    channelId: string,
+    id: string
+  ): Promise<void> {
+    const { message } = await this.access.readableMessage(actor, id, {
+      channelId,
+    });
     if (message.actorId !== actor.member.id && !isAdmin(actor)) {
       throw new ForbiddenException("You can only delete your own messages.");
     }
@@ -216,7 +260,11 @@ export class MessagesService {
             workspaceId: actor.workspaceId,
             type: "message.deleted",
             channelId,
-            data: { messageId: id, threadRootId: tombstone.threadRootId, seq: tombstone.seq },
+            data: {
+              messageId: id,
+              threadRootId: tombstone.threadRootId,
+              seq: tombstone.seq,
+            },
           },
         ]);
       }
@@ -232,7 +280,7 @@ export class MessagesService {
     actor: WorkspaceActor,
     threadRootId: string,
     afterSeq: number | undefined,
-    perPage: number,
+    perPage: number
   ): Promise<{ items: Message[]; cursor: ApiCursorPagination }> {
     await this.threadRoot(actor, threadRootId, { includeDeleted: true });
     const page = await listThreadReplies(this.db.primary, threadRootId, {
@@ -245,7 +293,8 @@ export class MessagesService {
       cursor: {
         per_page: perPage,
         has_more: page.hasMore,
-        next_cursor: page.hasMore && last ? encodeCursor("after", last.seq) : null,
+        next_cursor:
+          page.hasMore && last ? encodeCursor("after", last.seq) : null,
       },
     };
   }
@@ -254,16 +303,23 @@ export class MessagesService {
     actor: WorkspaceActor,
     threadRootId: string,
     body: string,
-    broadcast: boolean,
+    broadcast: boolean
   ): Promise<Message> {
-    const root = await this.threadRoot(actor, threadRootId, { includeDeleted: false });
-    return this.post(actor, { channelId: root.channelId, body, threadRootId, broadcast });
+    const root = await this.threadRoot(actor, threadRootId, {
+      includeDeleted: false,
+    });
+    return this.post(actor, {
+      channelId: root.channelId,
+      body,
+      threadRootId,
+      broadcast,
+    });
   }
 
   async markThreadRead(
     actor: WorkspaceActor,
     threadRootId: string,
-    seq: number | undefined,
+    seq: number | undefined
   ): Promise<{ lastReadSeq: number }> {
     await this.threadRoot(actor, threadRootId, { includeDeleted: true });
     const lastReadSeq = await markThreadRead(this.db, {
@@ -272,18 +328,22 @@ export class MessagesService {
       workspaceId: actor.workspaceId,
       seq: seq ?? null,
     });
-    if (lastReadSeq === null) throw new NotFoundException(`No thread with root ${threadRootId}`);
+    if (lastReadSeq === null) {
+      throw new NotFoundException(`No thread with root ${threadRootId}`);
+    }
     return { lastReadSeq };
   }
 
   private async threadRoot(
     actor: WorkspaceActor,
     id: string,
-    options: { includeDeleted: boolean },
+    options: { includeDeleted: boolean }
   ): Promise<Message> {
     const { message } = await this.access.readableMessage(actor, id, options);
     if (message.threadRootId) {
-      throw new NotFoundException(`Message ${id} is a reply, not a thread root`);
+      throw new NotFoundException(
+        `Message ${id} is a reply, not a thread root`
+      );
     }
     return message;
   }

@@ -1,6 +1,10 @@
 import type { ApiPagination } from "@wire/types";
 
-export function buildPaginationMeta(page: number, perPage: number, total: number): ApiPagination {
+export function buildPaginationMeta(
+  page: number,
+  perPage: number,
+  total: number
+): ApiPagination {
   return {
     page,
     per_page: perPage,

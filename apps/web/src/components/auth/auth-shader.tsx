@@ -7,11 +7,20 @@ import { cn } from "@/lib/cn.js";
  * (`.auth-shader`), these are illustration colors, not UI theme tokens.
  */
 const UNIFORMS = {
-  uLight: [-0.4932757352618994, 0.7044707580885331],
-  uBg: [0.22745098039215686, 0.5333333333333333, 0.996078431372549],
-  uC1: [0.12156862745098039, 0.43529411764705883, 0.47058823529411764],
-  uC2: [0.6078431372549019, 0.9098039215686274, 0.8627450980392157],
-  uC3: [0.9098039215686274, 0.6352941176470588, 0.47843137254901963],
+  uLight: [-0.493_275_735_261_899_4, 0.704_470_758_088_533_1],
+  uBg: [
+    0.227_450_980_392_156_86, 0.533_333_333_333_333_3, 0.996_078_431_372_549,
+  ],
+  uC1: [
+    0.121_568_627_450_980_39, 0.435_294_117_647_058_83,
+    0.470_588_235_294_117_64,
+  ],
+  uC2: [
+    0.607_843_137_254_901_9, 0.909_803_921_568_627_4, 0.862_745_098_039_215_7,
+  ],
+  uC3: [
+    0.909_803_921_568_627_4, 0.635_294_117_647_058_8, 0.478_431_372_549_019_63,
+  ],
   uBright: 0,
   uContrast: 1,
   uFill: 1,
@@ -23,7 +32,8 @@ const CELL_SIZE = 2.2;
 const SPEED = 1;
 const START_TIME = 20;
 
-const VERTEX_SHADER = "attribute vec2 a;void main(){gl_Position=vec4(a,0.0,1.0);}";
+const VERTEX_SHADER =
+  "attribute vec2 a;void main(){gl_Position=vec4(a,0.0,1.0);}";
 
 const FRAGMENT_SHADER = `
 precision highp float;
@@ -100,9 +110,15 @@ void main(){
 }
 `;
 
-function compile(gl: WebGLRenderingContext, type: number, source: string): WebGLShader | null {
+function compile(
+  gl: WebGLRenderingContext,
+  type: number,
+  source: string
+): WebGLShader | null {
   const shader = gl.createShader(type);
-  if (!shader) return null;
+  if (!shader) {
+    return null;
+  }
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
@@ -120,38 +136,62 @@ function motionReduced(): boolean {
 }
 
 /** Animated halftone panel. Falls back to the flat `.auth-shader` background if WebGL is unavailable. */
-export function AuthShader({ className }: { className?: string }): React.JSX.Element {
+export function AuthShader({
+  className,
+}: {
+  className?: string;
+}): React.JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const gl = canvas?.getContext("webgl", { antialias: false, premultipliedAlpha: false });
-    if (!canvas || !gl) return;
+    const gl = canvas?.getContext("webgl", {
+      antialias: false,
+      premultipliedAlpha: false,
+    });
+    if (!(canvas && gl)) {
+      return;
+    }
 
     const vs = compile(gl, gl.VERTEX_SHADER, VERTEX_SHADER);
     const fs = compile(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER);
     const program = gl.createProgram();
-    if (!vs || !fs || !program) return;
+    if (!(vs && fs && program)) {
+      return;
+    }
     gl.attachShader(program, vs);
     gl.attachShader(program, fs);
     gl.bindAttribLocation(program, 0, "a");
     gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      return;
+    }
+    // biome-ignore lint/correctness/useHookAtTopLevel: gl.useProgram is a WebGL context method, not a React hook
     gl.useProgram(program);
 
     const buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([-1, -1, 3, -1, -1, 3]),
+      gl.STATIC_DRAW
+    );
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
     const set = (name: string, value: number | readonly number[]): void => {
       const loc = gl.getUniformLocation(program, name);
-      if (typeof value === "number") gl.uniform1f(loc, value);
-      else if (value.length === 2) gl.uniform2fv(loc, [...value]);
-      else gl.uniform3fv(loc, [...value]);
+      if (typeof value === "number") {
+        gl.uniform1f(loc, value);
+      } else if (value.length === 2) {
+        gl.uniform2fv(loc, [...value]);
+      } else {
+        gl.uniform3fv(loc, [...value]);
+      }
     };
-    for (const [name, value] of Object.entries(UNIFORMS)) set(name, value);
+    for (const [name, value] of Object.entries(UNIFORMS)) {
+      set(name, value);
+    }
 
     let time = START_TIME;
     let last = performance.now();
@@ -183,7 +223,9 @@ export function AuthShader({ className }: { className?: string }): React.JSX.Ele
     };
 
     const start = (): void => {
-      if (frameId || !visible || motionReduced()) return;
+      if (frameId || !visible || motionReduced()) {
+        return;
+      }
       last = performance.now();
       frameId = requestAnimationFrame(frame);
     };
@@ -196,8 +238,11 @@ export function AuthShader({ className }: { className?: string }): React.JSX.Ele
     resizeObserver.observe(canvas);
     const intersectionObserver = new IntersectionObserver(([entry]) => {
       visible = entry?.isIntersecting ?? true;
-      if (visible) start();
-      else stop();
+      if (visible) {
+        start();
+      } else {
+        stop();
+      }
     });
     intersectionObserver.observe(canvas);
 
@@ -218,8 +263,14 @@ export function AuthShader({ className }: { className?: string }): React.JSX.Ele
   }, []);
 
   return (
-    <div className={cn("auth-shader relative overflow-hidden", className)} aria-hidden="true">
-      <canvas ref={canvasRef} className="absolute inset-0 block h-full w-full" />
+    <div
+      aria-hidden="true"
+      className={cn("auth-shader relative overflow-hidden", className)}
+    >
+      <canvas
+        className="absolute inset-0 block h-full w-full"
+        ref={canvasRef}
+      />
     </div>
   );
 }

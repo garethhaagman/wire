@@ -1,11 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, IsString, Length, Max, Min } from "class-validator";
 import type {
   CreateUploadRequest,
   CreateUploadResponse,
   DownloadUrlResponse,
   WireFile,
 } from "@wire/types";
+import { IsInt, IsString, Length, Max, Min } from "class-validator";
 
 export class FileDto implements WireFile {
   @ApiProperty({ example: "file_01jd5x0k8f3v8q2m7n4r6t9w1y" })
@@ -31,7 +31,8 @@ export class FileDto implements WireFile {
 
   @ApiProperty({
     example: true,
-    description: "False until confirmUpload() verifies the blob actually landed in storage.",
+    description:
+      "False until confirmUpload() verifies the blob actually landed in storage.",
   })
   sizeConfirmed!: boolean;
 
@@ -57,7 +58,11 @@ export class CreateUploadRequestDto implements CreateUploadRequest {
   @Length(1, 255)
   mime!: string;
 
-  @ApiProperty({ example: 2_458_112, maximum: 5 * 1024 ** 3, description: "Size in bytes" })
+  @ApiProperty({
+    example: 2_458_112,
+    maximum: 5 * 1024 ** 3,
+    description: "Size in bytes",
+  })
   @IsInt()
   @Min(0)
   @Max(5 * 1024 ** 3)

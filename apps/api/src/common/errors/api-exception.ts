@@ -13,7 +13,7 @@ export class ApiException extends HttpException {
     public readonly code: ApiErrorCode,
     message: string,
     status: HttpStatus,
-    public readonly details?: ApiErrorDetail[],
+    public readonly details?: ApiErrorDetail[]
   ) {
     super(message, status);
   }
@@ -25,7 +25,7 @@ export class ValidationException extends ApiException {
       "VALIDATION_ERROR",
       "The request contains invalid fields.",
       HttpStatus.UNPROCESSABLE_ENTITY,
-      details,
+      details
     );
   }
 }

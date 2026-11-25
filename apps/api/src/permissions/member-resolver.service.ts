@@ -1,21 +1,21 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import type { Redis } from "ioredis";
+import { type ApiEnv, claimRequiresVerifiedEmail } from "@wire/config";
 import { claimInvitesByEmail, Database, findMemberByUser } from "@wire/db";
-import { claimRequiresVerifiedEmail, type ApiEnv } from "@wire/config";
 import type { Member } from "@wire/types";
+import type { Redis } from "ioredis";
 import { API_ENV } from "../config/env.provider.js";
 import { REDIS, warnRedisFailure } from "../redis/redis.module.js";
 
 export interface ResolvedMember {
+  displayName: string;
   id: string;
   role: Member["role"];
-  displayName: string;
 }
 
 interface SessionUser {
-  id: string;
   email: string;
   emailVerified: boolean;
+  id: string;
 }
 
 const POSITIVE_TTL_SECONDS = 60;
@@ -40,7 +40,7 @@ export class MemberResolverService {
   constructor(
     @Inject(Database) private readonly db: Database,
     @Inject(REDIS) private readonly redis: Redis,
-    @Inject(API_ENV) env: ApiEnv,
+    @Inject(API_ENV) env: ApiEnv
   ) {
     this.requireVerifiedEmail = claimRequiresVerifiedEmail(env);
   }
@@ -49,18 +49,35 @@ export class MemberResolverService {
     return user.emailVerified || !this.requireVerifiedEmail;
   }
 
-  async resolve(workspaceId: string, user: SessionUser): Promise<ResolvedMember | null> {
+  async resolve(
+    workspaceId: string,
+    user: SessionUser
+  ): Promise<ResolvedMember | null> {
     const key = cacheKey(workspaceId, user.id);
     const cached = await this.redis.get(key).catch((err: Error) => {
-      warnRedisFailure(this.redis, this.logger, "member cache read failed", err);
+      warnRedisFailure(
+        this.redis,
+        this.logger,
+        "member cache read failed",
+        err
+      );
       return null;
     });
-    if (cached === NONE) return null;
-    if (cached) return JSON.parse(cached) as ResolvedMember;
+    if (cached === NONE) {
+      return null;
+    }
+    if (cached) {
+      return JSON.parse(cached) as ResolvedMember;
+    }
 
     let member = await findMemberByUser(this.db, workspaceId, user.id);
     if (!member && this.canClaim(user)) {
-      [member = null] = await claimInvitesByEmail(this.db, user.id, user.email, workspaceId);
+      [member = null] = await claimInvitesByEmail(
+        this.db,
+        user.id,
+        user.email,
+        workspaceId
+      );
     }
 
     const resolved = member
@@ -71,20 +88,32 @@ export class MemberResolverService {
         key,
         resolved ? JSON.stringify(resolved) : NONE,
         "EX",
-        resolved ? POSITIVE_TTL_SECONDS : NEGATIVE_TTL_SECONDS,
+        resolved ? POSITIVE_TTL_SECONDS : NEGATIVE_TTL_SECONDS
       )
       .catch((err: Error) =>
-        warnRedisFailure(this.redis, this.logger, "member cache write failed", err),
+        warnRedisFailure(
+          this.redis,
+          this.logger,
+          "member cache write failed",
+          err
+        )
       );
     return resolved;
   }
 
   async invalidate(workspaceId: string, userId: string | null): Promise<void> {
-    if (!userId) return;
+    if (!userId) {
+      return;
+    }
     await this.redis
       .del(cacheKey(workspaceId, userId))
       .catch((err: Error) =>
-        warnRedisFailure(this.redis, this.logger, "member cache invalidate failed", err),
+        warnRedisFailure(
+          this.redis,
+          this.logger,
+          "member cache invalidate failed",
+          err
+        )
       );
   }
 }

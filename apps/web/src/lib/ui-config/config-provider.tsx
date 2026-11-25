@@ -1,17 +1,19 @@
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { baseUiConfig, type UiConfig, type UiConfigOverride } from "@wire/ui-config";
 import type { UiConfigResource } from "@wire/types";
+import type { UiConfig, UiConfigOverride } from "@wire/ui-config";
+import { baseUiConfig } from "@wire/ui-config";
+import type { ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo } from "react";
 import { apiFetch } from "@/lib/api-client.js";
 import { applyTheme } from "./apply-theme.js";
 import { createIconRegistry, IconRegistryProvider } from "./icon-pack.js";
 
 interface UiConfigContextValue {
   config: UiConfig;
-  warnings: string[];
   /** True while the first server resolve is in flight — config is the base default until then. */
   isResolving: boolean;
   setUserOverride: (override: UiConfigOverride) => void;
+  warnings: string[];
 }
 
 const UiConfigContext = createContext<UiConfigContextValue | null>(null);
@@ -35,7 +37,8 @@ export function UiConfigProvider({
 
   const { data, isLoading } = useQuery({
     queryKey: ["ui-config", workspaceId],
-    queryFn: () => apiFetch<UiConfigResource>(`/v1/workspaces/${workspaceId}/ui-config`),
+    queryFn: () =>
+      apiFetch<UiConfigResource>(`/v1/workspaces/${workspaceId}/ui-config`),
   });
 
   const config = data?.resolved ?? baseUiConfig;
@@ -58,7 +61,7 @@ export function UiConfigProvider({
 
   const iconRegistry = useMemo(
     () => createIconRegistry(config.theme.iconPack),
-    [config.theme.iconPack],
+    [config.theme.iconPack]
   );
 
   const value: UiConfigContextValue = {
@@ -70,13 +73,17 @@ export function UiConfigProvider({
 
   return (
     <UiConfigContext.Provider value={value}>
-      <IconRegistryProvider value={iconRegistry}>{children}</IconRegistryProvider>
+      <IconRegistryProvider value={iconRegistry}>
+        {children}
+      </IconRegistryProvider>
     </UiConfigContext.Provider>
   );
 }
 
 export function useUiConfig(): UiConfigContextValue {
   const ctx = useContext(UiConfigContext);
-  if (!ctx) throw new Error("useUiConfig must be used within UiConfigProvider");
+  if (!ctx) {
+    throw new Error("useUiConfig must be used within UiConfigProvider");
+  }
   return ctx;
 }

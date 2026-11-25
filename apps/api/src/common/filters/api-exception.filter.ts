@@ -9,9 +9,9 @@ import {
 import { API_VERSION } from "@wire/config";
 import type { ApiError, ApiResponse } from "@wire/types";
 import type { Response } from "express";
-import type { RequestWithId } from "../middleware/request-id.middleware.js";
 import { ApiException } from "../errors/api-exception.js";
 import { errorCodeForStatus } from "../errors/http-status-error-code.map.js";
+import type { RequestWithId } from "../middleware/request-id.middleware.js";
 
 const GENERIC_MESSAGE = "An unexpected error occurred.";
 
@@ -28,12 +28,14 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const http = host.switchToHttp();
     const res = http.getResponse<Response>();
     const req = http.getRequest<RequestWithId>();
-    const requestId = req.requestId ?? "req_unknown";
+    const { requestId } = req;
 
     const { status, error } = this.resolve(exception);
 
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
-      this.logger.error(exception instanceof Error ? exception.stack : exception);
+      this.logger.error(
+        exception instanceof Error ? exception.stack : exception
+      );
     }
 
     res.setHeader("X-API-Version", API_VERSION);
@@ -68,13 +70,17 @@ export class ApiExceptionFilter implements ExceptionFilter {
       // A 5xx HttpException that isn't one of ours may carry a message from a
       // library or dependency — never let it reach the client.
       if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
-        return { status, error: { code: errorCodeForStatus(status), message: GENERIC_MESSAGE } };
+        return {
+          status,
+          error: { code: errorCodeForStatus(status), message: GENERIC_MESSAGE },
+        };
       }
       const response = exception.getResponse();
       const message =
         typeof response === "string"
           ? response
-          : ((response as { message?: string | string[] }).message ?? exception.message);
+          : ((response as { message?: string | string[] }).message ??
+            exception.message);
 
       return {
         status,

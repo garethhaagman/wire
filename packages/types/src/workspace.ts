@@ -4,17 +4,17 @@
  * an x-wire-codegen marker (see internal-docs/stack/monorepo-layout.md).
  */
 export interface Workspace {
-  id: `ws_${string}`;
-  orgId: string;
-  name: string;
-  dataRegion: string;
   createdAt: string;
+  dataRegion: string;
+  id: `ws_${string}`;
+  name: string;
+  orgId: string;
   updatedAt: string;
 }
 
 export interface CreateWorkspaceRequest {
-  name: string;
   dataRegion: string;
+  name: string;
 }
 
 export interface UpdateWorkspaceRequest {

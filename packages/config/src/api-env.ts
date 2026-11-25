@@ -3,12 +3,14 @@ import { z } from "zod";
 /** Blank `KEY=` lines in .env files mean "unset", not an empty value. */
 const optionalString = z.preprocess(
   (value) => (value === "" ? undefined : value),
-  z.string().min(1).optional(),
+  z.string().min(1).optional()
 );
 
 export const apiEnvSchema = z
   .object({
-    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development"),
     PORT: z.coerce.number().int().positive().default(3001),
     DATABASE_URL: z.string().url(),
     /** Optional streaming replica for history/search/list reads. */
@@ -58,16 +60,23 @@ export const apiEnvSchema = z
     RESEND_API_KEY: optionalString,
     EMAIL_FROM_ADDRESS: z.string().min(1).default("Wire <no-reply@wire.local>"),
   })
-  .refine((env) => Boolean(env.GOOGLE_CLIENT_ID) === Boolean(env.GOOGLE_CLIENT_SECRET), {
-    message: "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set together",
-    path: ["GOOGLE_CLIENT_SECRET"],
-  })
   .refine(
-    (env) => !env.S3_BUCKET || (env.S3_ACCESS_KEY_ID && env.S3_SECRET_ACCESS_KEY && env.S3_REGION),
+    (env) =>
+      Boolean(env.GOOGLE_CLIENT_ID) === Boolean(env.GOOGLE_CLIENT_SECRET),
     {
-      message: "S3_BUCKET requires S3_REGION, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY",
+      message: "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set together",
+      path: ["GOOGLE_CLIENT_SECRET"],
+    }
+  )
+  .refine(
+    (env) =>
+      !env.S3_BUCKET ||
+      (env.S3_ACCESS_KEY_ID && env.S3_SECRET_ACCESS_KEY && env.S3_REGION),
+    {
+      message:
+        "S3_BUCKET requires S3_REGION, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY",
       path: ["S3_BUCKET"],
-    },
+    }
   );
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>;

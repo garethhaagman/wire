@@ -1,11 +1,25 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post } from "@nestjs/common";
-import { ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+} from "@nestjs/common";
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Pin } from "@wire/types";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
-import { PinsService } from "./pins.service.js";
 import { CreatePinRequestDto, PinDto } from "./dto/pin.dto.js";
+import { PinsService } from "./pins.service.js";
 
 @ApiTags("Pins")
 @ApiCookieAuth()
@@ -19,7 +33,7 @@ export class PinsController {
   @ApiOkResponse({ type: PinDto, isArray: true })
   list(
     @CurrentActor() actor: WorkspaceActor,
-    @Param("channelId") channelId: string,
+    @Param("channelId") channelId: string
   ): Promise<Pin[]> {
     return this.pins.list(actor, channelId);
   }
@@ -30,7 +44,7 @@ export class PinsController {
   add(
     @CurrentActor() actor: WorkspaceActor,
     @Param("channelId") channelId: string,
-    @Body() body: CreatePinRequestDto,
+    @Body() body: CreatePinRequestDto
   ): Promise<Pin> {
     return this.pins.add(actor, channelId, body.messageId);
   }
@@ -42,7 +56,7 @@ export class PinsController {
   async remove(
     @CurrentActor() actor: WorkspaceActor,
     @Param("channelId") channelId: string,
-    @Param("id") id: string,
+    @Param("id") id: string
   ): Promise<null> {
     await this.pins.remove(actor, channelId, id);
     return null;

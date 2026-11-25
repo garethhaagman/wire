@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { generateText } from "ai";
+import type { ApiEnv } from "@wire/config";
 import {
   appendEvents,
   Database,
@@ -8,19 +8,19 @@ import {
   insertMessage,
   updateAgentRun,
 } from "@wire/db";
-import type { ApiEnv } from "@wire/config";
 import type { Agent, AgentRun } from "@wire/types";
+import { generateText } from "ai";
 import { API_ENV } from "../config/env.provider.js";
 import { OutboxRelayService } from "../events/outbox-relay.service.js";
 import { selectModel } from "./model-selection.js";
 
 interface TriggerRunInput {
-  workspaceId: string;
   agent: Agent;
-  prompt: string;
   channelId?: string | undefined;
-  triggeredByMessageId?: string | undefined;
   context?: Record<string, unknown> | undefined;
+  prompt: string;
+  triggeredByMessageId?: string | undefined;
+  workspaceId: string;
 }
 
 /**
@@ -42,7 +42,7 @@ export class AgentRunnerService {
   constructor(
     @Inject(Database) private readonly db: Database,
     @Inject(API_ENV) private readonly env: ApiEnv,
-    private readonly relay: OutboxRelayService,
+    private readonly relay: OutboxRelayService
   ) {}
 
   /** Creates the queued row, then kicks off execution in the background. Never throws from the background part. */
@@ -53,7 +53,10 @@ export class AgentRunnerService {
         agentId: input.agent.id,
         triggeredByMessageId: input.triggeredByMessageId ?? null,
         channelId: input.channelId ?? null,
-        input: { prompt: input.prompt, ...(input.context ? { context: input.context } : {}) },
+        input: {
+          prompt: input.prompt,
+          ...(input.context ? { context: input.context } : {}),
+        },
       });
       await appendEvents(tx, [
         {
@@ -68,17 +71,26 @@ export class AgentRunnerService {
     this.relay.kick();
 
     this.execute(run, input.agent).catch((err: unknown) => {
-      this.logger.error(`agent run ${run.id} crashed outside its own error handling`, err);
+      this.logger.error(
+        `agent run ${run.id} crashed outside its own error handling`,
+        err
+      );
     });
 
     return run;
   }
 
   private async execute(run: AgentRun, agent: Agent): Promise<void> {
-    await updateAgentRun(this.db, run.id, { status: "running", startedAt: new Date() });
+    await updateAgentRun(this.db, run.id, {
+      status: "running",
+      startedAt: new Date(),
+    });
 
     try {
-      const result = await generateText({ model: selectModel(this.env), prompt: run.input.prompt });
+      const result = await generateText({
+        model: selectModel(this.env),
+        prompt: run.input.prompt,
+      });
 
       await insertAgentRunStep(this.db, {
         runId: run.id,
@@ -100,7 +112,12 @@ export class AgentRunnerService {
       });
 
       if (run.channelId) {
-        await this.postReply(run.workspaceId, run.channelId, agent, result.text);
+        await this.postReply(
+          run.workspaceId,
+          run.channelId,
+          agent,
+          result.text
+        );
       }
 
       await appendEvents(this.db, [
@@ -114,7 +131,8 @@ export class AgentRunnerService {
       this.relay.kick();
     } catch (err: unknown) {
       this.logger.error(`agent run ${run.id} failed`, err);
-      const message = err instanceof Error ? err.message : "Unknown model error.";
+      const message =
+        err instanceof Error ? err.message : "Unknown model error.";
       const failed = await updateAgentRun(this.db, run.id, {
         status: "failed",
         error: message,
@@ -136,7 +154,7 @@ export class AgentRunnerService {
     workspaceId: string,
     channelId: string,
     agent: Agent,
-    body: string,
+    body: string
   ): Promise<void> {
     await this.db.tx(async (tx) => {
       const result = await insertMessage(tx, {
@@ -150,12 +168,17 @@ export class AgentRunnerService {
       });
       if (!result.ok) {
         this.logger.warn(
-          `agent ${agent.id} could not post to channel ${channelId}: ${result.reason}`,
+          `agent ${agent.id} could not post to channel ${channelId}: ${result.reason}`
         );
         return;
       }
       await appendEvents(tx, [
-        { workspaceId, type: "message.created", channelId, data: { message: result.message } },
+        {
+          workspaceId,
+          type: "message.created",
+          channelId,
+          data: { message: result.message },
+        },
       ]);
     });
     this.relay.kick();

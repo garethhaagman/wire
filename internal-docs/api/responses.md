@@ -53,7 +53,13 @@ Defined in `@wire/types` (`packages/types/src/envelope.ts`) — the single canon
   "error": {
     "code": "VALIDATION_ERROR",
     "message": "The request contains invalid fields.",
-    "details": [{ "field": "email", "code": "ISEMAIL", "message": "email must be an email" }]
+    "details": [
+      {
+        "field": "email",
+        "code": "ISEMAIL",
+        "message": "email must be an email"
+      }
+    ]
   },
   "meta": {
     "request_id": "req_...",

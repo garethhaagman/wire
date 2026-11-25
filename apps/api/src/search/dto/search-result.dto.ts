@@ -11,7 +11,11 @@ export class SearchResultDto implements SearchResult {
   @ApiProperty({ example: "ch_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   channelId!: string;
 
-  @ApiProperty({ nullable: true, type: String, example: "msg_01jd5wz2n0a1b2c3d4e5f6g7h8" })
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    example: "msg_01jd5wz2n0a1b2c3d4e5f6g7h8",
+  })
   threadRootId!: string | null;
 
   @ApiProperty({ example: "mem_01jd5x0k8f3v8q2m7n4r6t9w1y" })

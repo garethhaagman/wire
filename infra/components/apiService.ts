@@ -3,19 +3,22 @@ import * as docker from "@pulumi/docker";
 import * as pulumi from "@pulumi/pulumi";
 
 export interface ApiServiceArgs {
+  authSecret: pulumi.Input<string>;
+  databaseUrl: pulumi.Input<string>;
+  dependsOn?: pulumi.Resource[];
   networkName: pulumi.Input<string>;
   port: pulumi.Input<number>;
-  databaseUrl: pulumi.Input<string>;
   redisUrl: pulumi.Input<string>;
   webOrigin: pulumi.Input<string>;
-  authSecret: pulumi.Input<string>;
-  dependsOn?: pulumi.Resource[];
 }
 
 const repoRoot = path.resolve(__dirname, "..", "..");
 const INTERNAL_PORT = 3001;
 
-export function createApiService(name: string, args: ApiServiceArgs): docker.Container {
+export function createApiService(
+  name: string,
+  args: ApiServiceArgs
+): docker.Container {
   const image = new docker.Image(`${name}-api-image`, {
     build: {
       context: repoRoot,
@@ -42,6 +45,6 @@ export function createApiService(name: string, args: ApiServiceArgs): docker.Con
       networksAdvanced: [{ name: args.networkName, aliases: ["api"] }],
       restart: "unless-stopped",
     },
-    args.dependsOn ? { dependsOn: args.dependsOn } : undefined,
+    args.dependsOn ? { dependsOn: args.dependsOn } : undefined
   );
 }

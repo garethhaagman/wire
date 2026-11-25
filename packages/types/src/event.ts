@@ -4,14 +4,14 @@
  * delivered over SSE and webhooks (at-least-once: dedupe on `id`).
  */
 export interface WireEvent<T = Record<string, unknown>> {
+  channelId: string | null;
+  createdAt: string;
+  data: T;
   id: `evt_${string}`;
   /** Workspace-wide replay cursor (SSE `id:` / `Last-Event-ID`). */
   seq: number;
   type: WireEventType;
   workspaceId: string;
-  channelId: string | null;
-  data: T;
-  createdAt: string;
 }
 
 export const WIRE_EVENT_TYPES = [
@@ -43,7 +43,7 @@ export type WireEventType = (typeof WIRE_EVENT_TYPES)[number];
 
 /** Ephemeral signals — SSE only, never persisted or replayed. */
 export interface PresenceEntry {
+  lastSeenAt: string;
   memberId: string;
   status: "active";
-  lastSeenAt: string;
 }

@@ -5,7 +5,6 @@ import {
   type OnApplicationBootstrap,
   type OnApplicationShutdown,
 } from "@nestjs/common";
-import type { Redis } from "ioredis";
 import { API_VERSION, type ApiEnv } from "@wire/config";
 import {
   claimUnpublishedEvents,
@@ -15,10 +14,11 @@ import {
   pruneEvents,
 } from "@wire/db";
 import type { WireEvent } from "@wire/types";
+import type { Redis } from "ioredis";
 import { RepeatErrorLogger } from "../common/logging/repeat-error-logger.js";
 import { API_ENV } from "../config/env.provider.js";
 import { REDIS, warnRedisFailure } from "../redis/redis.module.js";
-import { workspaceChannel, type RealtimeEnvelope } from "./realtime-channel.js";
+import { type RealtimeEnvelope, workspaceChannel } from "./realtime-channel.js";
 
 const BATCH_SIZE = 500;
 const POLL_INTERVAL_MS = 200;
@@ -38,25 +38,32 @@ const EVENT_RETENTION_SECONDS = 7 * 24 * 60 * 60;
  * can never back up the outbox.
  */
 @Injectable()
-export class OutboxRelayService implements OnApplicationBootstrap, OnApplicationShutdown {
+export class OutboxRelayService
+  implements OnApplicationBootstrap, OnApplicationShutdown
+{
   private readonly logger = new Logger(OutboxRelayService.name);
-  private readonly errors = new RepeatErrorLogger(this.logger, "outbox relay failed");
+  private readonly errors = new RepeatErrorLogger(
+    this.logger,
+    "outbox relay failed"
+  );
   private readonly enabled: boolean;
   private draining = false;
   private pending = false;
   private stopped = false;
-  private timers: NodeJS.Timeout[] = [];
+  private readonly timers: NodeJS.Timeout[] = [];
 
   constructor(
     @Inject(Database) private readonly db: Database,
     @Inject(REDIS) private readonly redis: Redis,
-    @Inject(API_ENV) env: ApiEnv,
+    @Inject(API_ENV) env: ApiEnv
   ) {
     this.enabled = env.RUN_WORKERS;
   }
 
   onApplicationBootstrap(): void {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+      return;
+    }
     this.timers.push(setInterval(() => this.kick(), POLL_INTERVAL_MS));
     this.timers.push(setInterval(() => void this.prune(), PRUNE_INTERVAL_MS));
     this.kick();
@@ -64,12 +71,17 @@ export class OutboxRelayService implements OnApplicationBootstrap, OnApplication
 
   onApplicationShutdown(): void {
     this.stopped = true;
-    for (const timer of this.timers) clearInterval(timer);
+    for (const timer of this.timers) {
+      clearInterval(timer);
+    }
   }
 
   /** Called after a mutation commits so its events go out now instead of on the next poll. */
   kick(): void {
-    if (!this.enabled || this.stopped) return;
+    if (!this.enabled || this.stopped) {
+      return;
+    }
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: drain() sets this.draining asynchronously; kick() can re-enter while a drain is in flight
     if (this.draining) {
       this.pending = true;
       return;
@@ -82,8 +94,12 @@ export class OutboxRelayService implements OnApplicationBootstrap, OnApplication
     try {
       do {
         this.pending = false;
+        // biome-ignore lint/performance/noAwaitInLoops: drains batches until empty; each batch depends on the previous one finishing
         const relayed = await this.relayBatch();
-        if (relayed === BATCH_SIZE) this.pending = true;
+        if (relayed === BATCH_SIZE) {
+          this.pending = true;
+        }
+        // biome-ignore lint/suspicious/noUnnecessaryConditions: kick() can set this.pending asynchronously while this loop is running, and onApplicationShutdown() sets this.stopped externally
       } while (this.pending && !this.stopped);
       this.errors.reset();
     } catch (err) {
@@ -96,13 +112,15 @@ export class OutboxRelayService implements OnApplicationBootstrap, OnApplication
   private relayBatch(): Promise<number> {
     return this.db.tx(async (tx) => {
       const events = await claimUnpublishedEvents(tx, BATCH_SIZE);
-      if (events.length === 0) return 0;
+      if (events.length === 0) {
+        return 0;
+      }
 
       await this.publish(events);
       await enqueueWebhookDeliveries(tx, events, API_VERSION);
       await markEventsPublished(
         tx,
-        events.map((e) => e.seq),
+        events.map((e) => e.seq)
       );
       return events.length;
     });
@@ -113,7 +131,10 @@ export class OutboxRelayService implements OnApplicationBootstrap, OnApplication
       const pipeline = this.redis.pipeline();
       for (const event of events) {
         const envelope: RealtimeEnvelope = { kind: "event", event };
-        pipeline.publish(workspaceChannel(event.workspaceId), JSON.stringify(envelope));
+        pipeline.publish(
+          workspaceChannel(event.workspaceId),
+          JSON.stringify(envelope)
+        );
       }
       await pipeline.exec();
     } catch (err) {
@@ -121,18 +142,25 @@ export class OutboxRelayService implements OnApplicationBootstrap, OnApplication
         this.redis,
         this.logger,
         "realtime publish failed (clients will resync on reconnect)",
-        err,
+        err
       );
     }
   }
 
   private async prune(): Promise<void> {
     try {
-      while (!this.stopped && (await pruneEvents(this.db, EVENT_RETENTION_SECONDS, 5000)) > 0) {
+      while (
+        // biome-ignore lint/suspicious/noUnnecessaryConditions: onApplicationShutdown() sets this.stopped externally, invisible to this method's own analysis
+        !this.stopped &&
+        // biome-ignore lint/performance/noAwaitInLoops: deletes in bounded batches until none remain; each batch depends on the previous one finishing
+        (await pruneEvents(this.db, EVENT_RETENTION_SECONDS, 5000)) > 0
+      ) {
         // keep deleting in bounded batches
       }
     } catch (err) {
-      this.logger.warn(`event retention prune failed: ${(err as Error).message}`);
+      this.logger.warn(
+        `event retention prune failed: ${(err as Error).message}`
+      );
     }
   }
 }

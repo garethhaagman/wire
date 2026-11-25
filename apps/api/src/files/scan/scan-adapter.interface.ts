@@ -6,5 +6,5 @@
  * without any caller change — see select-scan-adapter.ts.
  */
 export interface ScanAdapter {
-  scan(input: { key: string }): Promise<"clean" | "infected">;
+  scan: (input: { key: string }) => Promise<"clean" | "infected">;
 }

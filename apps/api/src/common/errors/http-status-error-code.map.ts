@@ -6,7 +6,9 @@ import type { ApiErrorCode } from "@wire/types";
  * don't carry an explicit ApiErrorCode (e.g. Nest's built-in NotFoundException).
  * See internal-docs/api/errors.md for the full status/code table.
  */
-export const HTTP_STATUS_TO_ERROR_CODE: Partial<Record<HttpStatus, ApiErrorCode>> = {
+export const HTTP_STATUS_TO_ERROR_CODE: Partial<
+  Record<HttpStatus, ApiErrorCode>
+> = {
   [HttpStatus.BAD_REQUEST]: "VALIDATION_ERROR",
   [HttpStatus.UNAUTHORIZED]: "AUTHENTICATION_ERROR",
   [HttpStatus.FORBIDDEN]: "PERMISSION_DENIED",

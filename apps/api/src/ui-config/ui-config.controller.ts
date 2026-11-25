@@ -1,14 +1,14 @@
-import { Body, Controller, Patch, Get } from "@nestjs/common";
+import { Body, Controller, Get, Patch } from "@nestjs/common";
 import { ApiCookieAuth, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import type { UiConfigResource } from "@wire/types";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
-import { UiConfigService } from "./ui-config.service.js";
 import {
   UiConfigResourceDto,
   UpdateOrgUiConfigRequestDto,
   UpdateUserUiConfigRequestDto,
 } from "./dto/ui-config.dto.js";
+import { UiConfigService } from "./ui-config.service.js";
 
 /**
  * Server-resolved config, per internal-docs/ui/config-schema.md "Resolution
@@ -34,7 +34,7 @@ export class UiConfigController {
   @ApiOkResponse({ type: UiConfigResourceDto })
   async updateOrgLayer(
     @CurrentActor() actor: WorkspaceActor,
-    @Body() body: UpdateOrgUiConfigRequestDto,
+    @Body() body: UpdateOrgUiConfigRequestDto
   ): Promise<UiConfigResource> {
     await this.uiConfig.setOrgLayer(actor, body.override, body.locks);
     return this.uiConfig.resolve(actor);
@@ -45,7 +45,7 @@ export class UiConfigController {
   @ApiOkResponse({ type: UiConfigResourceDto })
   async updateUserLayer(
     @CurrentActor() actor: WorkspaceActor,
-    @Body() body: UpdateUserUiConfigRequestDto,
+    @Body() body: UpdateUserUiConfigRequestDto
   ): Promise<UiConfigResource> {
     await this.uiConfig.setUserLayer(actor, body.override);
     return this.uiConfig.resolve(actor);

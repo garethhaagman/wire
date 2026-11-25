@@ -9,7 +9,10 @@ export interface DocsServiceArgs {
 
 const repoRoot = path.resolve(__dirname, "..", "..");
 
-export function createDocsService(name: string, args: DocsServiceArgs): docker.Container {
+export function createDocsService(
+  name: string,
+  args: DocsServiceArgs
+): docker.Container {
   const image = new docker.Image(`${name}-docs-image`, {
     build: {
       context: repoRoot,

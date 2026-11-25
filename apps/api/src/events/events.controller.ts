@@ -1,39 +1,44 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
   Inject,
+  Param,
   Post,
   Query,
   Req,
   Res,
-  Body,
-  Param,
 } from "@nestjs/common";
-import { ApiCookieAuth, ApiOkResponse, ApiProduces, ApiTags } from "@nestjs/swagger";
-import type { Request, Response } from "express";
+import {
+  ApiCookieAuth,
+  ApiOkResponse,
+  ApiProduces,
+  ApiTags,
+} from "@nestjs/swagger";
 import { Database, listEventsAfter } from "@wire/db";
 import type { PresenceEntry, WireEvent } from "@wire/types";
+import type { Request, Response } from "express";
+import { ChannelAccessService } from "../channels/channel-access.service.js";
 import {
   CursorPaginatedResult,
   CursorQueryDto,
   decodeCursor,
   encodeCursor,
 } from "../common/dto/cursor-paginated-result.js";
-import { ChannelAccessService } from "../channels/channel-access.service.js";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { WorkspaceScope } from "../permissions/workspace-scope.decorator.js";
-import { PresenceService } from "./presence.service.js";
-import { HEARTBEAT_MS, RealtimeService } from "./realtime.service.js";
-import { SseSink } from "./sse-sink.js";
 import {
   PresenceEntryDto,
   StreamQueryDto,
   TypingRequestDto,
   WireEventDto,
 } from "./dto/event.dto.js";
+import { PresenceService } from "./presence.service.js";
+import { HEARTBEAT_MS, RealtimeService } from "./realtime.service.js";
+import { SseSink } from "./sse-sink.js";
 
 /**
  * Realtime surface — internal-docs/api/events-webhooks.md. Durable events come from
@@ -47,7 +52,7 @@ export class EventsController {
     @Inject(Database) private readonly db: Database,
     private readonly realtime: RealtimeService,
     private readonly presence: PresenceService,
-    private readonly access: ChannelAccessService,
+    private readonly access: ChannelAccessService
   ) {}
 
   /** Replay / poll durable events the caller can see, oldest first. */
@@ -56,7 +61,7 @@ export class EventsController {
   @ApiOkResponse({ type: WireEventDto, isArray: true })
   async list(
     @CurrentActor() actor: WorkspaceActor,
-    @Query() query: CursorQueryDto,
+    @Query() query: CursorQueryDto
   ): Promise<CursorPaginatedResult<WireEvent>> {
     const perPage = query.per_page ?? 50;
     const afterSeq = decodeCursor(query.cursor)?.seq ?? query.after_seq ?? 0;
@@ -71,7 +76,9 @@ export class EventsController {
     return new CursorPaginatedResult(page.items, {
       per_page: perPage,
       has_more: page.hasMore,
-      next_cursor: last ? encodeCursor("after", last.seq) : (query.cursor ?? null),
+      next_cursor: last
+        ? encodeCursor("after", last.seq)
+        : (query.cursor ?? null),
     });
   }
 
@@ -84,17 +91,20 @@ export class EventsController {
   @RequirePermission("read", "Event")
   @ApiProduces("text/event-stream")
   @ApiOkResponse({
-    description: "text/event-stream of WireEvent frames (event: <type>, id: <seq>)",
+    description:
+      "text/event-stream of WireEvent frames (event: <type>, id: <seq>)",
   })
   async getStream(
     @CurrentActor() actor: WorkspaceActor,
     @Query() query: StreamQueryDto,
     @Req() req: Request,
-    @Res() res: Response,
+    @Res() res: Response
   ): Promise<void> {
     const lastEventId = Number(req.header("Last-Event-ID"));
     const afterSeq =
-      Number.isInteger(lastEventId) && lastEventId >= 0 ? lastEventId : (query.after_seq ?? null);
+      Number.isInteger(lastEventId) && lastEventId >= 0
+        ? lastEventId
+        : (query.after_seq ?? null);
 
     res.status(200);
     res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
@@ -102,7 +112,7 @@ export class EventsController {
     res.setHeader("Connection", "keep-alive");
     res.setHeader("X-Accel-Buffering", "no");
     res.flushHeaders();
-    res.write(`retry: 3000\n\n`);
+    res.write("retry: 3000\n\n");
 
     const sink = new SseSink(actor.member.id, res);
     const { close } = await this.realtime.attachSink(actor, sink, {
@@ -135,7 +145,9 @@ export class EventsController {
   @Get("workspaces/:workspaceId/presence")
   @RequirePermission("read", "Presence")
   @ApiOkResponse({ type: PresenceEntryDto, isArray: true })
-  listPresence(@CurrentActor() actor: WorkspaceActor): Promise<PresenceEntry[]> {
+  listPresence(
+    @CurrentActor() actor: WorkspaceActor
+  ): Promise<PresenceEntry[]> {
     return this.presence.listActive(actor.workspaceId);
   }
 
@@ -147,14 +159,14 @@ export class EventsController {
   async createTyping(
     @CurrentActor() actor: WorkspaceActor,
     @Param("channelId") channelId: string,
-    @Body() body: TypingRequestDto,
+    @Body() body: TypingRequestDto
   ): Promise<null> {
     await this.access.writable(actor, channelId);
     await this.presence.typing(
       actor.workspaceId,
       channelId,
       actor.member.id,
-      body.threadRootId ?? null,
+      body.threadRootId ?? null
     );
     return null;
   }

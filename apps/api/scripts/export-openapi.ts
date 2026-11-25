@@ -14,7 +14,15 @@ import { stringify } from "yaml";
 import { createApp } from "../src/create-app.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const OUTPUT_PATH = path.join(__dirname, "..", "..", "..", "internal-docs", "api", "openapi.yaml");
+const OUTPUT_PATH = path.join(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "internal-docs",
+  "api",
+  "openapi.yaml"
+);
 
 async function main(): Promise<void> {
   const app = await createApp();
@@ -23,7 +31,7 @@ async function main(): Promise<void> {
     .setTitle("Wire API")
     .setDescription(
       "Primary HTTP surface for the Wire AI-native team messaging platform. Generated from " +
-        "@nestjs/swagger decorators in apps/api, do not hand-edit. Regenerate with `bun run openapi:export`.",
+        "@nestjs/swagger decorators in apps/api, do not hand-edit. Regenerate with `bun run openapi:export`."
     )
     .setVersion("0.1.0")
     .addCookieAuth("better-auth.session_token")

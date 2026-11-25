@@ -1,7 +1,7 @@
-import { createContext, useContext } from "react";
-import * as Lucide from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import type { IconPack } from "@wire/ui-config";
+import type { LucideIcon } from "lucide-react";
+import * as Lucide from "lucide-react";
+import { createContext, useContext } from "react";
 
 /**
  * Icon packs are referenced by id in config (see @wire/ui-config primitives.ts
@@ -14,7 +14,14 @@ import type { IconPack } from "@wire/ui-config";
  * against the org's sprite sheet instead of a bundled component set.
  */
 export type IconName =
-  "hash" | "lock" | "search" | "plus" | "settings" | "send" | "chevron-right" | "message-square";
+  | "hash"
+  | "lock"
+  | "search"
+  | "plus"
+  | "settings"
+  | "send"
+  | "chevron-right"
+  | "message-square";
 
 const lucideIcons: Record<IconName, LucideIcon> = {
   hash: Lucide.Hash,
@@ -37,7 +44,7 @@ function CustomSpriteIcon({
   className: string;
 }): React.JSX.Element {
   return (
-    <svg className={className} aria-hidden="true">
+    <svg aria-hidden="true" className={className}>
       <use href={`${spriteUrl}#${name}`} />
     </svg>
   );
@@ -50,8 +57,13 @@ export interface IconRegistry {
 export function createIconRegistry(pack: IconPack): IconRegistry {
   if (pack.kind === "custom") {
     return {
+      // biome-ignore lint/correctness/noComponentHookFactories: createIconRegistry is called once per config change via useMemo in config-provider.tsx, not per-render
       Icon: ({ name, className = "" }) => (
-        <CustomSpriteIcon name={name} spriteUrl={pack.spriteUrl} className={className} />
+        <CustomSpriteIcon
+          className={className}
+          name={name}
+          spriteUrl={pack.spriteUrl}
+        />
       ),
     };
   }
@@ -59,6 +71,7 @@ export function createIconRegistry(pack: IconPack): IconRegistry {
   // lucide and phosphor both resolve to the lucide set today — phosphor's
   // bundled set is a follow-up registration here, not a schema change.
   return {
+    // biome-ignore lint/correctness/noComponentHookFactories: createIconRegistry is called once per config change via useMemo in config-provider.tsx, not per-render
     Icon: ({ name, className = "" }) => {
       const Component = lucideIcons[name];
       return <Component className={className} />;
@@ -72,6 +85,8 @@ export const IconRegistryProvider = IconRegistryContext.Provider;
 
 export function useIcon(): IconRegistry["Icon"] {
   const registry = useContext(IconRegistryContext);
-  if (!registry) throw new Error("useIcon must be used within IconRegistryProvider");
+  if (!registry) {
+    throw new Error("useIcon must be used within IconRegistryProvider");
+  }
   return registry.Icon;
 }

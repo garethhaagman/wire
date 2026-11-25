@@ -6,6 +6,7 @@ import {
   Logger,
   NotFoundException,
 } from "@nestjs/common";
+import type { ApiEnv } from "@wire/config";
 import {
   addChannelMembers,
   appendEvents,
@@ -20,11 +21,10 @@ import {
   listMembers,
   lockActiveOwnerIds,
   mergePreferences,
+  type NewEvent,
   updateMember,
   upsertMember,
-  type NewEvent,
 } from "@wire/db";
-import type { ApiEnv } from "@wire/config";
 import type {
   CreateMemberRequest,
   Member,
@@ -32,20 +32,32 @@ import type {
   UpdateMemberPreferencesRequest,
   UpdateMemberRequest,
 } from "@wire/types";
+import {
+  ApiException,
+  ResourceConflictException,
+} from "../common/errors/api-exception.js";
 import { API_ENV } from "../config/env.provider.js";
-import { ApiException, ResourceConflictException } from "../common/errors/api-exception.js";
 import { selectEmailSender } from "../email/select-email-sender.js";
 import { OutboxRelayService } from "../events/outbox-relay.service.js";
 import { isAdmin, type WorkspaceActor } from "../permissions/actor.js";
+import { MemberResolverService } from "../permissions/member-resolver.service.js";
+
+const HTML_ESCAPE_PATTERN = /[&<>"']/gu;
+const HTML_ESCAPES: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
 
 /** Workspace names are user-controlled; escape before interpolating into an HTML email body. */
 function escapeHtml(value: string): string {
   return value.replace(
-    /[&<>"']/g,
-    (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!,
+    HTML_ESCAPE_PATTERN,
+    (char) => HTML_ESCAPES[char] ?? char
   );
 }
-import { MemberResolverService } from "../permissions/member-resolver.service.js";
 
 @Injectable()
 export class MembersService {
@@ -55,14 +67,14 @@ export class MembersService {
     @Inject(Database) private readonly db: Database,
     @Inject(API_ENV) private readonly env: ApiEnv,
     private readonly resolver: MemberResolverService,
-    private readonly relay: OutboxRelayService,
+    private readonly relay: OutboxRelayService
   ) {}
 
   list(
     actor: WorkspaceActor,
     page: number,
     perPage: number,
-    search?: string,
+    search?: string
   ): Promise<{ items: Member[]; total: number }> {
     return listMembers(this.db, actor.workspaceId, { page, perPage, search });
   }
@@ -81,7 +93,10 @@ export class MembersService {
    * their first sign-in. New members join the workspace's default channels in the
    * same transaction.
    */
-  async create(actor: WorkspaceActor, input: CreateMemberRequest): Promise<Member> {
+  async create(
+    actor: WorkspaceActor,
+    input: CreateMemberRequest
+  ): Promise<Member> {
     if (input.role === "owner" && actor.member.role !== "owner") {
       throw new ForbiddenException("Only an owner can invite another owner.");
     }
@@ -89,7 +104,11 @@ export class MembersService {
     const user = await findUserByEmail(this.db, input.email);
     const userId =
       user &&
-      this.resolver.canClaim({ id: user.id, email: input.email, emailVerified: user.emailVerified })
+      this.resolver.canClaim({
+        id: user.id,
+        email: input.email,
+        emailVerified: user.emailVerified,
+      })
         ? user.id
         : null;
 
@@ -102,7 +121,9 @@ export class MembersService {
           role: input.role,
           userId,
         });
-        if (!created) return null;
+        if (!created) {
+          return null;
+        }
 
         const events: NewEvent[] = [
           {
@@ -112,8 +133,17 @@ export class MembersService {
             data: { member: created },
           },
         ];
-        for (const channelId of await findDefaultChannelIds(tx, actor.workspaceId)) {
-          const joined = await addChannelMembers(tx, channelId, actor.workspaceId, [created.id]);
+        for (const channelId of await findDefaultChannelIds(
+          tx,
+          actor.workspaceId
+        )) {
+          // biome-ignore lint/performance/noAwaitInLoops: queries on one transaction's connection can't run concurrently
+          const joined = await addChannelMembers(
+            tx,
+            channelId,
+            actor.workspaceId,
+            [created.id]
+          );
           if (joined.length) {
             events.push({
               workspaceId: actor.workspaceId,
@@ -127,12 +157,16 @@ export class MembersService {
         return created;
       })
       .catch((err: unknown) => {
-        if (isUniqueViolation(err)) return null;
+        if (isUniqueViolation(err)) {
+          return null;
+        }
         throw err;
       });
 
     if (!member) {
-      throw new ResourceConflictException(`${input.email} is already a member of this workspace.`);
+      throw new ResourceConflictException(
+        `${input.email} is already a member of this workspace.`
+      );
     }
     this.relay.kick();
     await this.resolver.invalidate(actor.workspaceId, member.userId);
@@ -149,7 +183,10 @@ export class MembersService {
    * retried on failure (a missed send just means the invitee doesn't get an email;
    * they can still be told directly or re-invited).
    */
-  private async sendInviteEmail(workspaceId: string, member: Member): Promise<void> {
+  private async sendInviteEmail(
+    workspaceId: string,
+    member: Member
+  ): Promise<void> {
     const workspace = await findWorkspace(this.db, workspaceId);
     const workspaceName = workspace?.name ?? "a Wire workspace";
     // No dedicated accept-invite page exists yet in apps/web — this links to the
@@ -168,29 +205,39 @@ export class MembersService {
   }
 
   /** Members may edit their own display name; changing roles (or anyone else) is admin-only. */
-  async update(actor: WorkspaceActor, id: string, input: UpdateMemberRequest): Promise<Member> {
+  async update(
+    actor: WorkspaceActor,
+    id: string,
+    input: UpdateMemberRequest
+  ): Promise<Member> {
     const self = id === actor.member.id;
     if (!isAdmin(actor) && (!self || input.role !== undefined)) {
       throw new ApiException(
         "PERMISSION_DENIED",
         "Members can only update their own display name.",
-        HttpStatus.FORBIDDEN,
+        HttpStatus.FORBIDDEN
       );
     }
 
     const member = await this.db.tx(async (tx) => {
       const target = await findMember(tx, actor.workspaceId, id);
-      if (!target) return null;
+      if (!target) {
+        return null;
+      }
 
       if (input.role !== undefined && input.role !== target.role) {
         const touchesOwner = input.role === "owner" || target.role === "owner";
         if (touchesOwner && actor.member.role !== "owner") {
-          throw new ForbiddenException("Only an owner can grant or revoke the owner role.");
+          throw new ForbiddenException(
+            "Only an owner can grant or revoke the owner role."
+          );
         }
         if (target.role === "owner") {
           const owners = await lockActiveOwnerIds(tx, actor.workspaceId);
           if (owners.length <= 1) {
-            throw new ResourceConflictException("A workspace must keep at least one owner.");
+            throw new ResourceConflictException(
+              "A workspace must keep at least one owner."
+            );
           }
         }
       }
@@ -220,13 +267,19 @@ export class MembersService {
   async remove(actor: WorkspaceActor, id: string): Promise<void> {
     const removed = await this.db.tx(async (tx) => {
       const target = await findMember(tx, actor.workspaceId, id);
-      if (!target) return null;
+      if (!target) {
+        return null;
+      }
       if (target.role === "owner") {
-        if (actor.member.role !== "owner")
+        if (actor.member.role !== "owner") {
           throw new ForbiddenException("Only an owner can remove an owner.");
+        }
         const owners = await lockActiveOwnerIds(tx, actor.workspaceId);
-        if (owners.length <= 1)
-          throw new ResourceConflictException("A workspace must keep at least one owner.");
+        if (owners.length <= 1) {
+          throw new ResourceConflictException(
+            "A workspace must keep at least one owner."
+          );
+        }
       }
 
       const member = await deactivateMember(tx, actor.workspaceId, id);
@@ -256,11 +309,15 @@ export class MembersService {
 
   updatePreferences(
     actor: WorkspaceActor,
-    input: UpdateMemberPreferencesRequest,
+    input: UpdateMemberPreferencesRequest
   ): Promise<MemberPreferences> {
     const patch: Partial<MemberPreferences> = {};
-    if (input.starredChannelIds) patch.starredChannelIds = [...new Set(input.starredChannelIds)];
-    if (input.mutedChannelIds) patch.mutedChannelIds = [...new Set(input.mutedChannelIds)];
+    if (input.starredChannelIds) {
+      patch.starredChannelIds = [...new Set(input.starredChannelIds)];
+    }
+    if (input.mutedChannelIds) {
+      patch.mutedChannelIds = [...new Set(input.mutedChannelIds)];
+    }
     return mergePreferences(this.db, actor.member.id, patch);
   }
 }

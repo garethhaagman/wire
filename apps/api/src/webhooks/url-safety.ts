@@ -11,19 +11,23 @@ export class WebhookDeliveryError extends Error {}
  * DNS can change after an endpoint is created.
  */
 export async function assertPublicHost(hostname: string): Promise<void> {
-  const host = hostname.replace(/^\[|\]$/g, "");
+  const host = hostname.replace(/^\[|\]$/gu, "");
   const addresses = isIP(host)
     ? [host]
     : (await lookup(host, { all: true, verbatim: true })).map((a) => a.address);
   for (const address of addresses) {
     if (isPrivateAddress(address)) {
-      throw new WebhookDeliveryError(`${hostname} resolves to a non-public address`);
+      throw new WebhookDeliveryError(
+        `${hostname} resolves to a non-public address`
+      );
     }
   }
 }
 
 function isPrivateAddress(address: string): boolean {
-  const mapped = address.toLowerCase().startsWith("::ffff:") ? address.slice(7) : address;
+  const mapped = address.toLowerCase().startsWith("::ffff:")
+    ? address.slice(7)
+    : address;
   if (isIP(mapped) === 4) {
     const [a = 0, b = 0] = mapped.split(".").map(Number);
     return (

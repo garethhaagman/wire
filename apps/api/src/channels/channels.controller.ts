@@ -19,18 +19,30 @@ import {
   ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
-import type { Request } from "express";
 import type { Channel } from "@wire/types";
-import { PaginationQueryDto, parseFilterQuery } from "../common/dto/pagination-query.dto.js";
-import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
+import type { Request } from "express";
 import { PaginatedResult } from "../common/dto/paginated-result.js";
+import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
+import {
+  PaginationQueryDto,
+  parseFilterQuery,
+} from "../common/dto/pagination-query.dto.js";
 import { IdempotencyInterceptor } from "../common/interceptors/idempotency.interceptor.js";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
 import { ChannelsService } from "./channels.service.js";
-import { ChannelDto, CreateChannelRequestDto, UpdateChannelRequestDto } from "./dto/channel.dto.js";
+import {
+  ChannelDto,
+  CreateChannelRequestDto,
+  UpdateChannelRequestDto,
+} from "./dto/channel.dto.js";
 
-const CHANNEL_TYPES = new Set<Channel["type"]>(["public", "private", "dm", "group_dm"]);
+const CHANNEL_TYPES = new Set<Channel["type"]>([
+  "public",
+  "private",
+  "dm",
+  "group_dm",
+]);
 
 @ApiTags("Channels")
 @ApiCookieAuth()
@@ -56,29 +68,35 @@ export class ChannelsController {
   async list(
     @CurrentActor() actor: WorkspaceActor,
     @Query() query: PaginationQueryDto,
-    @Req() req: Request,
+    @Req() req: Request
   ): Promise<PaginatedResult<Channel>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
     const filter = parseFilterQuery(req.query);
-    const type = CHANNEL_TYPES.has(filter["type"] as Channel["type"])
-      ? (filter["type"] as Channel["type"])
+    const type = CHANNEL_TYPES.has(filter.type as Channel["type"])
+      ? (filter.type as Channel["type"])
       : undefined;
     const { items, total } = await this.channels.list(actor, {
       page,
       perPage,
-      joinedOnly: filter["joined"] === "true",
-      includeArchived: filter["archived"] === "true",
+      joinedOnly: filter.joined === "true",
+      includeArchived: filter.archived === "true",
       type,
       search: query.search,
     });
-    return new PaginatedResult(items, buildPaginationMeta(page, perPage, total));
+    return new PaginatedResult(
+      items,
+      buildPaginationMeta(page, perPage, total)
+    );
   }
 
   @Get(":id")
   @RequirePermission("read", "Channel")
   @ApiOkResponse({ type: ChannelDto })
-  getById(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<Channel> {
+  getById(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("id") id: string
+  ): Promise<Channel> {
     return this.channels.getById(actor, id);
   }
 
@@ -93,7 +111,7 @@ export class ChannelsController {
   @UseInterceptors(IdempotencyInterceptor)
   create(
     @CurrentActor() actor: WorkspaceActor,
-    @Body() body: CreateChannelRequestDto,
+    @Body() body: CreateChannelRequestDto
   ): Promise<Channel> {
     return this.channels.create(actor, body);
   }
@@ -104,7 +122,7 @@ export class ChannelsController {
   update(
     @CurrentActor() actor: WorkspaceActor,
     @Param("id") id: string,
-    @Body() body: UpdateChannelRequestDto,
+    @Body() body: UpdateChannelRequestDto
   ): Promise<Channel> {
     return this.channels.update(actor, id, body);
   }
@@ -114,7 +132,10 @@ export class ChannelsController {
   @RequirePermission("delete", "Channel")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: ChannelDto })
-  executeArchive(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<Channel> {
+  executeArchive(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("id") id: string
+  ): Promise<Channel> {
     return this.channels.setArchived(actor, id, true);
   }
 
@@ -124,7 +145,7 @@ export class ChannelsController {
   @ApiOkResponse({ type: ChannelDto })
   executeUnarchive(
     @CurrentActor() actor: WorkspaceActor,
-    @Param("id") id: string,
+    @Param("id") id: string
   ): Promise<Channel> {
     return this.channels.setArchived(actor, id, false);
   }

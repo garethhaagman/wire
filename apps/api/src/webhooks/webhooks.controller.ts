@@ -9,19 +9,24 @@ import {
   Post,
   Query,
 } from "@nestjs/common";
-import { ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { WebhookEndpoint } from "@wire/types";
-import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
-import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
 import { PaginatedResult } from "../common/dto/paginated-result.js";
+import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
+import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
-import { WebhooksService } from "./webhooks.service.js";
 import {
   CreateWebhookEndpointRequestDto,
   WebhookEndpointCreatedDto,
   WebhookEndpointDto,
 } from "./dto/webhook-endpoint.dto.js";
+import { WebhooksService } from "./webhooks.service.js";
 
 /** Admin-only — see internal-docs/api/permissions.md, the member role has no
  * WebhookEndpoint permissions at all. */
@@ -36,12 +41,15 @@ export class WebhooksController {
   @ApiOkResponse({ type: WebhookEndpointDto, isArray: true })
   async list(
     @CurrentActor() actor: WorkspaceActor,
-    @Query() query: PaginationQueryDto,
+    @Query() query: PaginationQueryDto
   ): Promise<PaginatedResult<WebhookEndpoint>> {
     const page = query.page ?? 1;
     const perPage = query.per_page ?? 20;
     const { items, total } = await this.webhooks.list(actor, page, perPage);
-    return new PaginatedResult(items, buildPaginationMeta(page, perPage, total));
+    return new PaginatedResult(
+      items,
+      buildPaginationMeta(page, perPage, total)
+    );
   }
 
   @Get(":id")
@@ -49,7 +57,7 @@ export class WebhooksController {
   @ApiOkResponse({ type: WebhookEndpointDto })
   getById(
     @CurrentActor() actor: WorkspaceActor,
-    @Param("id") id: string,
+    @Param("id") id: string
   ): Promise<WebhookEndpoint> {
     return this.webhooks.getById(actor, id);
   }
@@ -59,7 +67,7 @@ export class WebhooksController {
   @ApiCreatedResponse({ type: WebhookEndpointCreatedDto })
   create(
     @CurrentActor() actor: WorkspaceActor,
-    @Body() body: CreateWebhookEndpointRequestDto,
+    @Body() body: CreateWebhookEndpointRequestDto
   ): Promise<WebhookEndpointCreatedDto> {
     return this.webhooks.create(actor, body);
   }
@@ -68,7 +76,10 @@ export class WebhooksController {
   @RequirePermission("delete", "WebhookEndpoint")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })
-  async remove(@CurrentActor() actor: WorkspaceActor, @Param("id") id: string): Promise<null> {
+  async remove(
+    @CurrentActor() actor: WorkspaceActor,
+    @Param("id") id: string
+  ): Promise<null> {
     await this.webhooks.remove(actor, id);
     return null;
   }

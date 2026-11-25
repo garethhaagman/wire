@@ -5,7 +5,12 @@ import {
   type OnApplicationShutdown,
   type OnModuleInit,
 } from "@nestjs/common";
-import { Database, insertAuditEvents, listAuditEvents, type NewAuditEvent } from "@wire/db";
+import {
+  Database,
+  insertAuditEvents,
+  listAuditEvents,
+  type NewAuditEvent,
+} from "@wire/db";
 import type { AuditEvent } from "@wire/types";
 
 const FLUSH_INTERVAL_MS = 500;
@@ -33,7 +38,9 @@ export class AuditService implements OnModuleInit, OnApplicationShutdown {
   }
 
   async onApplicationShutdown(): Promise<void> {
-    if (this.timer) clearInterval(this.timer);
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
     await this.flushing;
     await this.flush();
   }
@@ -41,7 +48,7 @@ export class AuditService implements OnModuleInit, OnApplicationShutdown {
   list(
     workspaceId: string,
     page: number,
-    perPage: number,
+    perPage: number
   ): Promise<{ items: AuditEvent[]; total: number }> {
     return listAuditEvents(this.db, workspaceId, page, perPage);
   }
@@ -52,17 +59,21 @@ export class AuditService implements OnModuleInit, OnApplicationShutdown {
       return;
     }
     this.buffer.push({ ...event, createdAt: new Date() });
-    if (this.buffer.length >= FLUSH_AT) void this.flush();
+    if (this.buffer.length >= FLUSH_AT) {
+      void this.flush();
+    }
   }
 
   private flush(): Promise<void> {
-    if (this.flushing || this.buffer.length === 0) return this.flushing ?? Promise.resolve();
+    if (this.flushing || this.buffer.length === 0) {
+      return this.flushing ?? Promise.resolve();
+    }
     const batch = this.buffer;
     this.buffer = [];
     this.flushing = insertAuditEvents(this.db, batch)
       .catch((err: unknown) => {
         this.logger.error(
-          `audit flush failed, requeueing ${batch.length}: ${(err as Error).message}`,
+          `audit flush failed, requeueing ${batch.length}: ${(err as Error).message}`
         );
         this.buffer = batch.concat(this.buffer).slice(0, MAX_BUFFERED);
       })

@@ -4,7 +4,8 @@ import { IsInt, IsOptional, IsString, Length, Max, Min } from "class-validator";
 
 export class SearchQueryDto {
   @ApiProperty({
-    description: 'Keyword query. Supports "quoted phrases", OR, and -exclusions.',
+    description:
+      'Keyword query. Supports "quoted phrases", OR, and -exclusions.',
     example: "launch plan",
   })
   @IsString()
@@ -12,7 +13,8 @@ export class SearchQueryDto {
   q!: string;
 
   @ApiPropertyOptional({
-    description: "Limit to one workspace (default: every workspace you belong to)",
+    description:
+      "Limit to one workspace (default: every workspace you belong to)",
     example: "ws_64d9dea525ae84ef6f7bd361",
   })
   @IsOptional()
@@ -43,7 +45,13 @@ export class SearchQueryDto {
   @Max(50)
   page?: number = 1;
 
-  @ApiProperty({ required: false, minimum: 1, maximum: 100, default: 20, example: 20 })
+  @ApiProperty({
+    required: false,
+    minimum: 1,
+    maximum: 100,
+    default: 20,
+    example: 20,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()

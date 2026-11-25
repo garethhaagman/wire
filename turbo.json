@@ -17,7 +17,7 @@
     "typecheck": {
       "dependsOn": ["transit"]
     },
-    "lint": {
+    "lint:wire-rules": {
       "dependsOn": ["transit"]
     },
     "test": {

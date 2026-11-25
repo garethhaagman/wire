@@ -8,7 +8,11 @@ import {
   listAgents,
   updateAgent,
 } from "@wire/db";
-import type { Agent, CreateAgentRequest, UpdateAgentRequest } from "@wire/types";
+import type {
+  Agent,
+  CreateAgentRequest,
+  UpdateAgentRequest,
+} from "@wire/types";
 import { ResourceConflictException } from "../common/errors/api-exception.js";
 import { OutboxRelayService } from "../events/outbox-relay.service.js";
 import type { WorkspaceActor } from "../permissions/actor.js";
@@ -21,13 +25,13 @@ import type { WorkspaceActor } from "../permissions/actor.js";
 export class AgentsService {
   constructor(
     @Inject(Database) private readonly db: Database,
-    private readonly relay: OutboxRelayService,
+    private readonly relay: OutboxRelayService
   ) {}
 
   list(
     actor: WorkspaceActor,
     page: number,
-    perPage: number,
+    perPage: number
   ): Promise<{ items: Agent[]; total: number }> {
     return listAgents(this.db, actor.workspaceId, page, perPage);
   }
@@ -40,7 +44,10 @@ export class AgentsService {
     return agent;
   }
 
-  async create(actor: WorkspaceActor, input: CreateAgentRequest): Promise<Agent> {
+  async create(
+    actor: WorkspaceActor,
+    input: CreateAgentRequest
+  ): Promise<Agent> {
     const agent = await this.db
       .tx(async (tx) => {
         const created = await insertAgent(tx, {
@@ -61,7 +68,7 @@ export class AgentsService {
       .catch((err: unknown) => {
         if (isUniqueViolation(err, "UQ_agents_workspace_handle")) {
           throw new ResourceConflictException(
-            `An agent with handle @${input.handle} already exists.`,
+            `An agent with handle @${input.handle} already exists.`
           );
         }
         throw err;
@@ -70,7 +77,11 @@ export class AgentsService {
     return agent;
   }
 
-  async update(actor: WorkspaceActor, id: string, input: UpdateAgentRequest): Promise<Agent> {
+  update(
+    actor: WorkspaceActor,
+    id: string,
+    input: UpdateAgentRequest
+  ): Promise<Agent> {
     return this.write(actor, id, input);
   }
 
@@ -82,7 +93,7 @@ export class AgentsService {
   private async write(
     actor: WorkspaceActor,
     id: string,
-    patch: { harnessId?: string; status?: Agent["status"] },
+    patch: { harnessId?: string; status?: Agent["status"] }
   ): Promise<Agent> {
     const agent = await this.db.tx(async (tx) => {
       const updated = await updateAgent(tx, actor.workspaceId, id, patch);

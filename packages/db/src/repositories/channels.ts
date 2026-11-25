@@ -6,30 +6,30 @@ import { newId } from "../ids.js";
 const UNREAD_CAP = 100;
 
 export interface ChannelRecord {
-  id: string;
-  workspaceId: string;
-  type: Channel["type"];
   archivedAt: string | null;
+  id: string;
   lastSeq: number;
+  type: Channel["type"];
+  workspaceId: string;
 }
 
 interface ChannelRow {
-  id: string;
-  workspace_id: string;
-  name: string;
-  type: Channel["type"];
-  topic: string | null;
-  purpose: string | null;
-  created_by: string | null;
-  member_count: number;
-  last_seq: string;
-  last_message_at: Date | null;
   archived_at: Date | null;
   created_at: Date;
-  updated_at: Date;
+  created_by: string | null;
+  id: string;
   is_member?: boolean;
+  last_message_at: Date | null;
   last_read_seq?: string | null;
+  last_seq: string;
+  member_count: number;
+  name: string;
+  purpose: string | null;
+  topic: string | null;
+  type: Channel["type"];
   unread_count?: number | null;
+  updated_at: Date;
+  workspace_id: string;
 }
 
 function toChannel(row: ChannelRow): Channel {
@@ -70,10 +70,18 @@ const VIEWER_COLUMNS = `
     ) unread
   ) end as unread_count`;
 
-export async function findChannelRecord(db: Queryable, id: string): Promise<ChannelRecord | null> {
-  const { rows } = await db.query<ChannelRow>(`select * from channels where id = $1`, [id]);
-  const row = rows[0];
-  if (!row) return null;
+export async function findChannelRecord(
+  db: Queryable,
+  id: string
+): Promise<ChannelRecord | null> {
+  const { rows } = await db.query<ChannelRow>(
+    "select * from channels where id = $1",
+    [id]
+  );
+  const [row] = rows;
+  if (!row) {
+    return null;
+  }
   return {
     id: row.id,
     workspaceId: row.workspace_id,
@@ -86,26 +94,26 @@ export async function findChannelRecord(db: Queryable, id: string): Promise<Chan
 export async function getChannelForViewer(
   db: Queryable,
   id: string,
-  memberId: string,
+  memberId: string
 ): Promise<Channel | null> {
   const { rows } = await db.query<ChannelRow>(
     `select ${VIEWER_COLUMNS} from channels c
      left join channel_members cm on cm.channel_id = c.id and cm.member_id = $2
      where c.id = $1`,
-    [id, memberId],
+    [id, memberId]
   );
   return rows[0] ? toChannel(rows[0]) : null;
 }
 
 export interface ListChannelsOptions {
-  page: number;
-  perPage: number;
+  includeArchived: boolean;
   /** Guests only see channels they belong to — never the public directory. */
   isGuest: boolean;
   joinedOnly: boolean;
-  includeArchived: boolean;
-  type?: Channel["type"] | undefined;
+  page: number;
+  perPage: number;
   search?: string | undefined;
+  type?: Channel["type"] | undefined;
 }
 
 /** Public directory plus every non-public channel the viewer belongs to. */
@@ -113,9 +121,11 @@ export async function listChannelsForViewer(
   db: Queryable,
   workspaceId: string,
   memberId: string,
-  options: ListChannelsOptions,
+  options: ListChannelsOptions
 ): Promise<{ items: Channel[]; total: number }> {
-  const search = options.search ? `%${options.search.replace(/[%_\\]/g, "\\$&")}%` : null;
+  const search = options.search
+    ? `%${options.search.replace(/[%_\\]/gu, "\\$&")}%`
+    : null;
   const where = `
     c.workspace_id = $1
     and (cm.member_id is not null or (c.type = 'public' and not $3::boolean and not $4::boolean))
@@ -131,14 +141,18 @@ export async function listChannelsForViewer(
     options.type ?? null,
     search,
   ];
-  const from = `from channels c left join channel_members cm on cm.channel_id = c.id and cm.member_id = $2`;
+  const from =
+    "from channels c left join channel_members cm on cm.channel_id = c.id and cm.member_id = $2";
 
   const [rows, count] = await Promise.all([
     db.query<ChannelRow>(
       `select ${VIEWER_COLUMNS} ${from} where ${where} order by c.name, c.id limit $8 offset $9`,
-      [...params, options.perPage, (options.page - 1) * options.perPage],
+      [...params, options.perPage, (options.page - 1) * options.perPage]
     ),
-    db.query<{ total: number }>(`select count(*)::int as total ${from} where ${where}`, params),
+    db.query<{ total: number }>(
+      `select count(*)::int as total ${from} where ${where}`,
+      params
+    ),
   ]);
   return { items: rows.rows.map(toChannel), total: count.rows[0]?.total ?? 0 };
 }
@@ -163,10 +177,11 @@ export async function insertChannel(
     purpose: string | null;
     createdBy: string;
     memberIds: string[];
-  },
+  }
 ): Promise<{ id: string; created: boolean }> {
   const members = [...new Set([input.createdBy, ...input.memberIds])];
-  const key = input.type === "dm" || input.type === "group_dm" ? dmKey(members) : null;
+  const key =
+    input.type === "dm" || input.type === "group_dm" ? dmKey(members) : null;
 
   const { rows } = await tx.query<{ id: string }>(
     `insert into channels (id, workspace_id, name, type, topic, purpose, created_by, dm_key)
@@ -182,19 +197,26 @@ export async function insertChannel(
       input.purpose,
       input.createdBy,
       key,
-    ],
+    ]
   );
+  const [inserted] = rows;
 
-  if (!rows[0]) {
+  if (!inserted) {
     const existing = await tx.query<{ id: string }>(
-      `select id from channels where workspace_id = $1 and dm_key = $2`,
-      [input.workspaceId, key],
+      "select id from channels where workspace_id = $1 and dm_key = $2",
+      [input.workspaceId, key]
     );
-    return { id: existing.rows[0]!.id, created: false };
+    const [existingRow] = existing.rows;
+    if (!existingRow) {
+      throw new Error(
+        "Channel insert conflicted but no existing row was found."
+      );
+    }
+    return { id: existingRow.id, created: false };
   }
 
-  await addChannelMembers(tx, rows[0].id, input.workspaceId, members);
-  return { id: rows[0].id, created: true };
+  await addChannelMembers(tx, inserted.id, input.workspaceId, members);
+  return { id: inserted.id, created: true };
 }
 
 /** Idempotent bulk join; returns only the member ids that were newly added. */
@@ -202,9 +224,11 @@ export async function addChannelMembers(
   tx: Queryable,
   channelId: string,
   workspaceId: string,
-  memberIds: string[],
+  memberIds: string[]
 ): Promise<string[]> {
-  if (memberIds.length === 0) return [];
+  if (memberIds.length === 0) {
+    return [];
+  }
   const { rows } = await tx.query<{ member_id: string }>(
     `with inserted as (
        insert into channel_members (channel_id, member_id, workspace_id, last_read_seq)
@@ -216,7 +240,7 @@ export async function addChannelMembers(
        where id = $1 and exists (select 1 from inserted)
      )
      select member_id from inserted`,
-    [channelId, workspaceId, memberIds],
+    [channelId, workspaceId, memberIds]
   );
   return rows.map((r) => r.member_id);
 }
@@ -224,7 +248,7 @@ export async function addChannelMembers(
 export async function removeChannelMember(
   tx: Queryable,
   channelId: string,
-  memberId: string,
+  memberId: string
 ): Promise<boolean> {
   const { rows } = await tx.query<{ removed: boolean }>(
     `with removed as (
@@ -234,16 +258,19 @@ export async function removeChannelMember(
        where id = $1 and exists (select 1 from removed)
      )
      select exists (select 1 from removed) as removed`,
-    [channelId, memberId],
+    [channelId, memberId]
   );
   return rows[0]?.removed ?? false;
 }
 
 /** Channels every new workspace member joins automatically. */
-export async function findDefaultChannelIds(db: Queryable, workspaceId: string): Promise<string[]> {
+export async function findDefaultChannelIds(
+  db: Queryable,
+  workspaceId: string
+): Promise<string[]> {
   const { rows } = await db.query<{ id: string }>(
     `select id from channels where workspace_id = $1 and type = 'public' and lower(name) = 'general' and archived_at is null`,
-    [workspaceId],
+    [workspaceId]
   );
   return rows.map((r) => r.id);
 }
@@ -252,11 +279,11 @@ export async function findDefaultChannelIds(db: Queryable, workspaceId: string):
 export async function filterWorkspaceChannelIds(
   db: Queryable,
   workspaceId: string,
-  ids: string[],
+  ids: string[]
 ): Promise<string[]> {
   const { rows } = await db.query<{ id: string }>(
-    `select id from channels where workspace_id = $1 and id = any($2::text[])`,
-    [workspaceId, ids],
+    "select id from channels where workspace_id = $1 and id = any($2::text[])",
+    [workspaceId, ids]
   );
   return rows.map((r) => r.id);
 }
@@ -264,28 +291,31 @@ export async function filterWorkspaceChannelIds(
 export async function isChannelMember(
   db: Queryable,
   channelId: string,
-  memberId: string,
+  memberId: string
 ): Promise<boolean> {
   const { rows } = await db.query(
-    `select 1 from channel_members where channel_id = $1 and member_id = $2`,
-    [channelId, memberId],
+    "select 1 from channel_members where channel_id = $1 and member_id = $2",
+    [channelId, memberId]
   );
   return rows.length > 0;
 }
 
-export async function listChannelMemberIds(db: Queryable, channelId: string): Promise<string[]> {
+export async function listChannelMemberIds(
+  db: Queryable,
+  channelId: string
+): Promise<string[]> {
   const { rows } = await db.query<{ member_id: string }>(
-    `select member_id from channel_members where channel_id = $1`,
-    [channelId],
+    "select member_id from channel_members where channel_id = $1",
+    [channelId]
   );
   return rows.map((r) => r.member_id);
 }
 
 interface ChannelMemberRow {
   channel_id: string;
-  member_id: string;
-  last_read_seq: string;
   joined_at: Date;
+  last_read_seq: string;
+  member_id: string;
 }
 
 function toChannelMember(row: ChannelMemberRow): ChannelMember {
@@ -300,11 +330,11 @@ function toChannelMember(row: ChannelMemberRow): ChannelMember {
 export async function findChannelMember(
   db: Queryable,
   channelId: string,
-  memberId: string,
+  memberId: string
 ): Promise<ChannelMember | null> {
   const { rows } = await db.query<ChannelMemberRow>(
-    `select * from channel_members where channel_id = $1 and member_id = $2`,
-    [channelId, memberId],
+    "select * from channel_members where channel_id = $1 and member_id = $2",
+    [channelId, memberId]
   );
   return rows[0] ? toChannelMember(rows[0]) : null;
 }
@@ -313,18 +343,22 @@ export async function listChannelMembers(
   db: Queryable,
   channelId: string,
   page: number,
-  perPage: number,
+  perPage: number
 ): Promise<{ items: ChannelMember[]; total: number }> {
   const [rows, count] = await Promise.all([
     db.query<ChannelMemberRow>(
-      `select * from channel_members where channel_id = $1 order by joined_at, member_id limit $2 offset $3`,
-      [channelId, perPage, (page - 1) * perPage],
+      "select * from channel_members where channel_id = $1 order by joined_at, member_id limit $2 offset $3",
+      [channelId, perPage, (page - 1) * perPage]
     ),
-    db.query<{ member_count: number }>(`select member_count from channels where id = $1`, [
-      channelId,
-    ]),
+    db.query<{ member_count: number }>(
+      "select member_count from channels where id = $1",
+      [channelId]
+    ),
   ]);
-  return { items: rows.rows.map(toChannelMember), total: count.rows[0]?.member_count ?? 0 };
+  return {
+    items: rows.rows.map(toChannelMember),
+    total: count.rows[0]?.member_count ?? 0,
+  };
 }
 
 export async function updateChannel(
@@ -334,7 +368,7 @@ export async function updateChannel(
     name?: string | undefined;
     topic?: string | null | undefined;
     purpose?: string | null | undefined;
-  },
+  }
 ): Promise<boolean> {
   const { rowCount } = await db.query(
     `update channels set
@@ -350,7 +384,7 @@ export async function updateChannel(
       patch.topic ?? null,
       patch.purpose !== undefined,
       patch.purpose ?? null,
-    ],
+    ]
   );
   return (rowCount ?? 0) > 0;
 }
@@ -359,13 +393,13 @@ export async function updateChannel(
 export async function setChannelArchived(
   db: Queryable,
   id: string,
-  archived: boolean,
+  archived: boolean
 ): Promise<boolean> {
   const { rowCount } = await db.query(
     archived
-      ? `update channels set archived_at = now(), updated_at = now() where id = $1 and archived_at is null`
-      : `update channels set archived_at = null, updated_at = now() where id = $1 and archived_at is not null`,
-    [id],
+      ? "update channels set archived_at = now(), updated_at = now() where id = $1 and archived_at is null"
+      : "update channels set archived_at = null, updated_at = now() where id = $1 and archived_at is not null",
+    [id]
   );
   return (rowCount ?? 0) > 0;
 }
@@ -378,7 +412,7 @@ export async function markChannelRead(
   db: Queryable,
   channelId: string,
   memberId: string,
-  seq: number | null,
+  seq: number | null
 ): Promise<ChannelMember | null> {
   const { rows } = await db.query<ChannelMemberRow>(
     `update channel_members cm
@@ -386,7 +420,7 @@ export async function markChannelRead(
      from channels c
      where c.id = cm.channel_id and cm.channel_id = $1 and cm.member_id = $2
      returning cm.*`,
-    [channelId, memberId, seq],
+    [channelId, memberId, seq]
   );
   return rows[0] ? toChannelMember(rows[0]) : null;
 }

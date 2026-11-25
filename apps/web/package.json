@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --bun vite",
     "build": "bun --bun vite build",
-    "preview": "bun --bun vite preview",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p scripts",
-    "lint": "eslint .",
+    "check:theme": "bun scripts/generate-theme-css.ts --check",
+    "dev": "bun --bun vite",
     "gen:theme": "bun scripts/generate-theme-css.ts",
-    "check:theme": "bun scripts/generate-theme-css.ts --check"
+    "lint:wire-rules": "eslint .",
+    "preview": "bun --bun vite preview",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p scripts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.5",

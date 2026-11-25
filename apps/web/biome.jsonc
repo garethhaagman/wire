@@ -1,0 +1,30 @@
+{
+  "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": ["ultracite/biome/core", "ultracite/biome/react"],
+  "root": false,
+  "linter": {
+    "rules": {
+      "performance": {
+        // This rule exists to protect memo() boundaries from being defeated
+        // by a new inline function identity every render. apps/web has no
+        // memo()'d components yet, so inline handlers on plain DOM elements
+        // (input/form/button) cost nothing today; revisit if/when a
+        // memoized component is introduced downstream of one of these.
+        "noJsxPropsBind": "off"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["src/App.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            // App.tsx is Vite/React's conventional PascalCase entry component filename.
+            "useFilenamingConvention": "off"
+          }
+        }
+      }
+    }
+  ]
+}

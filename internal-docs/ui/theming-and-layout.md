@@ -21,7 +21,11 @@ Config can arrange, resize, and reskin a slot, and pick which registered **varia
 ### Required slots
 
 ```typescript
-const REQUIRED_SLOT_IDS = ["nav.primary", "sidebar.channelList", "composer"] as const;
+const REQUIRED_SLOT_IDS = [
+  "nav.primary",
+  "sidebar.channelList",
+  "composer",
+] as const;
 ```
 
 The resolver (`resolveUiConfig()`) checks the active layout against this list after every merge. A custom layout missing a required slot gets that slot backfilled from the base layout's config, with a warning — never silently dropped, never a 500, never a blank pane where the composer should be. Everything in `SlotId` but not in `REQUIRED_SLOT_IDS` (e.g. `command.palette`) is genuinely optional — an org or user can place it, hide it (`placement: "hidden"`), or leave it unconfigured.
@@ -50,7 +54,14 @@ interface Layout {
   name: string;
   description?: string;
   slots: Partial<
-    Record<SlotId, { placement: SlotPlacement; variant: string; props: Record<string, unknown> }>
+    Record<
+      SlotId,
+      {
+        placement: SlotPlacement;
+        variant: string;
+        props: Record<string, unknown>;
+      }
+    >
   >;
 }
 ```

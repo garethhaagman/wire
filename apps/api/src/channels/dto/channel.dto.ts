@@ -1,4 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import type {
+  AddChannelMemberRequest,
+  Channel,
+  ChannelMember,
+  CreateChannelRequest,
+  MarkReadRequest,
+  UpdateChannelRequest,
+} from "@wire/types";
 import {
   ArrayMaxSize,
   IsArray,
@@ -10,14 +18,6 @@ import {
   Min,
   ValidateIf,
 } from "class-validator";
-import type {
-  AddChannelMemberRequest,
-  Channel,
-  ChannelMember,
-  CreateChannelRequest,
-  MarkReadRequest,
-  UpdateChannelRequest,
-} from "@wire/types";
 
 const CHANNEL_TYPES = ["public", "private", "dm", "group_dm"] as const;
 
@@ -44,16 +44,27 @@ export class ChannelDto implements Channel {
   })
   purpose!: string | null;
 
-  @ApiProperty({ nullable: true, type: String, example: "mem_64d9dea525ae84ef6f7bd361" })
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    example: "mem_64d9dea525ae84ef6f7bd361",
+  })
   createdBy!: string | null;
 
   @ApiProperty({ example: 12 })
   memberCount!: number;
 
-  @ApiProperty({ example: 4821, description: "Highest message seq in the channel" })
+  @ApiProperty({
+    example: 4821,
+    description: "Highest message seq in the channel",
+  })
   lastMessageSeq!: number;
 
-  @ApiProperty({ nullable: true, type: String, example: "2026-01-15T09:30:00.000Z" })
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    example: "2026-01-15T09:30:00.000Z",
+  })
   lastMessageAt!: string | null;
 
   @ApiProperty({ nullable: true, type: String, example: null })
@@ -86,9 +97,12 @@ export class ChannelDto implements Channel {
 export class CreateChannelRequestDto implements CreateChannelRequest {
   @ApiPropertyOptional({
     example: "general",
-    description: "Required for public/private channels; ignored for dm/group_dm",
+    description:
+      "Required for public/private channels; ignored for dm/group_dm",
   })
-  @ValidateIf((o: CreateChannelRequestDto) => o.type === "public" || o.type === "private")
+  @ValidateIf(
+    (o: CreateChannelRequestDto) => o.type === "public" || o.type === "private"
+  )
   @IsString()
   @Length(1, 80)
   name?: string;
@@ -103,7 +117,9 @@ export class CreateChannelRequestDto implements CreateChannelRequest {
   @Length(0, 250)
   topic?: string;
 
-  @ApiPropertyOptional({ example: "Coordinating releases and incident response" })
+  @ApiPropertyOptional({
+    example: "Coordinating releases and incident response",
+  })
   @IsOptional()
   @IsString()
   @Length(0, 250)
@@ -111,7 +127,8 @@ export class CreateChannelRequestDto implements CreateChannelRequest {
 
   @ApiPropertyOptional({
     type: [String],
-    description: "Initial members besides you; required for dm (1) and group_dm (2-7)",
+    description:
+      "Initial members besides you; required for dm (1) and group_dm (2-7)",
   })
   @IsOptional()
   @IsArray()

@@ -7,15 +7,15 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import type { Request } from "express";
-import { AUTH_INSTANCE } from "./auth.module.js";
-import type { Auth } from "./auth.config.js";
-import { Public } from "./public.decorator.js";
 import type { RequestActor } from "../permissions/actor.js";
+import type { Auth } from "./auth.config.js";
+import { AUTH_INSTANCE } from "./auth.module.js";
+import { Public } from "./public.decorator.js";
 
 export interface AuthedRequest extends Request {
-  session?: Awaited<ReturnType<Auth["api"]["getSession"]>>;
   /** Populated by PermissionsGuard — prefer the @CurrentActor()/@CurrentUser() param decorators. */
   actor?: RequestActor;
+  session?: Awaited<ReturnType<Auth["api"]["getSession"]>>;
 }
 
 /**
@@ -27,7 +27,7 @@ export interface AuthedRequest extends Request {
 export class SessionGuard implements CanActivate {
   constructor(
     @Inject(AUTH_INSTANCE) private readonly auth: Auth,
-    private readonly reflector: Reflector,
+    private readonly reflector: Reflector
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -39,8 +39,11 @@ export class SessionGuard implements CanActivate {
 
     const headers = new Headers();
     for (const [key, value] of Object.entries(req.headers)) {
-      if (typeof value === "string") headers.set(key, value);
-      else if (Array.isArray(value)) headers.set(key, value.join(", "));
+      if (typeof value === "string") {
+        headers.set(key, value);
+      } else if (Array.isArray(value)) {
+        headers.set(key, value.join(", "));
+      }
     }
 
     const session = await this.auth.api.getSession({ headers });

@@ -1,16 +1,16 @@
 /** Mirrors internal-docs/api/events-webhooks.md § Subscriptions */
 export interface WebhookEndpoint {
-  id: `whe_${string}`;
-  workspaceId: string;
-  url: string;
-  enabledEvents: string[];
   channelFilter: string[] | null;
   createdAt: string;
+  enabledEvents: string[];
+  id: `whe_${string}`;
   updatedAt: string;
+  url: string;
+  workspaceId: string;
 }
 
 export interface CreateWebhookEndpointRequest {
-  url: string;
-  enabledEvents: string[];
   channelFilter?: string[];
+  enabledEvents: string[];
+  url: string;
 }

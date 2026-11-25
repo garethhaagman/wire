@@ -1,12 +1,18 @@
 import { createHash } from "node:crypto";
-import { HttpStatus, Inject, Injectable, Logger, type NestMiddleware } from "@nestjs/common";
-import type { NextFunction, Request, Response } from "express";
-import type { Redis } from "ioredis";
+import {
+  HttpStatus,
+  Inject,
+  Injectable,
+  Logger,
+  type NestMiddleware,
+} from "@nestjs/common";
 import { API_VERSION, type ApiEnv } from "@wire/config";
 import type { ApiResponse } from "@wire/types";
-import type { RequestWithId } from "./request-id.middleware.js";
+import type { NextFunction, Request, Response } from "express";
+import type { Redis } from "ioredis";
 import { API_ENV } from "../../config/env.provider.js";
 import { REDIS, warnRedisFailure } from "../../redis/redis.module.js";
+import type { RequestWithId } from "./request-id.middleware.js";
 
 const WINDOW_MS = 60_000;
 const SESSION_COOKIE = "better-auth.session_token";
@@ -31,7 +37,7 @@ export class RateLimitMiddleware implements NestMiddleware {
 
   constructor(
     @Inject(REDIS) private readonly redis: Redis,
-    @Inject(API_ENV) env: ApiEnv,
+    @Inject(API_ENV) env: ApiEnv
   ) {
     this.limit = env.RATE_LIMIT_PER_MINUTE;
   }
@@ -40,19 +46,29 @@ export class RateLimitMiddleware implements NestMiddleware {
     let count: number;
     let ttlMs: number;
     try {
-      const result = (await this.redis.eval(FIXED_WINDOW_SCRIPT, 1, this.key(req), WINDOW_MS)) as [
-        number,
-        number,
-      ];
+      const result = (await this.redis.eval(
+        FIXED_WINDOW_SCRIPT,
+        1,
+        this.key(req),
+        WINDOW_MS
+      )) as [number, number];
       [count, ttlMs] = result;
     } catch (err) {
-      warnRedisFailure(this.redis, this.logger, "rate limiter unavailable, failing open", err);
+      warnRedisFailure(
+        this.redis,
+        this.logger,
+        "rate limiter unavailable, failing open",
+        err
+      );
       next();
       return;
     }
 
     const remaining = Math.max(0, this.limit - count);
-    const resetSeconds = Math.max(1, Math.ceil((ttlMs > 0 ? ttlMs : WINDOW_MS) / 1000));
+    const resetSeconds = Math.max(
+      1,
+      Math.ceil((ttlMs > 0 ? ttlMs : WINDOW_MS) / 1000)
+    );
 
     res.setHeader("RateLimit-Limit", this.limit);
     res.setHeader("RateLimit-Remaining", remaining);
@@ -68,7 +84,7 @@ export class RateLimitMiddleware implements NestMiddleware {
           message: "Too many requests. Retry after the window resets.",
         },
         meta: {
-          request_id: (req as RequestWithId).requestId ?? "req_unknown",
+          request_id: (req as RequestWithId).requestId,
           api_version: API_VERSION,
         },
       };
@@ -86,7 +102,8 @@ export class RateLimitMiddleware implements NestMiddleware {
       .map((part) => part.trim())
       .find(
         (part) =>
-          part.startsWith(`${SESSION_COOKIE}=`) || part.startsWith(`__Secure-${SESSION_COOKIE}=`),
+          part.startsWith(`${SESSION_COOKIE}=`) ||
+          part.startsWith(`__Secure-${SESSION_COOKIE}=`)
       );
     if (token) {
       return `wire:rl:s:${createHash("sha256").update(token).digest("base64url").slice(0, 22)}`;

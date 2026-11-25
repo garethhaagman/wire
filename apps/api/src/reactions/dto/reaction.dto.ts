@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString, Length } from "class-validator";
 import type { CreateReactionRequest, Reaction } from "@wire/types";
+import { IsString, Length } from "class-validator";
 
 export class ReactionDto implements Reaction {
   @ApiProperty({ example: "rxn_64d9dea525ae84ef6f7bd361" })

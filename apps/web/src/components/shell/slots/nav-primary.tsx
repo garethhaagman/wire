@@ -8,18 +8,24 @@ export function NavPrimaryDefault(_props: SlotProps): React.JSX.Element {
   const logo = config.branding.logo.mark ?? config.branding.logo.full;
 
   return (
-    <div className="flex h-full w-14 flex-col items-center gap-3 border-r border-border bg-muted py-3">
+    <div className="border-border bg-muted flex h-full w-14 flex-col items-center gap-3 border-r py-3">
       {logo ? (
-        <img src={logo} alt={config.branding.productName} className="h-8 w-8 rounded-md" />
+        <img
+          alt={config.branding.productName}
+          className="h-8 w-8 rounded-md"
+          height={32}
+          src={logo}
+          width={32}
+        />
       ) : (
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">
+        <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded-md text-sm font-semibold">
           {config.branding.productName.slice(0, 1)}
         </div>
       )}
-      <div className="mt-2 flex flex-col items-center gap-2 text-muted-foreground">
-        <Icon name="message-square" className="h-5 w-5" />
-        <Icon name="search" className="h-5 w-5" />
-        <Icon name="settings" className="h-5 w-5" />
+      <div className="text-muted-foreground mt-2 flex flex-col items-center gap-2">
+        <Icon className="h-5 w-5" name="message-square" />
+        <Icon className="h-5 w-5" name="search" />
+        <Icon className="h-5 w-5" name="settings" />
       </div>
     </div>
   );
