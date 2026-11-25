@@ -1,24 +1,23 @@
 ---
 name: skill-creation
-description: Use when adding a new skill to this repo, or renaming/moving/deleting an existing one. Covers where the real file lives and how to wire up symlinks so Claude Code, the .agents/ convention, and Cursor all see the same skill with zero content duplication.
-version: "1.0.0"
+description: Use when adding a new skill to this repo, or renaming/moving/deleting an existing one. Covers where the real file lives and how to wire up symlinks so Claude Code and Cursor both see the same skill with zero content duplication.
+version: "2.0.0"
 ---
 
 # Creating a skill with cross-tool parity
 
-This repo's AI agents aren't only Claude Code. A skill written once must be visible to all of them without a second copy of the content anyone can forget to update. **One real file, three ways in.**
+This repo's AI agents aren't only Claude Code. A skill written once must be visible to all of them without a second copy of the content anyone can forget to update. **One real file, one symlinked directory.**
 
 ## The rule
 
-The real file is `.claude/skills/<name>/SKILL.md` (plus any `references/`, scripts, or other supporting files in that same directory). Every other location is a symlink to it, never a copy.
+The real file is `.claude/skills/<name>/SKILL.md` (plus any `references/`, scripts, or other supporting files in that same directory). `.agents/skills/<name>/` is a symlink to that whole directory, never a copy.
 
 ```
 .claude/skills/<name>/SKILL.md          <- the one real file
-.agents/skills/<name>/SKILL.md          -> symlink to the line above
-.cursor/rules/<name>.mdc                -> symlink to the line above (best-effort, see "Cursor" below)
+.agents/skills/<name>                   -> symlink to the directory above
 ```
 
-If the skill has supporting files (a `references/` directory, a script), symlink the whole directory's contents the same way, or symlink the directory itself if `.agents/skills/<name>/` doesn't need to exist as its own real directory for some other reason.
+Cursor's [Agent Skills](https://cursor.com/docs/skills) feature discovers skills from `.agents/skills/` directly, and separately reads `.claude/skills/` as a legacy-compatible path — so this one symlink is enough for both Claude Code and Cursor to see the same skill. There is no `.cursor/rules/*.mdc` step; that was a workaround from before Cursor had native skill support and no longer applies.
 
 ## Why symlinks, not copies
 
@@ -27,48 +26,26 @@ A duplicated `SKILL.md` drifts the moment one copy gets edited and the other doe
 ## Step by step
 
 1. Write the real file: `.claude/skills/<name>/SKILL.md`, with frontmatter (`name`, `description`, `version`) matching the style of an existing skill (see `.claude/skills/api-design/SKILL.md` for the reference shape).
-2. Symlink it into `.agents/skills/`:
+2. Symlink the whole directory into `.agents/skills/`:
 
    ```sh
-   mkdir -p .agents/skills/<name>
-   ln -s ../../../.claude/skills/<name>/SKILL.md .agents/skills/<name>/SKILL.md
+   ln -s ../../.claude/skills/<name> .agents/skills/<name>
    ```
-3. Symlink it into Cursor's rules directory:
+3. Verify the link resolves and nothing is a plain copy:
 
    ```sh
-   mkdir -p .cursor/rules
-   ln -s ../../.claude/skills/<name>/SKILL.md .cursor/rules/<name>.mdc
-   ```
-4. Verify every link resolves and nothing is a plain copy:
-
-   ```sh
-   find .claude/skills .agents/skills .cursor/rules -iname "*.md" -o -iname "*.mdc" | xargs -I{} sh -c 'test -L "{}" -o -f ".claude/skills/$(basename $(dirname {}))/SKILL.md" && echo "{}" "-> $(readlink {})"'
+   ls -la .agents/skills/<name>
    ```
 
-   Simpler check: `ls -la .agents/skills/<name>/ .cursor/rules/` and confirm both entries show `->` pointing back at `.claude/skills/<name>/SKILL.md`.
-
-## Cursor's `.mdc` extension — a known limit, not a guess
-
-Cursor's documented rule discovery only reads `.cursor/rules/*.mdc` (a plain `.md` in that directory is ignored) and does not document symlink support one way or the other. A symlink named `<name>.mdc` pointing at a `.md` target is the best available option (standard filesystem symlink-following should make this work; the extension check is on the symlink's own name, not the target's) but treat it as best-effort, not a verified guarantee for every Cursor build.
-
-Cursor's own `.mdc` frontmatter schema (`description`, `globs`, `alwaysApply`) is different from this repo's `SKILL.md` frontmatter (`name`, `description`, `version`) — since the symlink points at the same file for every tool, Cursor sees the `SKILL.md` frontmatter, not its own. In practice Cursor should ignore the frontmatter keys it doesn't recognize and still index the body, but it will not get `globs`-scoped or `alwaysApply` behavior from a symlinked skill. That's an accepted tradeoff for having one real file; don't try to make the frontmatter satisfy both schemas at once (there's no field overlap that would let you).
-
-If a skill ever needs confirmed Cursor support and the `.mdc` symlink turns out not to work, the documented-safe fallback is a short, real (non-symlinked) `AGENTS.md` pointer file:
-
-```markdown
-# <name>
-
-Cross-agent entry point. The full procedure is in [SKILL.md](../../../.claude/skills/<name>/SKILL.md).
-```
-
-Cursor reads `AGENTS.md` natively, with no frontmatter and no extension requirement, at the project root or in any subdirectory. This is a last resort, not the default — prefer the symlink; only add a real `AGENTS.md` pointer alongside it if `.mdc` symlink support is confirmed broken for a tool you actually use.
+   Confirm the entry shows `-> ../../.claude/skills/<name>`.
 
 ## What NOT to do
 
 - **Don't** write the full skill content into `.agents/skills/<name>/SKILL.md` and a second time into `.claude/skills/<name>/SKILL.md`. That's the exact drift this skill exists to prevent.
-- **Don't** symlink in the wrong direction (`.claude/skills/<name>/SKILL.md -> .agents/skills/<name>/SKILL.md`). `.claude/skills/` is the canonical source; everything else points at it.
-- **Don't** forget `version` in the frontmatter, and don't forget to bump it when the content changes — other skills (e.g. `api-design`) reference their own version in their changelog-style edits, and a symlinked file needs the same discipline since every consumer sees the same version string.
-- **Don't** add a `.cursor/rules/*.mdc` entry for a skill whose `description` only makes sense in a Claude-Code-specific context (e.g. one that references Claude Code slash commands or tools that don't exist in Cursor) without checking the description still reads sensibly there — the content is shared, so write it to be true for every tool that will load it.
+- **Don't** symlink in the wrong direction (`.claude/skills/<name>` -> `.agents/skills/<name>`). `.claude/skills/` is the canonical source; `.agents/skills/` points at it.
+- **Don't** symlink the individual `SKILL.md` file instead of the directory if the skill has supporting files (`references/`, scripts, `assets/`) — symlink the directory itself so those come along automatically.
+- **Don't** forget `version` in the frontmatter, and don't forget to bump it when the content changes — other skills (e.g. `api-design`) reference their own version in their changelog-style edits.
+- **Don't** re-add a `.cursor/rules/*.mdc` symlink for a skill. Cursor's native skills feature reads `.agents/skills/` and `.claude/skills/` directly; a `.mdc` rules-file entry would just be a second, redundant way in.
 
 ## Applying this to an existing skill
 
@@ -76,4 +53,4 @@ If you find a skill with a real, duplicated file in more than one location (chec
 
 1. Pick `.claude/skills/<name>/SKILL.md` as the surviving real file (diff the two first; if they've drifted, reconcile the content before deleting either).
 2. Delete the duplicate(s).
-3. Create the symlinks per the steps above.
+3. Create the directory symlink per the steps above.
