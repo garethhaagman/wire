@@ -23,7 +23,7 @@ Hostname p75, caller routes, call count, bytes. Verify data is shared and tolera
 
 ## Do Not Recommend When
 
-Skip per-user, mutation, secret, or freshness-critical data. Skip when upstream is fast or rarely called. Avoid sub-ms reads (Edge Config) — overhead exceeds source latency.
+Skip per-user, mutation, secret, or freshness-critical data. Skip when upstream is fast or rarely called. Avoid sub-ms reads (Edge Config): overhead exceeds source latency.
 
 ## Verification
 

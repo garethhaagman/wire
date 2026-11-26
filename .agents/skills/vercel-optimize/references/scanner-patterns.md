@@ -10,7 +10,7 @@ Total scanners: 15.
 
 ## Patterns
 
-### `cache-components-suspense-dedupe` — 'use cache' with multiple Suspense boundaries on the same data
+### `cache-components-suspense-dedupe`, 'use cache' with multiple Suspense boundaries on the same data
 
 - **Severity**: medium
 - **Billing dimension**: function-duration
@@ -28,7 +28,7 @@ Total scanners: 15.
 
 ---
 
-### `edge-heavy-import` — Heavy / node-only import inside edge-runtime file
+### `edge-heavy-import`, Heavy / node-only import inside edge-runtime file
 
 - **Severity**: high
 - **Billing dimension**: function-duration
@@ -45,7 +45,7 @@ Total scanners: 15.
 
 ---
 
-### `force-dynamic` — export const dynamic = 'force-dynamic'
+### `force-dynamic`, export const dynamic = 'force-dynamic'
 
 - **Severity**: medium
 - **Billing dimension**: function-duration
@@ -53,7 +53,7 @@ Total scanners: 15.
 
 **Description.** force-dynamic disables static + ISR rendering. The route runs the function on every request. Sometimes necessary (cookies, headers, real-time data), often a habit that costs function-duration and edge-requests at scale.
 
-**Fix.** Audit the route. If dynamic behavior comes from cookies()/headers()/searchParams, force-dynamic may be redundant — Next infers dynamic automatically. Consider revalidate / 'use cache' / generateStaticParams if any portion can be pre-rendered.
+**Fix.** Audit the route. If dynamic behavior comes from cookies()/headers()/searchParams, force-dynamic may be redundant, Next infers dynamic automatically. Consider revalidate / 'use cache' / generateStaticParams if any portion can be pre-rendered.
 
 **Citations:**
 
@@ -61,13 +61,13 @@ Total scanners: 15.
 
 ---
 
-### `headers-in-page` — Dynamic API call forcing dynamic rendering
+### `headers-in-page`, Dynamic API call forcing dynamic rendering
 
 - **Severity**: medium
 - **Billing dimension**: function-duration
 - **Traffic-independent**: no (cold-path findings get dropped)
 
-**Description.** headers(), cookies(), and draftMode() are dynamic APIs. Reading them in a page/layout makes the entire segment dynamic — no ISR, no static generation, and a function invocation on every request.
+**Description.** headers(), cookies(), and draftMode() are dynamic APIs. Reading them in a page/layout makes the entire segment dynamic, no ISR, no static generation, and a function invocation on every request.
 
 **Fix.** Move the dynamic API call into a child Server Component that lives inside a Suspense boundary. The parent can stay static; only the leaf re-renders dynamically.
 
@@ -78,13 +78,13 @@ Total scanners: 15.
 
 ---
 
-### `large-static-asset` — Large file in public/
+### `large-static-asset`, Large file in public/
 
 - **Severity**: medium
 - **Billing dimension**: bandwidth
 - **Traffic-independent**: yes (cold-path findings survive the doctrine drop)
 
-**Description.** Static assets in `public/` over 500 KB ship as-is from the CDN. Whether the cost is meaningful depends on traffic, but the candidate is binary — the file is either needed at that size or it can be optimized (compressed image, video transcode, or moved off the critical path).
+**Description.** Static assets in `public/` over 500 KB ship as-is from the CDN. Whether the cost is meaningful depends on traffic, but the candidate is binary, the file is either needed at that size or it can be optimized (compressed image, video transcode, or moved off the critical path).
 
 **Fix.** Verify the asset is reachable on the customer-facing hot path. Then choose: (a) compress (convert PNG → AVIF/WebP; transcode MP4 to lower bitrate); (b) host externally (Vercel Blob, S3, or a media CDN with per-asset signed URLs); (c) lazy-load (defer to client-side fetch instead of bundling into initial HTML).
 
@@ -95,7 +95,7 @@ Total scanners: 15.
 
 ---
 
-### `max-age-without-s-maxage` — Cache-Control: max-age without s-maxage
+### `max-age-without-s-maxage`, Cache-Control: max-age without s-maxage
 
 - **Severity**: medium
 - **Billing dimension**: edge-requests
@@ -112,7 +112,7 @@ Total scanners: 15.
 
 ---
 
-### `middleware-broad-matcher` — Middleware matcher missing or too broad
+### `middleware-broad-matcher`, Middleware matcher missing or too broad
 
 - **Severity**: high
 - **Billing dimension**: edge-requests
@@ -128,7 +128,7 @@ Total scanners: 15.
 
 ---
 
-### `missing-cache-headers` — Cacheable route or fetch with no caching (Cache-Control absent or no-store)
+### `missing-cache-headers`, Cacheable route or fetch with no caching (Cache-Control absent or no-store)
 
 - **Severity**: medium
 - **Billing dimension**: edge-requests
@@ -146,7 +146,7 @@ Total scanners: 15.
 
 ---
 
-### `prisma-include-tree-bloat` — Deep Prisma include tree (3+ levels)
+### `prisma-include-tree-bloat`, Deep Prisma include tree (3+ levels)
 
 - **Severity**: high
 - **Billing dimension**: function-duration
@@ -162,7 +162,7 @@ Total scanners: 15.
 
 ---
 
-### `region-pin-in-config` — Function region pinned in config
+### `region-pin-in-config`, Function region pinned in config
 
 - **Severity**: low
 - **Billing dimension**: function-duration
@@ -179,7 +179,7 @@ Total scanners: 15.
 
 ---
 
-### `source-maps-production` — Source maps enabled in production
+### `source-maps-production`, Source maps enabled in production
 
 - **Severity**: low
 - **Billing dimension**: edge-requests
@@ -195,13 +195,13 @@ Total scanners: 15.
 
 ---
 
-### `sveltekit-prerender-missing` — SvelteKit page without explicit prerender / ISR config
+### `sveltekit-prerender-missing`, SvelteKit page without explicit prerender / ISR config
 
 - **Severity**: low
 - **Billing dimension**: function-duration
 - **Traffic-independent**: no (cold-path findings get dropped)
 
-**Description.** SvelteKit page or +page.server.ts is missing an explicit `prerender`, `ssr`, or adapter `config.isr` declaration. Default is per-request function execution — investigate whether the route could be prerendered or ISR-cached.
+**Description.** SvelteKit page or +page.server.ts is missing an explicit `prerender`, `ssr`, or adapter `config.isr` declaration. Default is per-request function execution, investigate whether the route could be prerendered or ISR-cached.
 
 **Fix.** If the page is static (no per-user / per-request data), add `export const prerender = true` in +page.ts or +page.server.ts. If the data refreshes on a schedule, prefer adapter-vercel's ISR option via `export const config = { isr: { expiration: 60 } }`.
 
@@ -213,7 +213,7 @@ Total scanners: 15.
 
 ---
 
-### `turbo-force-bypass` — Turborepo cache bypass on a monorepo
+### `turbo-force-bypass`, Turborepo cache bypass on a monorepo
 
 - **Severity**: high
 - **Billing dimension**: build
@@ -231,7 +231,7 @@ Total scanners: 15.
 
 ---
 
-### `unoptimized-image` — Image optimization gap (raw <img>, global flag, missing sizes, or SVG mis-routed)
+### `unoptimized-image`, Image optimization gap (raw <img>, global flag, missing sizes, or SVG mis-routed)
 
 - **Severity**: high
 - **Billing dimension**: image-optimization
@@ -248,7 +248,7 @@ Total scanners: 15.
 
 ---
 
-### `use-cache-date-stamp` — new Date() / Date.now() / Math.random() inside a 'use cache' file
+### `use-cache-date-stamp`, new Date() / Date.now() / Math.random() inside a 'use cache' file
 
 - **Severity**: high
 - **Billing dimension**: isr
@@ -256,7 +256,7 @@ Total scanners: 15.
 
 **Description.** `'use cache'` memoizes by argument identity AND prerender output. A timestamp baked into the cached output (`new Date().getFullYear()` in a footer, `Date.now()` in a payload field) forces a fresh ISR write on every regeneration even when the underlying data is unchanged. Random values have the same failure mode.
 
-**Fix.** Replace module-scope `new Date()` with a build-time constant (`const buildYear = new Date().getFullYear()`) or move per-request timestamps into a client component inside `useEffect`. Do not pass dates as arguments to `'use cache'` functions — they invalidate the cache every call.
+**Fix.** Replace module-scope `new Date()` with a build-time constant (`const buildYear = new Date().getFullYear()`) or move per-request timestamps into a client component inside `useEffect`. Do not pass dates as arguments to `'use cache'` functions, they invalidate the cache every call.
 
 **Citations:**
 

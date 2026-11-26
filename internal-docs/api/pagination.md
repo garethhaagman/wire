@@ -14,8 +14,8 @@ GET /v1/workspaces?search=acme
 | `page`          | Page number (1-indexed)                    | `1`              |
 | `per_page`      | Results per page                           | `20` (max `100`) |
 | `sort`          | Sort field; prefix with `-` for descending | resource-defined |
-| `filter[field]` | Filter by field                            | —                |
-| `search`        | Free-text search query                     | —                |
+| `filter[field]` | Filter by field                            | none             |
+| `search`        | Free-text search query                     | none             |
 
 Pagination metadata is always in the response envelope's `meta.pagination`, never in the response body itself:
 
@@ -34,7 +34,7 @@ Pagination metadata is always in the response envelope's `meta.pagination`, neve
 
 ## Implementation
 
-`PaginationQueryDto` (`apps/api/src/common/dto/pagination-query.dto.ts`) validates and type-coerces `page`/`per_page`/`sort`/`search` as a `@Query()` parameter; `parseFilterQuery()` reads the dynamic `filter[field]` keys off the raw query object since they can't be bound by fixed DTO properties. `buildPaginationMeta()` (`apps/api/src/common/dto/pagination-meta.ts`) computes `total_pages`; controllers return a `PaginatedResult` wrapping the page of items plus the computed metadata — see [responses.md](./responses.md).
+`PaginationQueryDto` (`apps/api/src/common/dto/pagination-query.dto.ts`) validates and type-coerces `page`/`per_page`/`sort`/`search` as a `@Query()` parameter; `parseFilterQuery()` reads the dynamic `filter[field]` keys off the raw query object since they can't be bound by fixed DTO properties. `buildPaginationMeta()` (`apps/api/src/common/dto/pagination-meta.ts`) computes `total_pages`; controllers return a `PaginatedResult` wrapping the page of items plus the computed metadata; see [responses.md](./responses.md).
 
 Page-based pagination is used for bounded, low-write collections (workspaces, members, channels, agents, bookmarks, files, webhook endpoints, audit events, search).
 
@@ -57,4 +57,4 @@ GET /v1/channels/{id}/messages?after_seq=1234         oldest first from a known 
 }
 ```
 
-Cursors are opaque — clients pass `next_cursor` back unchanged and never construct one. `after_seq` is the exception: every message carries its `seq`, so a client that knows the last `seq` it rendered can catch up with `after_seq` directly. `CursorQueryDto`, `CursorPaginatedResult` and `encodeCursor`/`decodeCursor` live in `apps/api/src/common/dto/cursor-paginated-result.ts`; the response interceptor writes `meta.cursor` instead of `meta.pagination`.
+Cursors are opaque: clients pass `next_cursor` back unchanged and never construct one. `after_seq` is the exception: every message carries its `seq`, so a client that knows the last `seq` it rendered can catch up with `after_seq` directly. `CursorQueryDto`, `CursorPaginatedResult` and `encodeCursor`/`decodeCursor` live in `apps/api/src/common/dto/cursor-paginated-result.ts`; the response interceptor writes `meta.cursor` instead of `meta.pagination`.

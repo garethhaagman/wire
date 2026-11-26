@@ -20,11 +20,11 @@ A message tree rooted at a **parent message** in a channel. Threads preserve ord
 
 Immutable content record with optional edits tracked as revisions. Fields include:
 
-- `body` — Plain text and/or structured blocks (see OpenAPI `MessageBody`).
-- `blocks` — Rich layout (sections, actions, context) for clients and agents.
-- `attachments` — File references, external URLs, or embedded cards.
-- `metadata` — Key-value for app agents (max 8KB).
-- `actor_id` — Human member or agent who authored the message.
+- `body`: Plain text and/or structured blocks (see OpenAPI `MessageBody`).
+- `blocks`: Rich layout (sections, actions, context) for clients and agents.
+- `attachments`: File references, external URLs, or embedded cards.
+- `metadata`: Key-value for app agents (max 8KB).
+- `actor_id`: Human member or agent who authored the message.
 
 ## Reaction, pin, bookmark
 

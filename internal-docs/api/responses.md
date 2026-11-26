@@ -1,6 +1,6 @@
 # Response envelope
 
-Every JSON response uses the same outer structure, regardless of endpoint or HTTP status. This is the single most important decision in the API's shape — it means an SDK needs exactly one generic handler for every endpoint (see [sdk-architecture.md](./sdk-architecture.md)).
+Every JSON response uses the same outer structure, regardless of endpoint or HTTP status. This is the single most important decision in the API's shape: it means an SDK needs exactly one generic handler for every endpoint (see [sdk-architecture.md](./sdk-architecture.md)).
 
 ## Shape
 
@@ -13,7 +13,7 @@ interface ApiResponse<T> {
 }
 ```
 
-Defined in `@wire/types` (`packages/types/src/envelope.ts`) — the single canonical definition every service and client imports.
+Defined in `@wire/types` (`packages/types/src/envelope.ts`), the single canonical definition every service and client imports.
 
 ## Successful response
 
@@ -87,12 +87,12 @@ See [errors.md](./errors.md) for the full error code list.
 | 500  | Internal Server Error | Unexpected error            |
 | 503  | Service Unavailable   | Temporary outage            |
 
-**204 is never used.** A `204 No Content` cannot carry a body, which would break the universal envelope guarantee — every response, including deletions, returns `200` with `data: null` instead.
+**204 is never used.** A `204 No Content` cannot carry a body, which would break the universal envelope guarantee: every response, including deletions, returns `200` with `data: null` instead.
 
 ## Implementation (never build this by hand in a controller)
 
 Controllers return plain data; the envelope is applied automatically by `ResponseEnvelopeInterceptor` (`apps/api/src/common/interceptors/response-envelope.interceptor.ts`), registered globally in `create-app.ts`. Errors go through `ApiExceptionFilter` (`apps/api/src/common/filters/api-exception.filter.ts`) the same way.
 
-For paginated collections, return a `PaginatedResult` (`apps/api/src/common/dto/paginated-result.ts`) instead of a raw array — the interceptor reads it to populate `meta.pagination`.
+For paginated collections, return a `PaginatedResult` (`apps/api/src/common/dto/paginated-result.ts`) instead of a raw array; the interceptor reads it to populate `meta.pagination`.
 
-`@wire/eslint-plugin-wire-api`'s `no-manual-envelope` rule flags any controller/service that hand-builds an object shaped like the envelope — that always indicates a bug (double-wrapping) rather than intentional code.
+`@wire/eslint-plugin-wire-api`'s `no-manual-envelope` rule flags any controller/service that hand-builds an object shaped like the envelope: that always indicates a bug (double-wrapping) rather than intentional code.

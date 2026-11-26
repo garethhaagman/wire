@@ -2,15 +2,15 @@
 
 ## Design goals
 
-Agents and integrations need **faithful, citeable context**—not raw channel dumps. Wire indexes at **message**, **thread**, and **file chunk** granularity with ACL filtering on every query.
+Agents and integrations need **faithful, citeable context**, not raw channel dumps. Wire indexes at **message**, **thread**, and **file chunk** granularity with ACL filtering on every query.
 
 ## Index pipeline
 
-1. **Ingest** — On message create/edit, file upload, thread reply.
-2. **Normalize** — Strip secrets per DLP rules; expand mentions to handles.
-3. **Chunk** — Thread-aware: parent + replies up to token budget; overlap 10%.
-4. **Embed** — Workspace-configurable embedding model id; store vector + sparse terms.
-5. **Publish** — Chunk visible in search after `indexing_status: ready`.
+1. **Ingest**: On message create/edit, file upload, thread reply.
+2. **Normalize**: Strip secrets per DLP rules; expand mentions to handles.
+3. **Chunk**: Thread-aware: parent + replies up to token budget; overlap 10%.
+4. **Embed**: Workspace-configurable embedding model id; store vector + sparse terms.
+5. **Publish**: Chunk visible in search after `indexing_status: ready`.
 
 ## Search modes
 
@@ -25,7 +25,7 @@ All modes accept `channel_ids`, `author_ids`, `actor_types`, `after`/`before`, `
 
 ## Context packs
 
-**Context pack** — Materialized, immutable snapshot for a harness prompt:
+**Context pack**: Materialized, immutable snapshot for a harness prompt:
 
 ```json
 {

@@ -20,7 +20,7 @@ maxBriefChars: 900
 
 ## Evidence To Check
 
-Check the scanner finding's `subtype`: `module-scope` (module-level date) or `in-cache-fn` (inside the cached body). Cross-reference `isrWritesByRoute` — a stable write rate against low reads is the symptom.
+Check the scanner finding's `subtype`: `module-scope` (module-level date) or `in-cache-fn` (inside the cached body). Cross-reference `isrWritesByRoute`, a stable write rate against low reads is the symptom.
 
 ## Do Not Recommend When
 

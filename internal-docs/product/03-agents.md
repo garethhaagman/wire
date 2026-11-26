@@ -27,21 +27,21 @@ Service accounts may still post via API; agents add **runs**, **tool traces**, a
 
 ## Lifecycle
 
-1. **Create** — `POST /v1/agents` with harness and permissions.
-2. **Install** — Add agent to channels (`POST /v1/channels/{id}/agents`) or workspace-wide.
-3. **Invoke** — Mention, automation, schedule, or `POST /v1/agent-runs`.
-4. **Observe** — Subscribe to `agent.run.completed` webhooks; fetch `GET /v1/agent-runs/{id}` for steps.
-5. **Retire** — `deleted_at` soft-delete; historical messages retain `actor_id`.
+1. **Create**: `POST /v1/agents` with harness and permissions.
+2. **Install**: Add agent to channels (`POST /v1/channels/{id}/agents`) or workspace-wide.
+3. **Invoke**: Mention, automation, schedule, or `POST /v1/agent-runs`.
+4. **Observe**: Subscribe to `agent.run.completed` webhooks; fetch `GET /v1/agent-runs/{id}` for steps.
+5. **Retire**: `deleted_at` soft-delete; historical messages retain `actor_id`.
 
 ## Agent run
 
 Atomic execution unit:
 
-- **Trigger** — `mention`, `message.created`, `schedule`, `api`, `automation`, `mcp.tool_call`.
-- **Input** — Structured context: channel snapshot, thread, optional `context_pack_id`.
-- **Steps** — Planning, tool calls, harness messages (stored redacted per policy).
-- **Output** — Final assistant message draft or posted message id.
-- **Status** — `queued`, `running`, `awaiting_approval`, `completed`, `failed`, `cancelled`.
+- **Trigger**: `mention`, `message.created`, `schedule`, `api`, `automation`, `mcp.tool_call`.
+- **Input**: Structured context: channel snapshot, thread, optional `context_pack_id`.
+- **Steps**: Planning, tool calls, harness messages (stored redacted per policy).
+- **Output**: Final assistant message draft or posted message id.
+- **Status**: `queued`, `running`, `awaiting_approval`, `completed`, `failed`, `cancelled`.
 
 Human-in-the-loop: when policy requires approval, run stops at `awaiting_approval` until `POST /v1/agent-runs/{id}/approve` or `/reject`.
 

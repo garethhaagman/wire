@@ -68,7 +68,8 @@ jobs:
           restore-keys: |
             turbo-wire-rules-${{ runner.os }}-
       - run: bun install --frozen-lockfile
-      - run: turbo run lint:wire-rules check:theme
+      - run: bunx turbo run lint:wire-rules check:theme
+      - run: bun run lint:md
 
   typecheck:
     name: typecheck
@@ -93,7 +94,7 @@ jobs:
           restore-keys: |
             turbo-typecheck-${{ runner.os }}-
       - run: bun install --frozen-lockfile
-      - run: turbo run typecheck
+      - run: bunx turbo run typecheck
 
   test:
     name: test
@@ -111,7 +112,7 @@ jobs:
           restore-keys: |
             bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
-      - run: turbo run test
+      - run: bunx turbo run test
 
   # Non-blocking: knip already has pre-existing false positives on main (it
   # can't see classes used only via decorator reflection, e.g. the Swagger DTO
@@ -160,7 +161,7 @@ jobs:
           restore-keys: |
             turbo-build-${{ runner.os }}-
       - run: bun install --frozen-lockfile
-      - run: turbo run build
+      - run: bunx turbo run build
 
   # One Docker build per app image, run in parallel (matrix), each with its
   # own GitHub Actions layer cache so an unrelated app's change doesn't

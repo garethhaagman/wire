@@ -13,7 +13,7 @@ Organization (billing, SSO)
 - OIDC / SAML at organization level.
 - Session cookies for interactive clients (out of scope for spec detail).
 - **OAuth 2.1** for third-party apps: authorization code + PKCE, scopes below.
-- **Primary capture** — Workspace admins onboard via [Slack export import](../import/workspace-import.md); users **claim** imported members on first login (email or token).
+- **Primary capture**: Workspace admins onboard via [Slack export import](../import/workspace-import.md); users **claim** imported members on first login (email or token).
 
 ## Machine authentication
 
@@ -25,7 +25,7 @@ Organization (billing, SSO)
 | Automation token (`wire_au_...`)  | Single automation + actions     |
 | MCP delegation token              | Short-lived, tool-scoped        |
 
-Never return full API keys after creation—show once.
+Never return full API keys after creation: show once.
 
 ## OAuth scopes (representative)
 
@@ -70,7 +70,7 @@ JWT includes `ws` claim for active workspace; switching via `POST /v1/session/wo
 
 ## Audit log
 
-`GET /v1/audit-events` — actor, ip, resource, action, `agent_run_id` if applicable. Immutable retention configurable.
+`GET /v1/audit-events`: actor, ip, resource, action, `agent_run_id` if applicable. Immutable retention configurable.
 
 ## Data residency
 
@@ -78,4 +78,4 @@ Workspace setting `data_region` (e.g. `us`, `eu`) pins storage and search.
 
 ## Response shape
 
-Auth failures (missing/invalid credentials, insufficient permissions) go through the same universal envelope as every other endpoint — `AUTHENTICATION_ERROR` / `PERMISSION_DENIED`, see [errors.md](./errors.md). `SessionGuard` (`apps/api/src/auth/session.guard.ts`) is what throws these for session-authenticated routes.
+Auth failures (missing/invalid credentials, insufficient permissions) go through the same universal envelope as every other endpoint: `AUTHENTICATION_ERROR` / `PERMISSION_DENIED`, see [errors.md](./errors.md). `SessionGuard` (`apps/api/src/auth/session.guard.ts`) is what throws these for session-authenticated routes.

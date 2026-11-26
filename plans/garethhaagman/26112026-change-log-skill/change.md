@@ -12,38 +12,38 @@ decision was made, not just what changed.
 
 ## Implementation details
 
-- `.claude/skills/change-log/SKILL.md` — new skill. Defines when to write a record,
+- `.claude/skills/change-log/SKILL.md`, new skill. Defines when to write a record,
   file locations, and how to fill in each template.
-- `.claude/skills/change-log/templates/change.md` — template for `plans/` entries:
+- `.claude/skills/change-log/templates/change.md`, template for `plans/` entries:
   description, implementation details, trade-offs, user input (with verbatim quotes).
-- `.claude/skills/change-log/templates/incident.md` — separate template for
+- `.claude/skills/change-log/templates/incident.md`, separate template for
   `incidents/` entries: timeline, root cause, impact, severity, status, follow-up.
-- `.agents/skills/change-log` — symlink to the directory above, per this repo's
+- `.agents/skills/change-log`, symlink to the directory above, per this repo's
   cross-tool parity convention (`skill-creation` skill) so Cursor sees the same skill.
-- `plans/<git-username>/<ddmmyyyy>-<feature-name>/change.md` — location for
+- `plans/<git-username>/<ddmmyyyy>-<feature-name>/change.md`, location for
   architecture/feature records, one folder per change, date-first so entries sort
   chronologically per user.
-- `incidents/<ddmmyyyy>-<description>.md` — flat, repo-root location for incidents, no
+- `incidents/<ddmmyyyy>-<description>.md`, flat, repo-root location for incidents, no
   per-user folder since incidents are shared, not personal.
 
 ## Trade-offs
 
 - **Chosen:** scope this skill to architecture/features only; leave routine bugfixes on
-  the existing `bugtracker` skill and its `bugs/` folder — why: `bugtracker` already
+  the existing `bugtracker` skill and its `bugs/` folder, why: `bugtracker` already
   auto-fires after bugfixes and writes to a different location (`bugs/` at repo root,
   flat, report+resolution pair). A second skill also claiming bugfixes would double-write
   or race with it for the same event.
 - **Rejected:** retire `bugtracker` and fold bugfixes into `change-log` under
-  `plans/` — why: would have required changing an existing, working skill with its own
+  `plans/`, why: would have required changing an existing, working skill with its own
   established format (report + resolution pair) for no functional gain, and the user's
   request didn't ask for that.
 - **Rejected:** keep both skills active for all changes, differentiated only by whether
-  a change needs user-input tracking — why: ambiguous trigger condition in practice; a
+  a change needs user-input tracking, why: ambiguous trigger condition in practice; a
   bugfix with a trade-off would be unclear which skill should fire. Clean split by change
   type (bug vs. architecture/feature) is unambiguous.
-- **Chosen:** write-biased, read-non-mandatory — records are created proactively on a
+- **Chosen:** write-biased, read-non-mandatory, records are created proactively on a
   qualifying change, but only read back when explicitly referenced or when diagnosing a
-  tricky design/architectural question — why: matches the user's explicit instruction
+  tricky design/architectural question, why: matches the user's explicit instruction
   that checking this history should be non-mandatory for ordinary changes.
 
 ## User input

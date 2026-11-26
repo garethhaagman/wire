@@ -17,17 +17,17 @@ impact was. State the impact before the mechanism.>
 
 ## Timeline
 
-- <HH:MM or relative time> — <event>
-- <HH:MM or relative time> — <event>
+- <HH:MM or relative time>, <event>
+- <HH:MM or relative time>, <event>
 
 ## Root cause
 
-<What was actually wrong, confirmed — not guessed. If still under investigation, say
-"unknown — under investigation" rather than a speculative guess stated as fact.>
+<What was actually wrong, confirmed, not guessed. If still under investigation, say
+"unknown, under investigation" rather than a speculative guess stated as fact.>
 
 ## Impact
 
-<Who/what was affected, for how long, and how severely — users, data, downstream
+<Who/what was affected, for how long, and how severely, users, data, downstream
 services.>
 
 ## Resolution
@@ -38,13 +38,13 @@ happened in two phases (mitigation vs. real fix), say so.>
 ## Trade-offs
 
 <Why this fix/mitigation was chosen over alternatives, if there was a real choice to
-make. "No alternative considered — this was the only viable fix" is fine if true.>
+make. "No alternative considered, this was the only viable fix" is fine if true.>
 
 ## User input
 
 <One of:
 
-- "No user input — this was handled autonomously."
+- "No user input, this was handled autonomously."
 - What the user specified, with direct quotes where exact wording matters.>
 
 > "<exact user quote if applicable>"

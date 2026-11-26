@@ -1,5 +1,6 @@
 // @ts-check
 import tsParser from "@typescript-eslint/parser";
+import noEmDash from "./rules/no-em-dash.js";
 
 /** @type {import("eslint").Linter.Config[]} */
 export default [
@@ -16,6 +17,13 @@ export default [
     files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {
       parser: tsParser,
+    },
+  },
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    plugins: { wire: { rules: { "no-em-dash": noEmDash } } },
+    rules: {
+      "wire/no-em-dash": "error",
     },
   },
 ];

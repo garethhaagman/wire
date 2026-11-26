@@ -13,9 +13,9 @@ After Slack import, humans exist as **unclaimed** members with email and display
 
 ## Claim triggers
 
-1. **Email match** — User signs in with SSO/email equal to `Member.email` → auto-claim if domain policy allows.
-2. **Claim token** — Link from `send-claim-invites` with `claim_token` one-time use.
-3. **Admin assign** — `POST /members/{id}/claim` binds specified auth user id.
+1. **Email match**: User signs in with SSO/email equal to `Member.email` → auto-claim if domain policy allows.
+2. **Claim token**: Link from `send-claim-invites` with `claim_token` one-time use.
+3. **Admin assign**: `POST /members/{id}/claim` binds specified auth user id.
 
 ## Conflicts
 
@@ -27,7 +27,7 @@ After Slack import, humans exist as **unclaimed** members with email and display
 
 ## API
 
-- `POST /imports/{id}/send-claim-invites` — optional `member_ids[]`, `only_unclaimed: true`
+- `POST /imports/{id}/send-claim-invites`: optional `member_ids[]`, `only_unclaimed: true`
 - `GET /members?claim_status=unclaimed`
 - `POST /members/{id}/claim`
 

@@ -7,8 +7,8 @@ RESTful, resource-based naming:
 - Nouns, not verbs.
 - Plural resource names.
 - Lowercase, kebab-case for multi-word resources.
-- Consistent nesting that mirrors the data model's ownership (e.g. messages nest under channels, agents nest under workspaces — see [data-model/data-model.md](../data-model/data-model.md)).
-- Avoid deeply nested URLs — two levels of nesting is the practical ceiling (`/v1/channels/{channelId}/messages`, not `/v1/workspaces/{id}/channels/{id}/messages/{id}/reactions`).
+- Consistent nesting that mirrors the data model's ownership (e.g. messages nest under channels, agents nest under workspaces, see [data-model/data-model.md](../data-model/data-model.md)).
+- Avoid deeply nested URLs: two levels of nesting is the practical ceiling (`/v1/channels/{channelId}/messages`, not `/v1/workspaces/{id}/channels/{id}/messages/{id}/reactions`).
 
 | Good                         | Avoid                      |
 | ---------------------------- | -------------------------- |
@@ -40,7 +40,7 @@ Rules:
 
 - `GET` must never modify state.
 - `PUT` and `DELETE` should be idempotent.
-- `POST` is generally non-idempotent — support `Idempotency-Key` for POSTs where duplicate execution matters (see [headers.md](./headers.md)).
+- `POST` is generally non-idempotent: support `Idempotency-Key` for POSTs where duplicate execution matters (see [headers.md](./headers.md)).
 
 ## Controller handler naming (enforced by lint)
 

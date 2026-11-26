@@ -1,0 +1,8 @@
+{
+  "config": {
+    "default": false,
+    "no-em-dash": true
+  },
+  "customRules": ["./.markdownlint/no-em-dash.js"],
+  "ignores": ["**/node_modules/**", "**/dist/**", "**/coverage/**"]
+}

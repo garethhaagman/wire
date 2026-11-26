@@ -10,6 +10,7 @@ COPY packages/eslint-config/package.json packages/eslint-config/package.json
 COPY packages/eslint-plugin-wire-api/package.json packages/eslint-plugin-wire-api/package.json
 COPY packages/eslint-plugin-wire-ui/package.json packages/eslint-plugin-wire-ui/package.json
 COPY packages/types/package.json packages/types/package.json
+COPY packages/ui/package.json packages/ui/package.json
 COPY packages/ui-config/package.json packages/ui-config/package.json
 COPY packages/config/package.json packages/config/package.json
 COPY packages/db/package.json packages/db/package.json

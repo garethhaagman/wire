@@ -1,6 +1,6 @@
 # Team messaging feature parity
 
-This section maps **mainstream team chat** capabilities—the set users expect from category-leading products—to Wire’s API and docs. Wire adds AI-native surfaces (agents, harnesses, context packs, MCP); parity here means **humans can migrate workflows without losing primitives**.
+This section maps **mainstream team chat** capabilities, the set users expect from category-leading products, to Wire’s API and docs. Wire adds AI-native surfaces (agents, harnesses, context packs, MCP); parity here means **humans can migrate workflows without losing primitives**.
 
 **Legend**
 
@@ -133,7 +133,7 @@ This section maps **mainstream team chat** capabilities—the set users expect f
 | **Slash commands**      | `/command` in composer       | `POST /commands` dispatch       | **Shipped (spec)** |
 | **Workflow automation** | If-this-then-that in product | **Automations** resource        | **Wire+**          |
 | **App home / modals**   | Structured UI                | `blocks` + future `views` API   | **Partial**        |
-| **MCP**                 | —                            | First-class MCP server          | **Wire+**          |
+| **MCP**                 | N/A                          | First-class MCP server          | **Wire+**          |
 
 ---
 

@@ -17,11 +17,11 @@ The real file is `.claude/skills/<name>/SKILL.md` (plus any `references/`, scrip
 .agents/skills/<name>                   -> symlink to the directory above
 ```
 
-Cursor's [Agent Skills](https://cursor.com/docs/skills) feature discovers skills from `.agents/skills/` directly, and separately reads `.claude/skills/` as a legacy-compatible path — so this one symlink is enough for both Claude Code and Cursor to see the same skill. There is no `.cursor/rules/*.mdc` step; that was a workaround from before Cursor had native skill support and no longer applies.
+Cursor's [Agent Skills](https://cursor.com/docs/skills) feature discovers skills from `.agents/skills/` directly, and separately reads `.claude/skills/` as a legacy-compatible path, so this one symlink is enough for both Claude Code and Cursor to see the same skill. There is no `.cursor/rules/*.mdc` step; that was a workaround from before Cursor had native skill support and no longer applies.
 
 ## Why symlinks, not copies
 
-A duplicated `SKILL.md` drifts the moment one copy gets edited and the other doesn't — this repo had exactly that problem (`.agents/skills/react-doctor/SKILL.md` and `.claude/skills/react-doctor/SKILL.md` were separately maintained, byte-for-byte copies, with no mechanism keeping them in sync). A symlink makes drift structurally impossible: there is only ever one file on disk, so there is nothing to fall out of sync.
+A duplicated `SKILL.md` drifts the moment one copy gets edited and the other doesn't: this repo had exactly that problem (`.agents/skills/react-doctor/SKILL.md` and `.claude/skills/react-doctor/SKILL.md` were separately maintained, byte-for-byte copies, with no mechanism keeping them in sync). A symlink makes drift structurally impossible: there is only ever one file on disk, so there is nothing to fall out of sync.
 
 ## Step by step
 
@@ -43,8 +43,8 @@ A duplicated `SKILL.md` drifts the moment one copy gets edited and the other doe
 
 - **Don't** write the full skill content into `.agents/skills/<name>/SKILL.md` and a second time into `.claude/skills/<name>/SKILL.md`. That's the exact drift this skill exists to prevent.
 - **Don't** symlink in the wrong direction (`.claude/skills/<name>` -> `.agents/skills/<name>`). `.claude/skills/` is the canonical source; `.agents/skills/` points at it.
-- **Don't** symlink the individual `SKILL.md` file instead of the directory if the skill has supporting files (`references/`, scripts, `assets/`) — symlink the directory itself so those come along automatically.
-- **Don't** forget `version` in the frontmatter, and don't forget to bump it when the content changes — other skills (e.g. `api-design`) reference their own version in their changelog-style edits.
+- **Don't** symlink the individual `SKILL.md` file instead of the directory if the skill has supporting files (`references/`, scripts, `assets/`): symlink the directory itself so those come along automatically.
+- **Don't** forget `version` in the frontmatter, and don't forget to bump it when the content changes: other skills (e.g. `api-design`) reference their own version in their changelog-style edits.
 - **Don't** re-add a `.cursor/rules/*.mdc` symlink for a skill. Cursor's native skills feature reads `.agents/skills/` and `.claude/skills/` directly; a `.mdc` rules-file entry would just be a second, redundant way in.
 
 ## Applying this to an existing skill

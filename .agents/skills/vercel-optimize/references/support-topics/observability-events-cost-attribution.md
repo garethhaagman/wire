@@ -20,7 +20,7 @@ Verify the share from `usage.services`. Cross-reference `requestsByRouteCache`, 
 
 ## Do Not Recommend When
 
-Skip below 15% share. Skip when cache hit rate is already >90% across hot routes — the lever is elsewhere. Do not propose sampling unless the specific metered signal has a documented sampling control.
+Skip below 15% share. Skip when cache hit rate is already >90% across hot routes, the lever is elsewhere. Do not propose sampling unless the specific metered signal has a documented sampling control.
 
 ## Verification
 
