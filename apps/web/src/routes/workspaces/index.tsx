@@ -1,5 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import type { Workspace } from "@wire/types";
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -9,13 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.js";
-import { apiFetch } from "@/lib/api-client.js";
+import { useWorkspaces } from "@/features/workspaces/hooks.js";
 
 export default function WorkspacesRoute(): React.JSX.Element {
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["workspaces"],
-    queryFn: () => apiFetch<Workspace[]>("/v1/workspaces"),
-  });
+  const { data, isLoading, isError, error } = useWorkspaces({ per_page: 100 });
+  const workspaces = data?.items;
 
   let content: React.JSX.Element;
   if (isLoading) {
@@ -28,10 +24,10 @@ export default function WorkspacesRoute(): React.JSX.Element {
         {error.message}
       </p>
     );
-  } else if (data?.length) {
+  } else if (workspaces?.length) {
     content = (
       <ul className="flex flex-col gap-1">
-        {data.map((ws) => (
+        {workspaces.map((ws) => (
           <li key={ws.id}>
             <Link
               className="border-border text-foreground hover:bg-accent hover:text-accent-foreground flex items-center justify-between rounded-md border px-3 py-2.5 text-sm font-medium transition-colors"

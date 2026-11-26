@@ -21,7 +21,26 @@ export type IconName =
   | "settings"
   | "send"
   | "chevron-right"
-  | "message-square";
+  | "chevron-left"
+  | "message-square"
+  | "reply"
+  | "pin"
+  | "bookmark"
+  | "smile"
+  | "paperclip"
+  | "x"
+  | "pencil"
+  | "trash"
+  | "more-horizontal"
+  | "users"
+  | "webhook"
+  | "bot"
+  | "shield"
+  | "loader"
+  | "download"
+  | "file"
+  | "check"
+  | "archive";
 
 const lucideIcons: Record<IconName, LucideIcon> = {
   hash: Lucide.Hash,
@@ -31,7 +50,26 @@ const lucideIcons: Record<IconName, LucideIcon> = {
   settings: Lucide.Settings,
   send: Lucide.Send,
   "chevron-right": Lucide.ChevronRight,
+  "chevron-left": Lucide.ChevronLeft,
   "message-square": Lucide.MessageSquare,
+  reply: Lucide.Reply,
+  pin: Lucide.Pin,
+  bookmark: Lucide.Bookmark,
+  smile: Lucide.Smile,
+  paperclip: Lucide.Paperclip,
+  x: Lucide.X,
+  pencil: Lucide.Pencil,
+  trash: Lucide.Trash2,
+  "more-horizontal": Lucide.MoreHorizontal,
+  users: Lucide.Users,
+  webhook: Lucide.Webhook,
+  bot: Lucide.Bot,
+  shield: Lucide.Shield,
+  loader: Lucide.Loader2,
+  download: Lucide.Download,
+  file: Lucide.File,
+  check: Lucide.Check,
+  archive: Lucide.Archive,
 };
 
 function CustomSpriteIcon({

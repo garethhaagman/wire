@@ -16,10 +16,10 @@ export class ApiClientError extends Error {
  * follows the same {success, data, error, meta} envelope, so no endpoint-specific
  * unwrapping logic is ever needed here. See internal-docs/api/README.md.
  */
-export async function apiFetch<T>(
+export async function apiFetchEnvelope<T>(
   path: string,
   init?: RequestInit
-): Promise<T> {
+): Promise<ApiResponse<T>> {
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
     credentials: "include",
@@ -38,5 +38,14 @@ export async function apiFetch<T>(
     );
   }
 
+  return body;
+}
+
+/** Convenience wrapper for the common case of only needing the data, not meta/pagination. */
+export async function apiFetch<T>(
+  path: string,
+  init?: RequestInit
+): Promise<T> {
+  const body = await apiFetchEnvelope<T>(path, init);
   return body.data as T;
 }

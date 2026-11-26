@@ -5,6 +5,7 @@ import { baseUiConfig } from "@wire/ui-config";
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useMemo } from "react";
 import { apiFetch } from "@/lib/api-client.js";
+import { queryKeys } from "@/lib/query-keys.js";
 import { applyTheme } from "./apply-theme.js";
 import { createIconRegistry, IconRegistryProvider } from "./icon-pack.js";
 
@@ -36,7 +37,7 @@ export function UiConfigProvider({
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["ui-config", workspaceId],
+    queryKey: queryKeys.uiConfig.detail(workspaceId),
     queryFn: () =>
       apiFetch<UiConfigResource>(`/v1/workspaces/${workspaceId}/ui-config`),
   });
@@ -55,7 +56,10 @@ export function UiConfigProvider({
         body: JSON.stringify({ override }),
       }),
     onSuccess: (resource) => {
-      queryClient.setQueryData(["ui-config", workspaceId], resource);
+      queryClient.setQueryData(
+        queryKeys.uiConfig.detail(workspaceId),
+        resource
+      );
     },
   });
 
