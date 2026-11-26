@@ -14,6 +14,7 @@ import {
 import {
   ApiCookieAuth,
   ApiOkResponse,
+  ApiOperation,
   ApiProduces,
   ApiTags,
 } from "@nestjs/swagger";
@@ -21,6 +22,7 @@ import { Database, listEventsAfter } from "@wire/db";
 import type { PresenceEntry, WireEvent } from "@wire/types";
 import type { Request, Response } from "express";
 import { ChannelAccessService } from "../channels/channel-access.service.js";
+import { ExcludeFromMcp } from "../common/decorators/exclude-from-mcp.decorator.js";
 import {
   CursorPaginatedResult,
   CursorQueryDto,
@@ -41,7 +43,7 @@ import { HEARTBEAT_MS, RealtimeService } from "./realtime.service.js";
 import { SseSink } from "./sse-sink.js";
 
 /**
- * Realtime surface — internal-docs/api/events-webhooks.md. Durable events come from
+ * Realtime surface: internal-docs/api/events-webhooks.md. Durable events come from
  * the transactional outbox (replayable); presence and typing are ephemeral.
  */
 @ApiTags("Events")
@@ -57,6 +59,11 @@ export class EventsController {
 
   /** Replay / poll durable events the caller can see, oldest first. */
   @Get("workspaces/:workspaceId/events")
+  @ApiOperation({
+    operationId: "list_events",
+    summary:
+      "Replay or poll durable workspace events the caller can see, oldest first",
+  })
   @RequirePermission("read", "Event")
   @ApiOkResponse({ type: WireEventDto, isArray: true })
   async list(
@@ -88,6 +95,11 @@ export class EventsController {
    * too far behind and should refetch state over REST.
    */
   @Get("workspaces/:workspaceId/events/stream")
+  @ApiOperation({
+    operationId: "stream_events",
+    summary: "Open a server-sent event stream of live workspace events",
+  })
+  @ExcludeFromMcp()
   @RequirePermission("read", "Event")
   @ApiProduces("text/event-stream")
   @ApiOkResponse({
@@ -134,6 +146,11 @@ export class EventsController {
 
   /** Heartbeat for clients not holding a stream open (an open stream heartbeats itself). */
   @Post("workspaces/:workspaceId/presence")
+  @ApiOperation({
+    operationId: "send_presence_heartbeat",
+    summary: "Mark the caller as online in the workspace",
+  })
+  @ExcludeFromMcp()
   @RequirePermission("create", "Presence")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })
@@ -143,6 +160,10 @@ export class EventsController {
   }
 
   @Get("workspaces/:workspaceId/presence")
+  @ApiOperation({
+    operationId: "list_presence",
+    summary: "List the members currently online in the workspace",
+  })
   @RequirePermission("read", "Presence")
   @ApiOkResponse({ type: PresenceEntryDto, isArray: true })
   listPresence(
@@ -152,6 +173,10 @@ export class EventsController {
   }
 
   @Post("channels/:channelId/typing")
+  @ApiOperation({
+    operationId: "send_typing_indicator",
+    summary: "Signal that the caller is typing in a channel or thread",
+  })
   @WorkspaceScope({ from: "channel", param: "channelId" })
   @RequirePermission("create", "Presence")
   @HttpCode(HttpStatus.OK)

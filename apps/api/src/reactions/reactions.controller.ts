@@ -13,6 +13,7 @@ import {
   ApiCookieAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
@@ -34,8 +35,12 @@ import { ReactionsService } from "./reactions.service.js";
 export class ReactionsController {
   constructor(private readonly reactions: ReactionsService) {}
 
-  /** Individual reactions (capped at 1000) — use Message.reactionCounts for totals. */
+  /** Individual reactions (capped at 1000): use Message.reactionCounts for totals. */
   @Get()
+  @ApiOperation({
+    operationId: "list_reactions",
+    summary: "List the individual emoji reactions on a message",
+  })
   @RequirePermission("read", "Reaction")
   @ApiOkResponse({ type: ReactionDto, isArray: true })
   list(
@@ -46,6 +51,10 @@ export class ReactionsController {
   }
 
   @Post()
+  @ApiOperation({
+    operationId: "add_reaction",
+    summary: "Add an emoji reaction to a message",
+  })
   @RequirePermission("create", "Reaction")
   @ApiCreatedResponse({ type: ReactionDto })
   add(
@@ -57,6 +66,10 @@ export class ReactionsController {
   }
 
   @Delete()
+  @ApiOperation({
+    operationId: "remove_reaction",
+    summary: "Remove the caller's emoji reaction from a message",
+  })
   @RequirePermission("delete", "Reaction")
   @HttpCode(HttpStatus.OK)
   @ApiQuery({ name: "emoji", required: true })

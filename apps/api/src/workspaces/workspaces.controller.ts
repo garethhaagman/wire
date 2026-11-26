@@ -13,6 +13,7 @@ import {
   ApiCreatedResponse,
   ApiHeader,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
 import type { Workspace } from "@wire/types";
@@ -33,7 +34,7 @@ import { WorkspacesService } from "./workspaces.service.js";
 /**
  * Skeleton-scope simplification: org_id is derived from the session user's id.
  * Real org/workspace tenancy per internal-docs/api/auth-tenancy.md (Organization -> Workspace)
- * is not implemented here — see internal-docs/data-model/data-model.md for the target shape.
+ * is not implemented here: see internal-docs/data-model/data-model.md for the target shape.
  * Access to a single workspace is gated on membership by PermissionsGuard.
  */
 @ApiTags("Workspaces")
@@ -43,6 +44,10 @@ export class WorkspacesController {
   constructor(private readonly workspaces: WorkspacesService) {}
 
   @Get()
+  @ApiOperation({
+    operationId: "list_workspaces",
+    summary: "List the workspaces the caller belongs to",
+  })
   @RequirePermission("read", "Workspace")
   @ApiOkResponse({ type: WorkspaceDto, isArray: true })
   async list(
@@ -59,6 +64,7 @@ export class WorkspacesController {
   }
 
   @Get(":id")
+  @ApiOperation({ operationId: "get_workspace", summary: "Get one workspace" })
   @WorkspaceScope({ from: "workspace", param: "id" })
   @RequirePermission("read", "Workspace")
   @ApiOkResponse({ type: WorkspaceDto })
@@ -67,6 +73,10 @@ export class WorkspacesController {
   }
 
   @Post()
+  @ApiOperation({
+    operationId: "create_workspace",
+    summary: "Create a workspace with the caller as its owner",
+  })
   @RequirePermission("create", "Workspace")
   @ApiHeader({
     name: "Idempotency-Key",
@@ -83,6 +93,10 @@ export class WorkspacesController {
   }
 
   @Patch(":id")
+  @ApiOperation({
+    operationId: "update_workspace",
+    summary: "Update a workspace's name or settings",
+  })
   @WorkspaceScope({ from: "workspace", param: "id" })
   @RequirePermission("update", "Workspace")
   @ApiOkResponse({ type: WorkspaceDto })

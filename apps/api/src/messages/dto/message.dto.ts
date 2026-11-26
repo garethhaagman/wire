@@ -15,7 +15,7 @@ import {
 } from "class-validator";
 
 export class MessageDto implements Message {
-  @ApiProperty({ example: "msg_01jd5x0k8f3v8q2m7n4r6t9w1y" })
+  @ApiProperty({ type: String, example: "msg_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   id!: Message["id"];
 
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })
@@ -105,7 +105,7 @@ export class CreateMessageRequestDto
 
 export class UpdateMessageRequestDto implements UpdateMessageRequest {
   @ApiProperty({
-    example: "Shipping the v2 config schema today — now with examples.",
+    example: "Shipping the v2 config schema today: now with examples.",
   })
   @IsString()
   @Length(1, 8000)

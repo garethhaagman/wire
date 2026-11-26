@@ -11,10 +11,11 @@ import { AUTH_INSTANCE } from "./auth/auth.module.js";
 import { ApiExceptionFilter } from "./common/filters/api-exception.filter.js";
 import { DeprecationHeadersInterceptor } from "./common/interceptors/deprecation-headers.interceptor.js";
 import { ResponseEnvelopeInterceptor } from "./common/interceptors/response-envelope.interceptor.js";
+import { declarePathParameters } from "./common/openapi/declare-path-parameters.js";
 import { validationExceptionFactory } from "./common/pipes/validation-exception-factory.js";
 
 /**
- * Builds and configures the Nest app without listening on a port — consumed by
+ * Builds and configures the Nest app without listening on a port: consumed by
  * main.ts (which also calls app.listen()) and scripts/export-openapi.ts (which
  * only needs SwaggerModule.createDocument()). Side-effect-free on import, unlike
  * main.ts which boots a listening server at module load.
@@ -30,7 +31,7 @@ export async function createApp(): Promise<NestExpressApplication> {
   const auth = app.get<Auth>(AUTH_INSTANCE);
   app.use("/api/auth/*", toNodeHandler(auth));
 
-  // Shared API infrastructure — every endpoint gets these for free, per
+  // Shared API infrastructure: every endpoint gets these for free, per
   // internal-docs/api/README.md § 13 (build conventions into the framework).
   const reflector = app.get(Reflector);
   app.useGlobalInterceptors(
@@ -55,7 +56,9 @@ export async function createApp(): Promise<NestExpressApplication> {
       .setVersion("0.1.0")
       .addCookieAuth("better-auth.session_token")
       .build();
-    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+    const swaggerDocument = declarePathParameters(
+      SwaggerModule.createDocument(app, swaggerConfig)
+    );
     SwaggerModule.setup("docs", app, swaggerDocument);
   }
 

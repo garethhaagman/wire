@@ -18,11 +18,11 @@ import {
 
 const ROLES = ["owner", "admin", "member", "guest"] as const;
 
-// Swagger-only schema shadow of the @wire/types interface — see
+// Swagger-only schema shadow of the @wire/types interface: see
 // apps/api/src/health/dto/health-response.dto.ts for why this exists alongside
 // (not instead of) the canonical type.
 export class MemberDto implements Member {
-  @ApiProperty({ example: "mem_01jd5x0k8f3v8q2m7n4r6t9w1y" })
+  @ApiProperty({ type: String, example: "mem_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   id!: Member["id"];
 
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })

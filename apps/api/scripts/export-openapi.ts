@@ -1,6 +1,6 @@
 /**
- * Boots the Nest app (requires a reachable Postgres — `make db migrate` locally), generates the OpenAPI document from @nestjs/swagger decorators, writes it
- * to internal-docs/api/openapi.yaml, then exits. The committed file is a generated artifact —
+ * Boots the Nest app (requires a reachable Postgres: `make db migrate` locally), generates the OpenAPI document from @nestjs/swagger decorators, writes it
+ * to internal-docs/api/openapi.yaml, then exits. The committed file is a generated artifact -
  * never hand-edit it; change the controllers/DTOs and re-run this script instead.
  *
  * Usage: DATABASE_URL=... bun run openapi:export
@@ -11,6 +11,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { stringify } from "yaml";
+import { declarePathParameters } from "../src/common/openapi/declare-path-parameters.js";
 import { createApp } from "../src/create-app.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -37,7 +38,9 @@ async function main(): Promise<void> {
     .addCookieAuth("better-auth.session_token")
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const document = declarePathParameters(
+    SwaggerModule.createDocument(app, config)
+  );
   const yaml = stringify(document, { lineWidth: 100 });
 
   await writeFile(OUTPUT_PATH, yaml, "utf8");

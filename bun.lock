@@ -62,6 +62,10 @@
       "name": "@wire/docs",
       "version": "0.1.0",
     },
+    "apps/mcp": {
+      "name": "@wire/mcp",
+      "version": "0.1.0",
+    },
     "apps/web": {
       "name": "@wire/web",
       "version": "0.1.0",
@@ -974,6 +978,8 @@
     "@wire/eslint-plugin-wire-ui": ["@wire/eslint-plugin-wire-ui@workspace:packages/eslint-plugin-wire-ui"],
 
     "@wire/infra": ["@wire/infra@workspace:infra"],
+
+    "@wire/mcp": ["@wire/mcp@workspace:apps/mcp"],
 
     "@wire/types": ["@wire/types@workspace:packages/types"],
 

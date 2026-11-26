@@ -8,10 +8,10 @@ import { IsOptional, IsString, Length, Matches } from "class-validator";
 
 const DATA_REGION_PATTERN = /^[a-z]{2}$/u;
 
-// Swagger-only schema shadow of the @wire/types interface — see health-response.dto.ts
+// Swagger-only schema shadow of the @wire/types interface: see health-response.dto.ts
 // for why this exists alongside (not instead of) the canonical type.
 export class WorkspaceDto implements Workspace {
-  @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })
+  @ApiProperty({ type: String, example: "ws_64d9dea525ae84ef6f7bd361" })
   id!: Workspace["id"];
 
   @ApiProperty({ example: "org_8f2c1a6e9b3d4f05" })

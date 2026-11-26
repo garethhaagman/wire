@@ -16,6 +16,7 @@ import {
   ApiCreatedResponse,
   ApiHeader,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
 import type { Agent } from "@wire/types";
@@ -39,6 +40,10 @@ export class AgentsController {
   constructor(private readonly agents: AgentsService) {}
 
   @Get()
+  @ApiOperation({
+    operationId: "list_agents",
+    summary: "List the agents configured in the workspace",
+  })
   @RequirePermission("read", "Agent")
   @ApiOkResponse({ type: AgentDto, isArray: true })
   async list(
@@ -55,6 +60,10 @@ export class AgentsController {
   }
 
   @Get(":id")
+  @ApiOperation({
+    operationId: "get_agent",
+    summary: "Get one agent's configuration",
+  })
   @RequirePermission("read", "Agent")
   @ApiOkResponse({ type: AgentDto })
   getById(
@@ -65,6 +74,10 @@ export class AgentsController {
   }
 
   @Post()
+  @ApiOperation({
+    operationId: "create_agent",
+    summary: "Create an agent in the workspace",
+  })
   @RequirePermission("create", "Agent")
   @ApiHeader({
     name: "Idempotency-Key",
@@ -81,6 +94,10 @@ export class AgentsController {
   }
 
   @Patch(":id")
+  @ApiOperation({
+    operationId: "update_agent",
+    summary: "Update an agent's configuration",
+  })
   @RequirePermission("update", "Agent")
   @ApiOkResponse({ type: AgentDto })
   update(
@@ -92,6 +109,7 @@ export class AgentsController {
   }
 
   @Delete(":id")
+  @ApiOperation({ operationId: "delete_agent", summary: "Delete an agent" })
   @RequirePermission("delete", "Agent")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })

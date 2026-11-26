@@ -12,6 +12,7 @@ import {
   ApiCookieAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
 import type { Pin } from "@wire/types";
@@ -29,6 +30,10 @@ export class PinsController {
   constructor(private readonly pins: PinsService) {}
 
   @Get()
+  @ApiOperation({
+    operationId: "list_pins",
+    summary: "List the pinned messages in a channel",
+  })
   @RequirePermission("read", "Pin")
   @ApiOkResponse({ type: PinDto, isArray: true })
   list(
@@ -39,6 +44,10 @@ export class PinsController {
   }
 
   @Post()
+  @ApiOperation({
+    operationId: "pin_message",
+    summary: "Pin a message to its channel",
+  })
   @RequirePermission("create", "Pin")
   @ApiCreatedResponse({ type: PinDto })
   add(
@@ -50,6 +59,10 @@ export class PinsController {
   }
 
   @Delete(":id")
+  @ApiOperation({
+    operationId: "unpin_message",
+    summary: "Remove a pin from a channel",
+  })
   @RequirePermission("delete", "Pin")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })

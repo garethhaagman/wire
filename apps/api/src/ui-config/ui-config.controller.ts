@@ -1,5 +1,10 @@
 import { Body, Controller, Get, Patch } from "@nestjs/common";
-import { ApiCookieAuth, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCookieAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { UiConfigResource } from "@wire/types";
 import { CurrentActor, type WorkspaceActor } from "../permissions/actor.js";
 import { RequirePermission } from "../permissions/require-permission.decorator.js";
@@ -13,7 +18,7 @@ import { UiConfigService } from "./ui-config.service.js";
 /**
  * Server-resolved config, per internal-docs/ui/config-schema.md "Resolution
  * happens on the server". Clients never merge base/org/user layers
- * themselves — they GET one already-resolved UiConfig and PATCH their own
+ * themselves: they GET one already-resolved UiConfig and PATCH their own
  * layer; only an admin can PATCH the org layer and locks.
  */
 @ApiTags("UiConfig")
@@ -23,6 +28,10 @@ export class UiConfigController {
   constructor(private readonly uiConfig: UiConfigService) {}
 
   @Get()
+  @ApiOperation({
+    operationId: "get_ui_config",
+    summary: "Get the caller's fully resolved UI configuration",
+  })
   @RequirePermission("read", "UiConfig")
   @ApiOkResponse({ type: UiConfigResourceDto })
   get(@CurrentActor() actor: WorkspaceActor): Promise<UiConfigResource> {
@@ -30,6 +39,11 @@ export class UiConfigController {
   }
 
   @Patch("org")
+  @ApiOperation({
+    operationId: "update_org_ui_config",
+    summary:
+      "Update the workspace-wide UI configuration layer and locks (admin only)",
+  })
   @RequirePermission("manage", "UiConfig")
   @ApiOkResponse({ type: UiConfigResourceDto })
   async updateOrgLayer(
@@ -41,6 +55,10 @@ export class UiConfigController {
   }
 
   @Patch("me")
+  @ApiOperation({
+    operationId: "update_my_ui_config",
+    summary: "Update the caller's personal UI configuration layer",
+  })
   @RequirePermission("update", "UiConfig")
   @ApiOkResponse({ type: UiConfigResourceDto })
   async updateUserLayer(

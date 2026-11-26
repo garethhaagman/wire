@@ -13,6 +13,7 @@ import {
   ApiCookieAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
 import type { ChannelMember } from "@wire/types";
@@ -37,6 +38,10 @@ export class ChannelMembersController {
   constructor(private readonly channels: ChannelsService) {}
 
   @Get("members")
+  @ApiOperation({
+    operationId: "list_channel_members",
+    summary: "List the members of a channel",
+  })
   @RequirePermission("read", "ChannelMember")
   @ApiOkResponse({ type: ChannelMemberDto, isArray: true })
   async list(
@@ -60,6 +65,11 @@ export class ChannelMembersController {
 
   /** Join (pass your own member id) or add someone else. Idempotent. */
   @Post("members")
+  @ApiOperation({
+    operationId: "add_channel_member",
+    summary:
+      "Join a channel (pass your own member id) or add another member to it",
+  })
   @RequirePermission("create", "ChannelMember")
   @ApiCreatedResponse({ type: ChannelMemberDto })
   add(
@@ -72,6 +82,11 @@ export class ChannelMembersController {
 
   /** Leave (your own member id) or, as an admin, remove someone. */
   @Delete("members/:memberId")
+  @ApiOperation({
+    operationId: "remove_channel_member",
+    summary:
+      "Leave a channel (your own member id) or, as an admin, remove a member from it",
+  })
   @RequirePermission("delete", "ChannelMember")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })
@@ -86,6 +101,11 @@ export class ChannelMembersController {
 
   /** Advances your read cursor (never backwards). */
   @Post("mark-read")
+  @ApiOperation({
+    operationId: "mark_channel_read",
+    summary:
+      "Advance the caller's read position in a channel up to a message seq",
+  })
   @RequirePermission("update", "ChannelMember")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: ChannelMemberDto })

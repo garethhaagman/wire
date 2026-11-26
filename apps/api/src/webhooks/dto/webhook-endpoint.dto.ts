@@ -14,7 +14,7 @@ import {
 } from "class-validator";
 
 export class WebhookEndpointDto implements WebhookEndpoint {
-  @ApiProperty({ example: "whe_64d9dea525ae84ef6f7bd361" })
+  @ApiProperty({ type: String, example: "whe_64d9dea525ae84ef6f7bd361" })
   id!: WebhookEndpoint["id"];
 
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })
@@ -40,7 +40,7 @@ export class WebhookEndpointDto implements WebhookEndpoint {
   updatedAt!: string;
 }
 
-/** Only ever returned from create — the secret is shown once and never again. */
+/** Only ever returned from create: the secret is shown once and never again. */
 export class WebhookEndpointCreatedDto extends WebhookEndpointDto {
   @ApiProperty({
     description: "Shown once. Store it: it cannot be retrieved again.",

@@ -11,7 +11,7 @@ import {
 } from "class-validator";
 
 export class WireEventDto implements WireEvent {
-  @ApiProperty({ example: "evt_01jd5x0k8f3v8q2m7n4r6t9w1y" })
+  @ApiProperty({ type: String, example: "evt_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   id!: WireEvent["id"];
 
   @ApiProperty({
@@ -20,7 +20,7 @@ export class WireEventDto implements WireEvent {
   })
   seq!: number;
 
-  @ApiProperty({ example: "message.created" })
+  @ApiProperty({ type: String, example: "message.created" })
   type!: WireEvent["type"];
 
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })

@@ -96,6 +96,29 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bunx turbo run typecheck
 
+  # Rust MCP server: format, lint, unit tests, and a drift gate so
+  # tools.snapshot.json always matches the committed OpenAPI spec. The
+  # toolchain pin lives in apps/mcp/rust-toolchain.toml.
+  mcp:
+    name: mcp (rust + openapi drift)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mcp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.90"
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/mcp -> target
+      - run: cargo fmt --check
+      - run: cargo clippy --locked -- -D warnings
+      - run: cargo test --locked
+      - run: cargo run --locked -q -- check
+
   test:
     name: test
     runs-on: ubuntu-latest

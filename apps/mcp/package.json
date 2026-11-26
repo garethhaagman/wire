@@ -1,0 +1,14 @@
+{
+  "name": "@wire/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Wire MCP server: one tool per OpenAPI operation, powered by rmcp-openapi",
+  "scripts": {
+    "check:openapi": "cargo run -q -- check",
+    "dev": "cargo run -q -- serve",
+    "generate": "cargo run -q -- generate",
+    "lint": "cargo fmt --check && cargo clippy --locked -- -D warnings",
+    "test": "cargo test --locked",
+    "typecheck": "cargo check --locked"
+  }
+}

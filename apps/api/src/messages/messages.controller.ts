@@ -16,6 +16,7 @@ import {
   ApiCreatedResponse,
   ApiHeader,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
 import type { Message } from "@wire/types";
@@ -47,6 +48,11 @@ export class MessagesController {
    * oldest-first catch-up from a known position. Follow meta.cursor.next_cursor.
    */
   @Get()
+  @ApiOperation({
+    operationId: "get_channel_history",
+    summary:
+      "Get a channel's message history, newest first, or catch up after a seq",
+  })
   @RequirePermission("read", "Message")
   @ApiOkResponse({ type: MessageDto, isArray: true })
   async list(
@@ -64,6 +70,10 @@ export class MessagesController {
   }
 
   @Get(":id")
+  @ApiOperation({
+    operationId: "get_message",
+    summary: "Get one message in a channel",
+  })
   @RequirePermission("read", "Message")
   @ApiOkResponse({ type: MessageDto })
   getById(
@@ -75,6 +85,10 @@ export class MessagesController {
   }
 
   @Post()
+  @ApiOperation({
+    operationId: "post_message",
+    summary: "Post a message to a channel",
+  })
   @RequirePermission("create", "Message")
   @ApiHeader({
     name: "Idempotency-Key",
@@ -97,6 +111,10 @@ export class MessagesController {
   }
 
   @Patch(":id")
+  @ApiOperation({
+    operationId: "update_message",
+    summary: "Edit a message's body",
+  })
   @RequirePermission("update", "Message")
   @ApiOkResponse({ type: MessageDto })
   update(
@@ -109,6 +127,7 @@ export class MessagesController {
   }
 
   @Delete(":id")
+  @ApiOperation({ operationId: "delete_message", summary: "Delete a message" })
   @RequirePermission("delete", "Message")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })
