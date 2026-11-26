@@ -1,7 +1,5 @@
+import { Button, Input, Label } from "@wire/ui";
 import { useState } from "react";
-import { Button } from "@/components/ui/button.js";
-import { Input } from "@/components/ui/input.js";
-import { Label } from "@/components/ui/label.js";
 import { useIcon } from "@/lib/ui-config/icon-pack.js";
 import {
   useCreateWebhookEndpoint,

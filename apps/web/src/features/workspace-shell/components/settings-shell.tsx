@@ -1,9 +1,9 @@
+import { cn } from "@wire/ui";
 import { Link } from "react-router-dom";
 import { AgentsPanel } from "@/features/agents/components/agents-panel.js";
 import { AuditLogPanel } from "@/features/audit/components/audit-log-panel.js";
 import { MembersPanel } from "@/features/members/components/members-panel.js";
 import { WebhooksPanel } from "@/features/webhooks/components/webhooks-panel.js";
-import { cn } from "@/lib/cn.js";
 
 export const SETTINGS_TABS = [
   "members",

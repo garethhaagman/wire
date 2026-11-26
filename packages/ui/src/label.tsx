@@ -1,6 +1,6 @@
 import type { LabelHTMLAttributes } from "react";
 import { forwardRef } from "react";
-import { cn } from "@/lib/cn.js";
+import { cn } from "./cn.js";
 
 export const Label = forwardRef<
   HTMLLabelElement,

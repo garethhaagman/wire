@@ -1,12 +1,12 @@
-import { ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card.js";
+} from "@wire/ui";
+import { ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useWorkspaces } from "@/features/workspaces/hooks.js";
 
 export default function WorkspacesRoute(): React.JSX.Element {

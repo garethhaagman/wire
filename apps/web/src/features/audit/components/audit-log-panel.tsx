@@ -1,5 +1,5 @@
+import { Button } from "@wire/ui";
 import { useState } from "react";
-import { Button } from "@/components/ui/button.js";
 import { useAuditEvents } from "../hooks.js";
 
 const DATE_FORMAT = new Intl.DateTimeFormat(undefined, {

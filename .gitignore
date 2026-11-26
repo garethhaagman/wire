@@ -11,6 +11,7 @@ build/
 coverage/
 .pulumi/
 *.tsbuildinfo
+storybook-static/
 
 # Claude Code local-only state (not shared project config)
 .claude/settings.local.json

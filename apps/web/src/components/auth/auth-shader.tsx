@@ -1,5 +1,5 @@
+import { cn } from "@wire/ui";
 import { useEffect, useRef } from "react";
-import { cn } from "@/lib/cn.js";
 
 /*
  * Halftone "Waves / Bokeh / Tidepool" shader, reduced to the one shape, particle and

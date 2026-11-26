@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+/*
+ * Mirrors apps/web/src/styles/globals.css's Tailwind wiring (minus
+ * app-specific pieces like the auth shader background) so @wire/ui's own
+ * token-backed utilities (bg-primary, text-muted-foreground, ...) resolve
+ * the same way in Storybook as they do in the real app. theme.generated.css
+ * is generated here from @wire/ui-config, same source as apps/web's copy —
+ * see .storybook/generate-theme-css.ts.
+ */
+@import "./theme.generated.css";
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 0.25rem);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 0.25rem);
+  --radius-xl: calc(var(--radius) + 0.5rem);
+  --font-display: var(--ui-font-display);
+}
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+    --ui-font-display: ui-serif, Georgia, Cambria, serif;
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    min-height: 100dvh;
+    font-family: var(--font-sans);
+    font-size: var(--ui-base-size, 16px);
+    -webkit-font-smoothing: antialiased;
+    color: var(--foreground);
+    background-color: var(--background);
+  }
+}

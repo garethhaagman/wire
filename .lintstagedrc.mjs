@@ -32,4 +32,5 @@ export default {
   "apps/web/**/*.{ts,tsx}": eslintInWorkspace("apps/web"),
   "packages/db/**/*.ts": eslintInWorkspace("packages/db"),
   "packages/types/**/*.ts": eslintInWorkspace("packages/types"),
+  "packages/ui/**/*.{ts,tsx}": eslintInWorkspace("packages/ui"),
 };

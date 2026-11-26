@@ -1,6 +1,6 @@
+import { Button } from "@wire/ui";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button.js";
 import { signIn } from "@/lib/auth-client.js";
 
 /** Google's brand mark — its colors are mandated by Google's branding guidelines, not theme tokens. */

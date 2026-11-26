@@ -1,9 +1,9 @@
 import type { Message } from "@wire/types";
+import { cn } from "@wire/ui";
 import { useState } from "react";
 import { useAddBookmark } from "@/features/bookmarks/hooks.js";
 import { useAddPin } from "@/features/pins/hooks.js";
 import { useToggleReaction } from "@/features/reactions/hooks.js";
-import { cn } from "@/lib/cn.js";
 import { useIcon } from "@/lib/ui-config/icon-pack.js";
 import { EmojiPicker } from "./emoji-picker.js";
 

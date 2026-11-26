@@ -11,6 +11,7 @@ export default [
     rules: {
       "wire-ui/no-hardcoded-colors": "error",
       "wire-ui/no-raw-query-keys": "error",
+      "wire-ui/use-design-system-primitives": "error",
     },
   },
 ];

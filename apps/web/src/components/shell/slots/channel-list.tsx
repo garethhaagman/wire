@@ -1,6 +1,6 @@
+import { cn } from "@wire/ui";
 import { useChannels } from "@/features/channels/hooks.js";
 import { useWorkspaceShell } from "@/features/workspace-shell/workspace-shell-context.js";
-import { cn } from "@/lib/cn.js";
 import { useUiConfig } from "@/lib/ui-config/config-provider.js";
 import { useIcon } from "@/lib/ui-config/icon-pack.js";
 import type { SlotProps } from "../slot-registry.js";

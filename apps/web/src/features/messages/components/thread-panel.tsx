@@ -1,5 +1,5 @@
+import { Button } from "@wire/ui";
 import { useState } from "react";
-import { Button } from "@/components/ui/button.js";
 import { useMemberLookup } from "@/features/members/use-member-lookup.js";
 import { useIcon } from "@/lib/ui-config/icon-pack.js";
 import { useMessage, useReplyToThread, useThreadMessages } from "../hooks.js";

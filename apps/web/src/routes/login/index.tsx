@@ -1,12 +1,10 @@
+import { Button, Input, Label } from "@wire/ui";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthLayout } from "@/components/auth/auth-layout.js";
 import { AuthDivider, GoogleButton } from "@/components/auth/google-button.js";
 import { PasswordInput } from "@/components/auth/password-input.js";
-import { Button } from "@/components/ui/button.js";
-import { Input } from "@/components/ui/input.js";
-import { Label } from "@/components/ui/label.js";
 import { signIn, useSession } from "@/lib/auth-client.js";
 
 /** Better Auth redirects failed OAuth attempts back here with `?error=<code>`. */

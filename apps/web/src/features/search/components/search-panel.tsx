@@ -1,6 +1,6 @@
+import { Input } from "@wire/ui";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input.js";
 import { useIcon } from "@/lib/ui-config/icon-pack.js";
 import { useSearch } from "../hooks.js";
 

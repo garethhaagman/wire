@@ -1,8 +1,7 @@
+import { cn, Input } from "@wire/ui";
 import { Eye, EyeOff } from "lucide-react";
 import type { InputHTMLAttributes } from "react";
 import { forwardRef, useState } from "react";
-import { Input } from "@/components/ui/input.js";
-import { cn } from "@/lib/cn.js";
 
 export const PasswordInput = forwardRef<
   HTMLInputElement,

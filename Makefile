@@ -3,7 +3,7 @@ COMPOSE := docker compose
 DOCKER_STACK := $(COMPOSE) --profile docker
 ENV_DIRS := apps/api apps/web packages/db
 
-.PHONY: help setup env dev dev-api dev-web dev-docs \
+.PHONY: help setup env dev dev-api dev-web dev-docs dev-storybook \
 	db db-down migrate seed clean \
 	docker-up docker-down docker-logs docker-ps docker-rebuild \
 	install typecheck lint test knip format
@@ -20,12 +20,13 @@ env: ## Create any missing .env files from .env.example (never overwrites)
 		if [ ! -f $$dir/.env ]; then cp $$dir/.env.example $$dir/.env && echo "  created $$dir/.env"; fi; \
 	done
 
-dev: env db migrate seed ## Start Postgres + Redis, migrate, seed dev data, then run api + web + docs with hot reload
+dev: env db migrate seed ## Start Postgres + Redis, migrate, seed dev data, then run api + web + docs + storybook with hot reload
 	@echo ""
 	@echo "  web           http://localhost:5173"
 	@echo "  api           http://localhost:3001"
 	@echo "  api docs      http://localhost:3001/docs"
 	@echo "  markdown docs http://localhost:3000"
+	@echo "  storybook     http://localhost:6006"
 	@echo ""
 	bun run dev
 
@@ -37,6 +38,9 @@ dev-web: env ## Run only the web app
 
 dev-docs: ## Run only the docs viewer
 	bun run dev:docs
+
+dev-storybook: ## Run only Storybook for the @wire/ui design system
+	bun run dev:storybook
 
 db: ## Start Postgres and Redis in Docker and wait until they're healthy
 	bun run db:up
