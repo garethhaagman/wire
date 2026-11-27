@@ -25,6 +25,27 @@ See `apps/api/.env.example`:
 
 Dev logs are pretty (human-readable for turbo). Production logs are JSON.
 
+## Local Grafana (interpret traces)
+
+Opt-in Docker profile. **Grafana datasources, dashboards, and alert monitors live
+in `packages/observability/`** (not a separate app, not only under `infra/`).
+
+```sh
+make observability-up
+# apps/api/.env → OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+# open http://localhost:3003  (anonymous admin; docs already use :3000)
+```
+
+| Piece           | Role                                                  |
+| --------------- | ----------------------------------------------------- |
+| Alloy `:4318`   | OTLP intake from the host API                         |
+| Tempo           | Traces                                                |
+| Loki            | Logs store (API access logs still go to turbo stdout) |
+| Grafana `:3003` | UI + provisioned Wire dashboard / alerting            |
+
+Edit monitors under `packages/observability/grafana/provisioning/alerting/`, then
+recreate Grafana so provisioning reloads. Details: `packages/observability/README.md`.
+
 ## Package boundary
 
 Shared Node plumbing lives in `@wire/observability` (`packages/observability`):
@@ -32,6 +53,7 @@ Shared Node plumbing lives in `@wire/observability` (`packages/observability`):
 - `createPinoLogger` / `PinoNestLogger`, levels + Nest `LoggerService`
 - `startTelemetry` / `shutdownTelemetry`, NodeSDK + auto-instrumentations
 - `trace` / `SpanStatusCode`, rare custom span enrichment
+- `grafana/`, `alloy/`, `tempo/`, `loki/` - local stack config mounted by compose
 
 Nest wiring (global interceptor, bootstrap order) stays in `apps/api`:
 

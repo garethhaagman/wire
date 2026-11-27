@@ -6,6 +6,7 @@ ENV_DIRS := apps/api apps/web apps/mcp packages/db
 .PHONY: help setup env dev dev-api dev-web dev-docs dev-mcp dev-storybook \
 	db db-down migrate seed clean \
 	docker-up docker-down docker-logs docker-ps docker-rebuild \
+	observability-up observability-down \
 	install typecheck lint test knip format \
 	mcp-generate mcp-check mcp-lint
 
@@ -63,6 +64,19 @@ clean: ## Stop all containers and remove volumes (DESTROYS local Postgres data)
 	$(DOCKER_STACK) down -v
 
 # --- Full stack in Docker (closer to deployment; no hot reload of host edits) ---
+
+observability-up: ## Start Grafana + Tempo + Loki + Alloy (OTLP on :4318)
+	$(COMPOSE) --profile observability up -d
+	@echo ""
+	@echo "  grafana   http://localhost:3003"
+	@echo "  otlp      http://localhost:4318"
+	@echo ""
+	@echo "  1. Set OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 in apps/api/.env"
+	@echo "  2. Restart the API (make dev / make dev-api)"
+	@echo "  3. Hit any API route, then refresh the Wire API overview dashboard"
+
+observability-down: ## Stop Grafana/Tempo/Loki/Alloy (keeps volumes)
+	$(COMPOSE) --profile observability stop grafana alloy tempo loki
 
 docker-up: ## Build and start postgres, redis, api, web, docs all in Docker
 	$(DOCKER_STACK) up -d --build

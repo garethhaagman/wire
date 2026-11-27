@@ -3,9 +3,11 @@ name: wire
 # `docker compose up` starts only Postgres and Redis; apps run natively via `make dev`.
 # The app containers are opt-in: `docker compose --profile docker up` (or `make docker-up`).
 # The local S3-compatible store (Garage) is also opt-in: `docker compose --profile s3 up`
-# — apps/api's FilesService defaults to LocalDiskAdapter (zero config, see
+# - apps/api's FilesService defaults to LocalDiskAdapter (zero config, see
 # apps/api/src/files/storage/local-disk-adapter.ts) and only needs Garage/S3 when you
 # want to exercise the real S3Adapter path locally.
+# Local Grafana/Tempo/Loki/Alloy: `docker compose --profile observability up -d`
+# (or `make observability-up`). Config lives in packages/observability/.
 
 services:
   postgres:
@@ -142,7 +144,84 @@ services:
     ports:
       - "3000:3000"
 
+  # --- Observability (opt-in profile). Config is versioned under
+  # packages/observability/{alloy,tempo,loki,grafana}/ — do not edit in the UI
+  # if you want the change to survive a recreate; edit the package files instead.
+  tempo:
+    profiles: [ "observability" ]
+    image: grafana/tempo:2.7.1
+    restart: unless-stopped
+    command: [ "-config.file=/etc/tempo/tempo.yaml" ]
+    volumes:
+      - ./packages/observability/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    # OTLP stays on the docker network; host apps talk to Alloy :4318.
+    expose:
+      - "3200"
+      - "4317"
+      - "4318"
+
+  loki:
+    profiles: [ "observability" ]
+    image: grafana/loki:3.4.2
+    restart: unless-stopped
+    command: [ "-config.file=/etc/loki/loki.yaml" ]
+    volumes:
+      - ./packages/observability/loki/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki_data:/loki
+    expose:
+      - "3100"
+
+  alloy:
+    profiles: [ "observability" ]
+    image: grafana/alloy:v1.7.1
+    restart: unless-stopped
+    command:
+      [
+        "run",
+        "/etc/alloy/config.alloy",
+        "--storage.path=/var/lib/alloy/data",
+        "--server.http.listen-addr=0.0.0.0:12345",
+      ]
+    volumes:
+      - ./packages/observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy_data:/var/lib/alloy/data
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    depends_on:
+      - tempo
+      - loki
+
+  grafana:
+    profiles: [ "observability" ]
+    image: grafana/grafana:11.5.2
+    restart: unless-stopped
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_USERS_DEFAULT_THEME: dark
+      GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
+      # Home opens the Wire API overview instead of the welcome screen.
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/wire-api-overview.json
+    volumes:
+      - ./packages/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./packages/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      # Docs already uses 3000; Grafana on 3003.
+      - "3003:3000"
+    depends_on:
+      - tempo
+      - loki
+      - alloy
+
 volumes:
   postgres_data:
   garage_meta:
   garage_data:
+  tempo_data:
+  loki_data:
+  alloy_data:
+  grafana_data:

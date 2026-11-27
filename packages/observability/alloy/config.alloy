@@ -1,0 +1,46 @@
+// Grafana Alloy: single OTLP intake for the host API, fans out to Tempo + Loki.
+// Point apps/api OTEL_EXPORTER_OTLP_ENDPOINT at http://localhost:4318
+
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    traces = [otelcol.processor.batch.default.input]
+    logs   = [otelcol.processor.batch.default.input]
+    metrics = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  output {
+    traces  = [otelcol.exporter.otlp.tempo.input]
+    logs    = [otelcol.exporter.otlphttp.loki.input]
+    metrics = []
+  }
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+    tls {
+      insecure = true
+    }
+  }
+}
+
+// Loki's OTLP endpoint (Loki 3+) — traces stay on Tempo; logs land here when
+// the app exports OTLP logs. Access logs still go to stdout for turbo.
+otelcol.exporter.otlphttp "loki" {
+  client {
+    endpoint = "http://loki:3100/otlp"
+    tls {
+      insecure = true
+    }
+  }
+}

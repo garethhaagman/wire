@@ -1,7 +1,12 @@
 ---
 name: api-design
-description: Use when adding, changing, or reviewing any endpoint in apps/api — a new resource controller, a new DTO, a new error case, or anything touching the HTTP surface. Also use when asked about Wire's API conventions, response envelope, error codes, pagination, headers, or OpenAPI spec generation.
-version: "1.6.0"
+description: >-
+  Use when adding, changing, or reviewing any endpoint in apps/api — a new
+  resource controller, a new DTO, a new error case, or anything touching the HTTP
+  surface. Also use when asked about Wire's API conventions, response envelope,
+  error codes, pagination, headers, OpenAPI spec generation, request logging,
+  OpenTelemetry, or the local Grafana stack.
+version: "1.7.0"
 ---
 
 # Wire API design
@@ -24,7 +29,7 @@ Use `internal-docs/api/workspaces` (well, `apps/api/src/workspaces/`) as the ref
 4. **Controller** (`apps/api/src/foo/foo.controller.ts`): see Naming & verbs below for method names, URL shape, and the required decorators.
 5. **Permissions**: add `"Foo"` to `PermissionSubject` in `apps/api/src/permissions/permission.types.ts`, decide which actions `member` gets in `ability.factory.ts` (admin always gets everything via `manage all`), then put `@RequirePermission(action, "Foo")` on every handler, see Permissions below.
 6. **Module**: wire controller + service, import into `AppModule`.
-7. **Observability**: do nothing per endpoint. Request access logs and OpenTelemetry spans are global (`RequestLoggingMiddleware` in `AppModule` + `@wire/observability` in `instrumentation.ts` / `main.ts`). Do not add logging/tracing middleware or interceptors, `console.*`, or a private OTEL SDK. Use Nest's `Logger` only for rare domain `warn`/`error` events. Full detail: `internal-docs/api/observability.md`.
+7. **Observability**: do nothing per endpoint for request lifecycle. Access logs and OTEL spans are global. Only add Nest `Logger` `warn`/`error` for unusual domain failures (caught email send, agent run crash). Never `console.*`, never per-route logging/tracing. Full detail below and in `internal-docs/api/observability.md`.
 8. **Regenerate the OpenAPI spec** and commit the diff alongside the code change.
 
 ## Versioning
@@ -97,15 +102,40 @@ Full detail: `internal-docs/api/errors.md`.
 
 ## Observability, automatic, do not re-wire
 
-HTTP access logs and OpenTelemetry are framework defaults (same idea as the response envelope and `X-Request-ID`):
+HTTP access logs and OpenTelemetry are framework defaults (same idea as the response envelope and `X-Request-ID`). **A new endpoint needs zero observability code** to show up in turbo and in Grafana.
 
-- One `info` line per request in turbo: `GET /v1/workspaces 200 12ms req_…` (`RequestLoggingMiddleware`; health is `debug`).
-- OTEL auto-instrumentation covers HTTP/Express/`pg`/`ioredis`/Nest for every route. Export when `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
-- Shared package: `@wire/observability`. Nest bootstrap only in `instrumentation.ts` / `main.ts` / `AppModule`.
-- **Don't** `console.*`, re-attach request logging, or import `@opentelemetry/sdk-*` from feature code. Enforced by `wire-api/no-console-logging` and `wire-api/no-manual-observability`.
-- Domain `warn`/`error` via Nest `Logger` is fine; don't log successful CRUD at `info`.
+### What you get for free
 
-Full detail: `internal-docs/api/observability.md`.
+- **Access log** (middleware, not an interceptor, so guard 401s still log): one turbo line per request, e.g. `GET /v1/workspaces 401 12ms req_…`. Level: `info` for 2xx/3xx, `warn` for 4xx, `error` for 5xx. `/health` is `debug` only.
+- **Traces**: OTEL auto-instrumentation covers HTTP/Express/`pg`/`ioredis`/Nest. Spans export only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set. Service name defaults to `wire-api`.
+- **Correlation**: `X-Request-ID` / `meta.request_id` is stamped on the active span; 5xx paths also mark the span as error in `ApiExceptionFilter`.
+
+Wiring lives only in bootstrap: `apps/api/src/instrumentation.ts` (OTEL first import), `main.ts` (pino Nest logger), `AppModule` (`RequestLoggingMiddleware`), shared SDK in `@wire/observability`.
+
+### What to do (and not do) in feature code
+
+| Do                                                                                                  | Don't                                                                                                                            |
+| --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Nest `Logger` for rare domain `warn`/`error` (log the raw cause, throw an authored client message)  | `console.*` anywhere under `src/` (lint: `wire-api/no-console-logging`)                                                          |
+| Catch → log → throw `ApiException` / Nest HTTP exception                                            | Per-route `@UseInterceptors` for logging/tracing, or starting an OTEL SDK in a module (lint: `wire-api/no-manual-observability`) |
+| Custom spans only for work auto-instrumentation cannot see (use `trace` from `@wire/observability`) | Log successful CRUD at `info`, or hand-roll access logs                                                                          |
+
+### Local Grafana (interpret traces)
+
+Opt-in Docker profile. Config (datasources, dashboards, alert monitors) is versioned under `packages/observability/grafana/` (and Alloy/Tempo/Loki configs beside it), not a separate app.
+
+```sh
+make observability-up
+# apps/api/.env → OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+# restart the API, hit any route
+# open http://localhost:3003 → Wire → Wire API overview
+```
+
+- Alloy listens on `:4318` (OTLP HTTP). Grafana is on `:3003` (docs already use `:3000`).
+- Empty charts / "Recent API traces" almost always means the OTLP endpoint is unset or the API was not restarted after setting it. TraceQL metrics (rate, p99) need a few minutes of traffic after Tempo starts.
+- Edit monitors/dashboards in `packages/observability/`. Dashboards reload from disk; Tempo/Alloy config changes need a container recreate. Do not treat the Grafana UI as source of truth.
+
+Full detail: `internal-docs/api/observability.md`, package README under `packages/observability/`.
 
 ## Headers
 

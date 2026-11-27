@@ -1,0 +1,80 @@
+apiVersion: 1
+
+# Monitors for local Grafana. Edit here (not in the UI) so rules stay in git.
+# TraceQL metrics need span-metrics from Tempo's metrics generator; the Wire
+# API overview dashboard is the day-to-day view until you add Prometheus remote
+# write. This rule fires when Tempo sees recent error spans for wire-api.
+groups:
+  - orgId: 1
+    name: wire-api
+    folder: Wire
+    interval: 1m
+    rules:
+      - uid: wire-api-error-spans
+        title: Wire API error spans
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: tempo
+            model:
+              datasource:
+                type: tempo
+                uid: tempo
+              queryType: traceqlSearch
+              limit: 20
+              tableType: traces
+              filters:
+                - id: service-name
+                  tag: resource.service.name
+                  operator: "="
+                  value:
+                    - wire-api
+                  scope: resource
+                - id: status
+                  tag: status
+                  operator: "="
+                  value:
+                    - error
+                  scope: intrinsic
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: count
+              settings:
+                mode: dropNN
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  type: query
+        noDataState: OK
+        execErrState: OK
+        for: 2m
+        annotations:
+          summary: Wire API produced error spans in the last 5 minutes.
+          description: Open Grafana Explore (Tempo) and filter resource.service.name=wire-api status=error.
+        labels:
+          severity: warning
+          service: wire-api
+        # Paused until TraceQL→numeric alerting is validated against your Grafana
+        # version; unpause in git after a local dry-run. Structure stays in-repo.
+        isPaused: true
