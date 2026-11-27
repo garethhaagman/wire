@@ -38,6 +38,9 @@
     "packages/config": {
       "project": ["src/**/*.ts"]
     },
+    "packages/observability": {
+      "project": ["src/**/*.ts"]
+    },
     "packages/db": {
       "entry": ["src/cli-data-source.ts", "src/migrations/*.ts"],
       "project": ["src/**/*.ts"]

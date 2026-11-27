@@ -1,7 +1,7 @@
 ---
 name: api-design
 description: Use when adding, changing, or reviewing any endpoint in apps/api — a new resource controller, a new DTO, a new error case, or anything touching the HTTP surface. Also use when asked about Wire's API conventions, response envelope, error codes, pagination, headers, or OpenAPI spec generation.
-version: "1.5.0"
+version: "1.6.0"
 ---
 
 # Wire API design
@@ -24,7 +24,8 @@ Use `internal-docs/api/workspaces` (well, `apps/api/src/workspaces/`) as the ref
 4. **Controller** (`apps/api/src/foo/foo.controller.ts`): see Naming & verbs below for method names, URL shape, and the required decorators.
 5. **Permissions**: add `"Foo"` to `PermissionSubject` in `apps/api/src/permissions/permission.types.ts`, decide which actions `member` gets in `ability.factory.ts` (admin always gets everything via `manage all`), then put `@RequirePermission(action, "Foo")` on every handler, see Permissions below.
 6. **Module**: wire controller + service, import into `AppModule`.
-7. **Regenerate the OpenAPI spec** and commit the diff alongside the code change.
+7. **Observability**: do nothing per endpoint. Request access logs and OpenTelemetry spans are global (`RequestLoggingMiddleware` in `AppModule` + `@wire/observability` in `instrumentation.ts` / `main.ts`). Do not add logging/tracing middleware or interceptors, `console.*`, or a private OTEL SDK. Use Nest's `Logger` only for rare domain `warn`/`error` events. Full detail: `internal-docs/api/observability.md`.
+8. **Regenerate the OpenAPI spec** and commit the diff alongside the code change.
 
 ## Versioning
 
@@ -94,6 +95,18 @@ Full detail, the complete admin/member permission matrix, and a known gap in rol
 
 Full detail: `internal-docs/api/errors.md`.
 
+## Observability, automatic, do not re-wire
+
+HTTP access logs and OpenTelemetry are framework defaults (same idea as the response envelope and `X-Request-ID`):
+
+- One `info` line per request in turbo: `GET /v1/workspaces 200 12ms req_…` (`RequestLoggingMiddleware`; health is `debug`).
+- OTEL auto-instrumentation covers HTTP/Express/`pg`/`ioredis`/Nest for every route. Export when `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
+- Shared package: `@wire/observability`. Nest bootstrap only in `instrumentation.ts` / `main.ts` / `AppModule`.
+- **Don't** `console.*`, re-attach request logging, or import `@opentelemetry/sdk-*` from feature code. Enforced by `wire-api/no-console-logging` and `wire-api/no-manual-observability`.
+- Domain `warn`/`error` via Nest `Logger` is fine; don't log successful CRUD at `info`.
+
+Full detail: `internal-docs/api/observability.md`.
+
 ## Headers
 
 - `X-Request-ID` (both directions, client-settable, server-minted if absent) and `X-API-Version` (response) are set automatically, don't touch these yourself.
@@ -144,6 +157,6 @@ Enforced by `wire-api/require-api-property-example` on every `src/**/dto/*.dto.t
 
 ## Lint enforcement
 
-`@wire/eslint-plugin-wire-api` (`packages/eslint-plugin-wire-api/`) enforces several of the above automatically on every `apps/api` file: `require-api-response` (every HTTP-decorated handler needs an `@Api*Response` decorator, this is what makes the generated spec complete), `require-permission` (every HTTP-decorated handler needs `@RequirePermission` or `@Public()`), `controller-verb-naming`, `no-bare-error-throw`, `no-manual-envelope`, `no-numeric-id`, `require-api-property-example` (every `@ApiProperty`/`@ApiPropertyOptional` in `src/**/dto/*.dto.ts` needs an `example`, `enum`, `oneOf`, or concrete `type`, see "DTO examples" above), and `no-em-dash-in-api-description` (no em dash in any OpenAPI-facing `description` string). Run `bun run lint` before considering an endpoint done.
+`@wire/eslint-plugin-wire-api` (`packages/eslint-plugin-wire-api/`) enforces several of the above automatically on every `apps/api` file: `require-api-response` (every HTTP-decorated handler needs an `@Api*Response` decorator, this is what makes the generated spec complete), `require-permission` (every HTTP-decorated handler needs `@RequirePermission` or `@Public()`), `controller-verb-naming`, `no-bare-error-throw`, `no-manual-envelope`, `no-numeric-id`, `require-api-property-example` (every `@ApiProperty`/`@ApiPropertyOptional` in `src/**/dto/*.dto.ts` needs an `example`, `enum`, `oneOf`, or concrete `type`, see "DTO examples" above), `no-em-dash-in-api-description` (no em dash in any OpenAPI-facing `description` string), `no-console-logging` (use Nest Logger / `@wire/observability`, request logs are automatic), and `no-manual-observability` (no per-route logging/tracing interceptors or DIY OTEL SDK). Run `bun run lint` before considering an endpoint done.
 
 This custom plugin exists specifically because **[Ultracite](https://www.ultracite.ai)/Biome** (the fast first-pass linter+formatter, config at root `biome.jsonc`) can't load custom plugins, it covers generic correctness/style rules only. ESLint + `@wire/eslint-plugin-wire-api` (via `bun run lint:wire-rules`) is where anything Wire-specific lives. `bun run lint` runs both (Biome first, since it's near-instant, then the wire-rules ESLint pass).

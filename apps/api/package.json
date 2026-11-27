@@ -26,6 +26,7 @@
     "@nestjs/websockets": "^10.4.15",
     "@wire/config": "workspace:*",
     "@wire/db": "workspace:*",
+    "@wire/observability": "workspace:*",
     "@wire/types": "workspace:*",
     "@wire/ui-config": "workspace:*",
     "ai": "^7.0.181",

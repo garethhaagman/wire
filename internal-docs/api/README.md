@@ -31,6 +31,7 @@ https://api.wire.example/v1
 | [sdk-architecture.md](./sdk-architecture.md) | Why one generic handler is enough for every endpoint                    |
 | [auth-tenancy.md](./auth-tenancy.md)         | Auth, RBAC, org/workspace boundaries                                    |
 | [events-webhooks.md](./events-webhooks.md)   | Realtime and async integration                                          |
+| [observability.md](./observability.md)       | Automatic request logging + OpenTelemetry (do not re-wire per endpoint) |
 | `openapi.yaml`                               | **Generated OpenAPI 3.0 spec**: the canonical machine-readable contract |
 
 ## Authentication

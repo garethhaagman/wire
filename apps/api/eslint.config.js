@@ -23,7 +23,9 @@ export default [
     plugins: { "wire-api": wireApi },
     rules: {
       "wire-api/no-bare-error-throw": "error",
+      "wire-api/no-console-logging": "error",
       "wire-api/no-manual-envelope": "error",
+      "wire-api/no-manual-observability": "error",
       "wire-api/no-numeric-id": "error",
     },
   },

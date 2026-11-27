@@ -142,6 +142,33 @@ export const apiEnvSchema = z
     /** Outbound email (invites, verification). Unset means emails are logged via console, not delivered. */
     RESEND_API_KEY: optionalString,
     EMAIL_FROM_ADDRESS: z.string().min(1).default("Wire <no-reply@wire.local>"),
+    /**
+     * Pino log level. Default `info` so turbo shows one access line per request
+     * without drowning in Nest framework debug noise.
+     */
+    LOG_LEVEL: z
+      .enum(["fatal", "error", "warn", "info", "debug", "trace"])
+      .default("info"),
+    /**
+     * OpenTelemetry service name. Defaults to `wire-api`.
+     * Standard OTEL env; we also accept it via parseApiEnv for typed access.
+     */
+    OTEL_SERVICE_NAME: z.string().min(1).default("wire-api"),
+    /**
+     * OTLP HTTP collector base URL (e.g. `http://localhost:4318`). When unset,
+     * auto-instrumentation still runs but spans are not exported.
+     */
+    OTEL_EXPORTER_OTLP_ENDPOINT: optionalString.pipe(
+      z.string().url().optional()
+    ),
+    /**
+     * Set `true` to skip starting the OpenTelemetry SDK entirely.
+     * Mirrors the OTEL spec's OTEL_SDK_DISABLED.
+     */
+    OTEL_SDK_DISABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
   })
   .refine(
     (env) =>

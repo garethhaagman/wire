@@ -10,6 +10,7 @@ import { BookmarksModule } from "./bookmarks/bookmarks.module.js";
 import { ChannelsModule } from "./channels/channels.module.js";
 import { RateLimitMiddleware } from "./common/middleware/rate-limit.middleware.js";
 import { RequestIdMiddleware } from "./common/middleware/request-id.middleware.js";
+import { RequestLoggingMiddleware } from "./common/middleware/request-logging.middleware.js";
 import { EnvModule } from "./config/env.provider.js";
 import { DatabaseModule } from "./database/database.module.js";
 import { EventsModule } from "./events/events.module.js";
@@ -54,6 +55,8 @@ import { WorkspacesModule } from "./workspaces/workspaces.module.js";
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(RequestIdMiddleware, RateLimitMiddleware).forRoutes("*");
+    consumer
+      .apply(RequestIdMiddleware, RequestLoggingMiddleware, RateLimitMiddleware)
+      .forRoutes("*");
   }
 }
