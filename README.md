@@ -53,15 +53,15 @@ flowchart LR
     api -- "file uploads/downloads\nfalls back to local disk" --> objectStore
 ```
 
-`packages/ui` ships as a design-system package (`@wire/ui`), consumed by `web` and previewed in Storybook; it has no runtime service of its own. See [internal-docs/stack/architecture.md](./internal-docs/stack/architecture.md) for the full target architecture, including the planned `worker` and `mcp-server` services not yet built.
+`packages/ui` ships as a design-system package (`@wire/ui`), consumed by `web` and previewed in Storybook; it has no runtime service of its own. `apps/mcp` is the OpenAPI-derived MCP server (`wire-mcp`). See [internal-docs/stack/architecture.md](./internal-docs/stack/architecture.md) for the full target architecture, including the planned `worker` service not yet built.
 
 ## Setup
 
-**Requires:** [Bun](https://bun.sh) 1.1+ and Docker (for Postgres and Redis only; apps run natively).
+**Requires:** [Bun](https://bun.sh) 1.1+, [Rust](https://rustup.rs) 1.90+ (for `apps/mcp`), and Docker (for Postgres and Redis only; apps run natively).
 
 ```bash
 make setup   # once: bun install + .env files from .env.example
-make dev     # Postgres + Redis in Docker, migrations, seed, then api + web + docs + storybook
+make dev     # Postgres + Redis in Docker, migrations, seed, then api + web + docs + storybook + mcp
 ```
 
 ### Local services
@@ -73,14 +73,15 @@ make dev     # Postgres + Redis in Docker, migrations, seed, then api + web + do
 | API docs (OpenAPI UI)  | [http://localhost:3001/docs](http://localhost:3001/docs) |
 | Markdown docs          | [http://localhost:3000](http://localhost:3000)           |
 | Storybook (`@wire/ui`) | [http://localhost:6006](http://localhost:6006)           |
+| MCP (streamable HTTP)  | [http://127.0.0.1:3002/mcp](http://127.0.0.1:3002/mcp)   |
 
-Run `make help` for every target, including `make dev-api`, `make dev-web`, `make dev-storybook` to run a single app, and `make docker-up` to run the whole stack in containers instead (no hot reload).
+Run `make help` for every target, including `make dev-api`, `make dev-web`, `make dev-mcp`, `make dev-storybook` to run a single app, and `make docker-up` to run the whole stack in containers instead (no hot reload). After OpenAPI changes, run `make mcp-generate` so `apps/mcp/tools.snapshot.json` stays in sync (`make mcp-check` / CI fail on drift).
 
 ### Checks
 
 ```bash
 bun run typecheck   # turbo run typecheck, cached
-bun run lint        # Biome + wire-rules eslint + generated-file checks + markdown lint
+bun run lint        # Biome + wire-rules eslint + markdown + mcp rustfmt/clippy/drift
 bun run test        # turbo run test, cached
 ```
 

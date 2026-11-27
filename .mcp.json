@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "wire": {
+      "command": "./apps/mcp/run-stdio.sh",
+      "args": []
+    }
+  }
+}

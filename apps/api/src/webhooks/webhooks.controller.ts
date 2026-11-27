@@ -13,6 +13,7 @@ import {
   ApiCookieAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
 import type { WebhookEndpoint } from "@wire/types";
@@ -28,7 +29,7 @@ import {
 } from "./dto/webhook-endpoint.dto.js";
 import { WebhooksService } from "./webhooks.service.js";
 
-/** Admin-only — see internal-docs/api/permissions.md, the member role has no
+/** Admin-only: see internal-docs/api/permissions.md, the member role has no
  * WebhookEndpoint permissions at all. */
 @ApiTags("Webhooks")
 @ApiCookieAuth()
@@ -37,6 +38,10 @@ export class WebhooksController {
   constructor(private readonly webhooks: WebhooksService) {}
 
   @Get()
+  @ApiOperation({
+    operationId: "list_webhook_endpoints",
+    summary: "List the workspace's outgoing webhook endpoints (admin only)",
+  })
   @RequirePermission("read", "WebhookEndpoint")
   @ApiOkResponse({ type: WebhookEndpointDto, isArray: true })
   async list(
@@ -53,6 +58,10 @@ export class WebhooksController {
   }
 
   @Get(":id")
+  @ApiOperation({
+    operationId: "get_webhook_endpoint",
+    summary: "Get one outgoing webhook endpoint (admin only)",
+  })
   @RequirePermission("read", "WebhookEndpoint")
   @ApiOkResponse({ type: WebhookEndpointDto })
   getById(
@@ -63,6 +72,11 @@ export class WebhooksController {
   }
 
   @Post()
+  @ApiOperation({
+    operationId: "create_webhook_endpoint",
+    summary:
+      "Register an outgoing webhook endpoint; the signing secret is returned only once (admin only)",
+  })
   @RequirePermission("create", "WebhookEndpoint")
   @ApiCreatedResponse({ type: WebhookEndpointCreatedDto })
   create(
@@ -73,6 +87,10 @@ export class WebhooksController {
   }
 
   @Delete(":id")
+  @ApiOperation({
+    operationId: "delete_webhook_endpoint",
+    summary: "Delete an outgoing webhook endpoint (admin only)",
+  })
   @RequirePermission("delete", "WebhookEndpoint")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })

@@ -8,7 +8,7 @@ import type {
 import { IsInt, IsString, Length, Max, Min } from "class-validator";
 
 export class FileDto implements WireFile {
-  @ApiProperty({ example: "file_01jd5x0k8f3v8q2m7n4r6t9w1y" })
+  @ApiProperty({ type: String, example: "file_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   id!: WireFile["id"];
 
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })

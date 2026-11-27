@@ -13,6 +13,7 @@ import {
   ApiCookieAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
 import type { Bookmark } from "@wire/types";
@@ -24,7 +25,7 @@ import { RequirePermission } from "../permissions/require-permission.decorator.j
 import { BookmarksService } from "./bookmarks.service.js";
 import { BookmarkDto, CreateBookmarkRequestDto } from "./dto/bookmark.dto.js";
 
-/** "Save for later" — the caller's own bookmarks in this workspace. */
+/** "Save for later": the caller's own bookmarks in this workspace. */
 @ApiTags("Bookmarks")
 @ApiCookieAuth()
 @Controller("v1/workspaces/:workspaceId/bookmarks")
@@ -32,6 +33,10 @@ export class BookmarksController {
   constructor(private readonly bookmarks: BookmarksService) {}
 
   @Get()
+  @ApiOperation({
+    operationId: "list_bookmarks",
+    summary: "List the caller's saved-for-later messages in the workspace",
+  })
   @RequirePermission("read", "Bookmark")
   @ApiOkResponse({ type: BookmarkDto, isArray: true })
   async list(
@@ -48,6 +53,10 @@ export class BookmarksController {
   }
 
   @Post()
+  @ApiOperation({
+    operationId: "add_bookmark",
+    summary: "Save a message for later",
+  })
   @RequirePermission("create", "Bookmark")
   @ApiCreatedResponse({ type: BookmarkDto })
   add(
@@ -58,6 +67,10 @@ export class BookmarksController {
   }
 
   @Delete(":id")
+  @ApiOperation({
+    operationId: "remove_bookmark",
+    summary: "Remove a saved-for-later bookmark",
+  })
   @RequirePermission("delete", "Bookmark")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })

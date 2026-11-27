@@ -3,7 +3,7 @@ import type { Bookmark, CreateBookmarkRequest } from "@wire/types";
 import { IsString, Length } from "class-validator";
 
 export class BookmarkDto implements Bookmark {
-  @ApiProperty({ example: "bkm_01jd5x0k8f3v8q2m7n4r6t9w1y" })
+  @ApiProperty({ type: String, example: "bkm_01jd5x0k8f3v8q2m7n4r6t9w1y" })
   id!: Bookmark["id"];
 
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })

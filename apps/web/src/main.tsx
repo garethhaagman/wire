@@ -6,6 +6,10 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App.js";
 import { queryClient } from "./lib/query-client.js";
 import { applyTheme } from "./lib/ui-config/apply-theme.js";
+import {
+  createIconRegistry,
+  IconRegistryProvider,
+} from "./lib/ui-config/icon-pack.js";
 import "./styles/globals.css";
 
 const container = document.querySelector("#root");
@@ -14,15 +18,20 @@ if (!container) {
 }
 
 // Routes outside a workspace (home, login, workspace list) have no
-// UiConfigProvider, so they'd otherwise render with every color token unset.
+// UiConfigProvider, so they'd otherwise render with every color token unset
+// and useIcon() would throw. WorkspaceLayout nests a workspace-resolved
+// registry that overrides this base once a workspace is open.
 applyTheme(baseUiConfig);
+const baseIconRegistry = createIconRegistry(baseUiConfig.theme.iconPack);
 
 createRoot(container).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <IconRegistryProvider value={baseIconRegistry}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </IconRegistryProvider>
     </QueryClientProvider>
   </StrictMode>
 );

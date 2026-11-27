@@ -16,6 +16,7 @@ import {
   ApiCreatedResponse,
   ApiHeader,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
 import type { Member, MemberPreferences } from "@wire/types";
@@ -41,6 +42,11 @@ export class MembersController {
   constructor(private readonly members: MembersService) {}
 
   @Get()
+  @ApiOperation({
+    operationId: "list_members",
+    summary:
+      "List the members of the workspace, optionally filtered by a search term",
+  })
   @RequirePermission("read", "Member")
   @ApiOkResponse({ type: MemberDto, isArray: true })
   async list(
@@ -62,6 +68,10 @@ export class MembersController {
   }
 
   @Get("me")
+  @ApiOperation({
+    operationId: "get_current_member",
+    summary: "Get the caller's own workspace membership",
+  })
   @RequirePermission("read", "Member")
   @ApiOkResponse({ type: MemberDto })
   getMe(@CurrentActor() actor: WorkspaceActor): Promise<Member> {
@@ -69,6 +79,10 @@ export class MembersController {
   }
 
   @Get("me/preferences")
+  @ApiOperation({
+    operationId: "get_my_preferences",
+    summary: "Get the caller's notification and display preferences",
+  })
   @RequirePermission("read", "Member")
   @ApiOkResponse({ type: MemberPreferencesDto })
   getPreferences(
@@ -78,6 +92,10 @@ export class MembersController {
   }
 
   @Patch("me/preferences")
+  @ApiOperation({
+    operationId: "update_my_preferences",
+    summary: "Update the caller's notification and display preferences",
+  })
   @RequirePermission("update", "Member")
   @ApiOkResponse({ type: MemberPreferencesDto })
   updatePreferences(
@@ -88,6 +106,10 @@ export class MembersController {
   }
 
   @Get(":id")
+  @ApiOperation({
+    operationId: "get_member",
+    summary: "Get one workspace member",
+  })
   @RequirePermission("read", "Member")
   @ApiOkResponse({ type: MemberDto })
   getById(
@@ -98,6 +120,10 @@ export class MembersController {
   }
 
   @Post()
+  @ApiOperation({
+    operationId: "invite_member",
+    summary: "Invite a person to the workspace by email",
+  })
   @RequirePermission("create", "Member")
   @ApiHeader({
     name: "Idempotency-Key",
@@ -114,6 +140,10 @@ export class MembersController {
   }
 
   @Patch(":id")
+  @ApiOperation({
+    operationId: "update_member",
+    summary: "Update a member's display name or role",
+  })
   @RequirePermission("update", "Member")
   @ApiOkResponse({ type: MemberDto })
   update(
@@ -125,6 +155,10 @@ export class MembersController {
   }
 
   @Delete(":id")
+  @ApiOperation({
+    operationId: "remove_member",
+    summary: "Deactivate a member and remove them from the workspace",
+  })
   @RequirePermission("delete", "Member")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })

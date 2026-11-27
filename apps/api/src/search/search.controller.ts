@@ -1,5 +1,10 @@
 import { Controller, Get, Query } from "@nestjs/common";
-import { ApiCookieAuth, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCookieAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { SearchResult } from "@wire/types";
 import { PaginatedResult } from "../common/dto/paginated-result.js";
 import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
@@ -11,7 +16,7 @@ import { SearchResultDto } from "./dto/search-result.dto.js";
 import { SearchService } from "./search.service.js";
 
 /**
- * Keyword search — internal-docs/product/05-feature-parity.md's "GET /search" row.
+ * Keyword search: internal-docs/product/05-feature-parity.md's "GET /search" row.
  * Results only include messages the caller can read. Semantic/hybrid search is
  * internal-docs/retrieval/retrieval.md.
  */
@@ -22,6 +27,10 @@ export class SearchController {
   constructor(private readonly search: SearchService) {}
 
   @Get()
+  @ApiOperation({
+    operationId: "search_messages",
+    summary: "Keyword search over messages the caller can read",
+  })
   @WorkspaceScope({ from: "optionalQueryWorkspace", key: "workspace_id" })
   @RequirePermission("read", "Search")
   @ApiOkResponse({ type: SearchResultDto, isArray: true })

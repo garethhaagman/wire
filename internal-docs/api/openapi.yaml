@@ -2,8 +2,14 @@ openapi: 3.0.0
 paths:
   /v1/workspaces/{workspaceId}/events:
     get:
-      operationId: EventsController_list
+      operationId: list_events
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: cursor
           required: false
           in: query
@@ -38,12 +44,19 @@ paths:
                   $ref: "#/components/schemas/WireEventDto"
       security: &a1
         - cookie: []
+      summary: Replay or poll durable workspace events the caller can see, oldest first
       tags: &a2
         - Events
   /v1/workspaces/{workspaceId}/events/stream:
     get:
-      operationId: EventsController_getStream
+      operationId: stream_events
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: types
           required: false
           in: query
@@ -71,11 +84,20 @@ paths:
         "200":
           description: "text/event-stream of WireEvent frames (event: <type>, id: <seq>)"
       security: *a1
+      summary: Open a server-sent event stream of live workspace events
       tags: *a2
+      x-wire-mcp:
+        exclude: true
   /v1/workspaces/{workspaceId}/presence:
     post:
-      operationId: EventsController_create
-      parameters: []
+      operationId: send_presence_heartbeat
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
       responses:
         "200":
           description: ""
@@ -84,10 +106,19 @@ paths:
               schema:
                 type: "null"
       security: *a1
+      summary: Mark the caller as online in the workspace
       tags: *a2
+      x-wire-mcp:
+        exclude: true
     get:
-      operationId: EventsController_listPresence
-      parameters: []
+      operationId: list_presence
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
       responses:
         "200":
           description: ""
@@ -98,10 +129,11 @@ paths:
                 items:
                   $ref: "#/components/schemas/PresenceEntryDto"
       security: *a1
+      summary: List the members currently online in the workspace
       tags: *a2
   /v1/channels/{channelId}/typing:
     post:
-      operationId: EventsController_createTyping
+      operationId: send_typing_indicator
       parameters:
         - name: channelId
           required: true
@@ -122,10 +154,11 @@ paths:
               schema:
                 type: "null"
       security: *a1
+      summary: Signal that the caller is typing in a channel or thread
       tags: *a2
   /health:
     get:
-      operationId: HealthController_get
+      operationId: get_health
       parameters: []
       responses:
         "200":
@@ -134,11 +167,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthResponseDto"
+      summary: Report API liveness
       tags:
         - Health
+      x-wire-mcp:
+        exclude: true
   /v1/workspaces:
     get:
-      operationId: WorkspacesController_list
+      operationId: list_workspaces
       parameters:
         - name: page
           required: false
@@ -194,10 +230,11 @@ paths:
                   $ref: "#/components/schemas/WorkspaceDto"
       security: &a3
         - cookie: []
+      summary: List the workspaces the caller belongs to
       tags: &a4
         - Workspaces
     post:
-      operationId: WorkspacesController_create
+      operationId: create_workspace
       parameters:
         - name: Idempotency-Key
           in: header
@@ -219,10 +256,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/WorkspaceDto"
       security: *a3
+      summary: Create a workspace with the caller as its owner
       tags: *a4
   /v1/workspaces/{id}:
     get:
-      operationId: WorkspacesController_getById
+      operationId: get_workspace
       parameters:
         - name: id
           required: true
@@ -237,9 +275,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/WorkspaceDto"
       security: *a3
+      summary: Get one workspace
       tags: *a4
     patch:
-      operationId: WorkspacesController_update
+      operationId: update_workspace
       parameters:
         - name: id
           required: true
@@ -260,11 +299,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/WorkspaceDto"
       security: *a3
+      summary: Update a workspace's name or settings
       tags: *a4
   /v1/workspaces/{workspaceId}/members:
     get:
-      operationId: MembersController_list
+      operationId: list_members
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: page
           required: false
           in: query
@@ -319,11 +365,18 @@ paths:
                   $ref: "#/components/schemas/MemberDto"
       security: &a5
         - cookie: []
+      summary: List the members of the workspace, optionally filtered by a search term
       tags: &a6
         - Members
     post:
-      operationId: MembersController_create
+      operationId: invite_member
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: Idempotency-Key
           in: header
           description: Replays the original response if the same key is sent again.
@@ -344,11 +397,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/MemberDto"
       security: *a5
+      summary: Invite a person to the workspace by email
       tags: *a6
   /v1/workspaces/{workspaceId}/members/me:
     get:
-      operationId: MembersController_getMe
-      parameters: []
+      operationId: get_current_member
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
       responses:
         "200":
           description: ""
@@ -357,11 +417,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/MemberDto"
       security: *a5
+      summary: Get the caller's own workspace membership
       tags: *a6
   /v1/workspaces/{workspaceId}/members/me/preferences:
     get:
-      operationId: MembersController_getPreferences
-      parameters: []
+      operationId: get_my_preferences
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
       responses:
         "200":
           description: ""
@@ -370,10 +437,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/MemberPreferencesDto"
       security: *a5
+      summary: Get the caller's notification and display preferences
       tags: *a6
     patch:
-      operationId: MembersController_updatePreferences
-      parameters: []
+      operationId: update_my_preferences
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
       requestBody:
         required: true
         content:
@@ -388,11 +462,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/MemberPreferencesDto"
       security: *a5
+      summary: Update the caller's notification and display preferences
       tags: *a6
   /v1/workspaces/{workspaceId}/members/{id}:
     get:
-      operationId: MembersController_getById
+      operationId: get_member
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: id
           required: true
           in: path
@@ -406,10 +487,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/MemberDto"
       security: *a5
+      summary: Get one workspace member
       tags: *a6
     patch:
-      operationId: MembersController_update
+      operationId: update_member
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: id
           required: true
           in: path
@@ -429,10 +517,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/MemberDto"
       security: *a5
+      summary: Update a member's display name or role
       tags: *a6
     delete:
-      operationId: MembersController_remove
+      operationId: remove_member
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: id
           required: true
           in: path
@@ -446,11 +541,18 @@ paths:
               schema:
                 type: "null"
       security: *a5
+      summary: Deactivate a member and remove them from the workspace
       tags: *a6
   /v1/workspaces/{workspaceId}/channels:
     get:
-      operationId: ChannelsController_list
+      operationId: list_channels
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: page
           required: false
           in: query
@@ -525,11 +627,18 @@ paths:
                   $ref: "#/components/schemas/ChannelDto"
       security: &a7
         - cookie: []
+      summary: List public channels plus every channel and conversation the caller belongs to
       tags: &a8
         - Channels
     post:
-      operationId: ChannelsController_create
+      operationId: create_channel
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: Idempotency-Key
           in: header
           description: Replays the original response if the same key is sent again.
@@ -550,11 +659,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChannelDto"
       security: *a7
+      summary: Create a channel
       tags: *a8
   /v1/workspaces/{workspaceId}/channels/{id}:
     get:
-      operationId: ChannelsController_getById
+      operationId: get_channel
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: id
           required: true
           in: path
@@ -568,10 +684,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChannelDto"
       security: *a7
+      summary: Get one channel's metadata
       tags: *a8
     patch:
-      operationId: ChannelsController_update
+      operationId: update_channel
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: id
           required: true
           in: path
@@ -591,11 +714,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChannelDto"
       security: *a7
+      summary: Update a channel's name, topic, or other metadata
       tags: *a8
   /v1/workspaces/{workspaceId}/channels/{id}/archive:
     post:
-      operationId: ChannelsController_executeArchive
+      operationId: archive_channel
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: id
           required: true
           in: path
@@ -609,11 +739,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChannelDto"
       security: *a7
+      summary: Archive a channel (admin only)
       tags: *a8
   /v1/workspaces/{workspaceId}/channels/{id}/unarchive:
     post:
-      operationId: ChannelsController_executeUnarchive
+      operationId: unarchive_channel
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: id
           required: true
           in: path
@@ -627,10 +764,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChannelDto"
       security: *a7
+      summary: Unarchive a previously archived channel (admin only)
       tags: *a8
   /v1/channels/{channelId}/members:
     get:
-      operationId: ChannelMembersController_list
+      operationId: list_channel_members
       parameters:
         - name: channelId
           required: true
@@ -691,10 +829,11 @@ paths:
                   $ref: "#/components/schemas/ChannelMemberDto"
       security: &a9
         - cookie: []
+      summary: List the members of a channel
       tags: &a10
         - Channel members
     post:
-      operationId: ChannelMembersController_add
+      operationId: add_channel_member
       parameters:
         - name: channelId
           required: true
@@ -715,10 +854,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChannelMemberDto"
       security: *a9
+      summary: Join a channel (pass your own member id) or add another member to it
       tags: *a10
   /v1/channels/{channelId}/members/{memberId}:
     delete:
-      operationId: ChannelMembersController_remove
+      operationId: remove_channel_member
       parameters:
         - name: channelId
           required: true
@@ -738,10 +878,11 @@ paths:
               schema:
                 type: "null"
       security: *a9
+      summary: Leave a channel (your own member id) or, as an admin, remove a member from it
       tags: *a10
   /v1/channels/{channelId}/mark-read:
     post:
-      operationId: ChannelMembersController_executeMarkRead
+      operationId: mark_channel_read
       parameters:
         - name: channelId
           required: true
@@ -762,10 +903,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChannelMemberDto"
       security: *a9
+      summary: Advance the caller's read position in a channel up to a message seq
       tags: *a10
   /v1/channels/{channelId}/messages:
     get:
-      operationId: MessagesController_list
+      operationId: get_channel_history
       parameters:
         - name: channelId
           required: true
@@ -806,10 +948,11 @@ paths:
                   $ref: "#/components/schemas/MessageDto"
       security: &a11
         - cookie: []
+      summary: Get a channel's message history, newest first, or catch up after a seq
       tags: &a12
         - Messages
     post:
-      operationId: MessagesController_create
+      operationId: post_message
       parameters:
         - name: channelId
           required: true
@@ -836,10 +979,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageDto"
       security: *a11
+      summary: Post a message to a channel
       tags: *a12
   /v1/channels/{channelId}/messages/{id}:
     get:
-      operationId: MessagesController_getById
+      operationId: get_message
       parameters:
         - name: channelId
           required: true
@@ -859,9 +1003,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageDto"
       security: *a11
+      summary: Get one message in a channel
       tags: *a12
     patch:
-      operationId: MessagesController_update
+      operationId: update_message
       parameters:
         - name: channelId
           required: true
@@ -887,9 +1032,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageDto"
       security: *a11
+      summary: Edit a message's body
       tags: *a12
     delete:
-      operationId: MessagesController_remove
+      operationId: delete_message
       parameters:
         - name: channelId
           required: true
@@ -909,11 +1055,18 @@ paths:
               schema:
                 type: "null"
       security: *a11
+      summary: Delete a message
       tags: *a12
   /v1/workspaces/{workspaceId}/agents:
     get:
-      operationId: AgentsController_list
+      operationId: list_agents
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: page
           required: false
           in: query
@@ -968,11 +1121,18 @@ paths:
                   $ref: "#/components/schemas/AgentDto"
       security: &a13
         - cookie: []
+      summary: List the agents configured in the workspace
       tags: &a14
         - Agents
     post:
-      operationId: AgentsController_create
+      operationId: create_agent
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: Idempotency-Key
           in: header
           description: Replays the original response if the same key is sent again.
@@ -993,11 +1153,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/AgentDto"
       security: *a13
+      summary: Create an agent in the workspace
       tags: *a14
   /v1/workspaces/{workspaceId}/agents/{id}:
     get:
-      operationId: AgentsController_getById
+      operationId: get_agent
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: id
           required: true
           in: path
@@ -1011,10 +1178,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/AgentDto"
       security: *a13
+      summary: Get one agent's configuration
       tags: *a14
     patch:
-      operationId: AgentsController_update
+      operationId: update_agent
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: id
           required: true
           in: path
@@ -1034,10 +1208,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/AgentDto"
       security: *a13
+      summary: Update an agent's configuration
       tags: *a14
     delete:
-      operationId: AgentsController_remove
+      operationId: delete_agent
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: id
           required: true
           in: path
@@ -1051,11 +1232,18 @@ paths:
               schema:
                 type: "null"
       security: *a13
+      summary: Delete an agent
       tags: *a14
   /v1/workspaces/{workspaceId}/agents/{agentId}/runs:
     post:
-      operationId: AgentRunsController_run
+      operationId: run_agent
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: agentId
           required: true
           in: path
@@ -1076,11 +1264,18 @@ paths:
                 $ref: "#/components/schemas/AgentRunDto"
       security: &a15
         - cookie: []
+      summary: Start a run of an agent with a prompt, optionally posting its output to a channel
       tags: &a16
         - Agents
     get:
-      operationId: AgentRunsController_list
+      operationId: list_agent_runs
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: agentId
           required: true
           in: path
@@ -1139,11 +1334,18 @@ paths:
                 items:
                   $ref: "#/components/schemas/AgentRunDto"
       security: *a15
+      summary: List past runs of an agent, newest first
       tags: *a16
   /v1/workspaces/{workspaceId}/agents/{agentId}/runs/{runId}:
     get:
-      operationId: AgentRunsController_getById
+      operationId: get_agent_run
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: agentId
           required: true
           in: path
@@ -1162,10 +1364,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/AgentRunWithStepsDto"
       security: *a15
+      summary: Get one agent run including its step-by-step trace
       tags: *a16
   /v1/threads/{threadRootId}/messages:
     get:
-      operationId: ThreadsController_list
+      operationId: list_thread_replies
       parameters:
         - name: threadRootId
           required: true
@@ -1206,10 +1409,11 @@ paths:
                   $ref: "#/components/schemas/MessageDto"
       security: &a17
         - cookie: []
+      summary: List the replies in a thread, newest first, or catch up after a seq
       tags: &a18
         - Threads
     post:
-      operationId: ThreadsController_reply
+      operationId: reply_in_thread
       parameters:
         - name: threadRootId
           required: true
@@ -1236,10 +1440,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageDto"
       security: *a17
+      summary: Post a reply in a thread
       tags: *a18
   /v1/threads/{threadRootId}/mark-read:
     post:
-      operationId: ThreadsController_executeMarkRead
+      operationId: mark_thread_read
       parameters:
         - name: threadRootId
           required: true
@@ -1260,10 +1465,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/ThreadReadStateDto"
       security: *a17
+      summary: Advance the caller's read position in a thread up to a message seq
       tags: *a18
   /v1/messages/{messageId}/reactions:
     get:
-      operationId: ReactionsController_list
+      operationId: list_reactions
       parameters:
         - name: messageId
           required: true
@@ -1281,10 +1487,11 @@ paths:
                   $ref: "#/components/schemas/ReactionDto"
       security: &a19
         - cookie: []
+      summary: List the individual emoji reactions on a message
       tags: &a20
         - Reactions
     post:
-      operationId: ReactionsController_add
+      operationId: add_reaction
       parameters:
         - name: messageId
           required: true
@@ -1305,9 +1512,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReactionDto"
       security: *a19
+      summary: Add an emoji reaction to a message
       tags: *a20
     delete:
-      operationId: ReactionsController_remove
+      operationId: remove_reaction
       parameters:
         - name: messageId
           required: true
@@ -1326,10 +1534,11 @@ paths:
               schema:
                 type: "null"
       security: *a19
+      summary: Remove the caller's emoji reaction from a message
       tags: *a20
   /v1/channels/{channelId}/pins:
     get:
-      operationId: PinsController_list
+      operationId: list_pins
       parameters:
         - name: channelId
           required: true
@@ -1347,10 +1556,11 @@ paths:
                   $ref: "#/components/schemas/PinDto"
       security: &a21
         - cookie: []
+      summary: List the pinned messages in a channel
       tags: &a22
         - Pins
     post:
-      operationId: PinsController_add
+      operationId: pin_message
       parameters:
         - name: channelId
           required: true
@@ -1371,10 +1581,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/PinDto"
       security: *a21
+      summary: Pin a message to its channel
       tags: *a22
   /v1/channels/{channelId}/pins/{id}:
     delete:
-      operationId: PinsController_remove
+      operationId: unpin_message
       parameters:
         - name: channelId
           required: true
@@ -1394,11 +1605,18 @@ paths:
               schema:
                 type: "null"
       security: *a21
+      summary: Remove a pin from a channel
       tags: *a22
   /v1/workspaces/{workspaceId}/bookmarks:
     get:
-      operationId: BookmarksController_list
+      operationId: list_bookmarks
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: page
           required: false
           in: query
@@ -1453,11 +1671,18 @@ paths:
                   $ref: "#/components/schemas/BookmarkDto"
       security: &a23
         - cookie: []
+      summary: List the caller's saved-for-later messages in the workspace
       tags: &a24
         - Bookmarks
     post:
-      operationId: BookmarksController_add
-      parameters: []
+      operationId: add_bookmark
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
       requestBody:
         required: true
         content:
@@ -1472,11 +1697,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/BookmarkDto"
       security: *a23
+      summary: Save a message for later
       tags: *a24
   /v1/workspaces/{workspaceId}/bookmarks/{id}:
     delete:
-      operationId: BookmarksController_remove
+      operationId: remove_bookmark
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: id
           required: true
           in: path
@@ -1490,10 +1722,11 @@ paths:
               schema:
                 type: "null"
       security: *a23
+      summary: Remove a saved-for-later bookmark
       tags: *a24
   /v1/search:
     get:
-      operationId: SearchController_list
+      operationId: search_messages
       parameters:
         - name: q
           required: true
@@ -1550,12 +1783,19 @@ paths:
                   $ref: "#/components/schemas/SearchResultDto"
       security:
         - cookie: []
+      summary: Keyword search over messages the caller can read
       tags:
         - Search
   /v1/workspaces/{workspaceId}/webhook-endpoints:
     get:
-      operationId: WebhooksController_list
+      operationId: list_webhook_endpoints
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: page
           required: false
           in: query
@@ -1610,11 +1850,18 @@ paths:
                   $ref: "#/components/schemas/WebhookEndpointDto"
       security: &a25
         - cookie: []
+      summary: List the workspace's outgoing webhook endpoints (admin only)
       tags: &a26
         - Webhooks
     post:
-      operationId: WebhooksController_create
-      parameters: []
+      operationId: create_webhook_endpoint
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
       requestBody:
         required: true
         content:
@@ -1629,11 +1876,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/WebhookEndpointCreatedDto"
       security: *a25
+      summary: Register an outgoing webhook endpoint; the signing secret is returned only once (admin only)
       tags: *a26
   /v1/workspaces/{workspaceId}/webhook-endpoints/{id}:
     get:
-      operationId: WebhooksController_getById
+      operationId: get_webhook_endpoint
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: id
           required: true
           in: path
@@ -1647,10 +1901,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/WebhookEndpointDto"
       security: *a25
+      summary: Get one outgoing webhook endpoint (admin only)
       tags: *a26
     delete:
-      operationId: WebhooksController_remove
+      operationId: delete_webhook_endpoint
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: id
           required: true
           in: path
@@ -1664,11 +1925,18 @@ paths:
               schema:
                 type: "null"
       security: *a25
+      summary: Delete an outgoing webhook endpoint (admin only)
       tags: *a26
   /v1/workspaces/{workspaceId}/audit-events:
     get:
-      operationId: AuditController_list
+      operationId: list_audit_events
       parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
         - name: page
           required: false
           in: query
@@ -1723,11 +1991,12 @@ paths:
                   $ref: "#/components/schemas/AuditEventDto"
       security:
         - cookie: []
+      summary: List audit events for the workspace, newest first
       tags:
         - Audit
   /v1/files/{id}:
     get:
-      operationId: FilesController_getById
+      operationId: get_file
       parameters:
         - name: id
           required: true
@@ -1743,11 +2012,12 @@ paths:
                 $ref: "#/components/schemas/FileDto"
       security: &a27
         - cookie: []
+      summary: Get one file's metadata
       tags: &a28
         - Files
   /v1/files/upload-requests:
     post:
-      operationId: FilesController_createUploadRequest
+      operationId: create_file_upload
       parameters: []
       requestBody:
         required: true
@@ -1763,10 +2033,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/CreateUploadResponseDto"
       security: *a27
+      summary: Request a presigned URL to upload a file to a channel
       tags: *a28
+      x-wire-mcp:
+        exclude: true
   /v1/files/{id}/confirm:
     post:
-      operationId: FilesController_createUploadConfirmation
+      operationId: confirm_file_upload
       parameters:
         - name: id
           required: true
@@ -1781,10 +2054,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/FileDto"
       security: *a27
+      summary: Confirm that a file upload to its presigned URL has finished
       tags: *a28
+      x-wire-mcp:
+        exclude: true
   /v1/files/{id}/download-url:
     get:
-      operationId: FilesController_getDownloadUrl
+      operationId: get_file_download_url
       parameters:
         - name: id
           required: true
@@ -1799,10 +2075,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/DownloadUrlResponseDto"
       security: *a27
+      summary: Get a short-lived URL to download a file
       tags: *a28
   /v1/channels/{channelId}/files:
     get:
-      operationId: FilesController_list
+      operationId: list_channel_files
       parameters:
         - name: channelId
           required: true
@@ -1862,10 +2139,11 @@ paths:
                 items:
                   $ref: "#/components/schemas/FileDto"
       security: *a27
+      summary: List the files shared in a channel
       tags: *a28
   /v1/files/_local-upload/{key}:
     put:
-      operationId: FilesController_setLocalUpload
+      operationId: put_local_file_upload
       parameters:
         - name: key
           required: true
@@ -1885,9 +2163,12 @@ paths:
               schema:
                 type: "null"
       security: *a27
+      summary: Receive file bytes for a presigned local-disk upload URL (dev storage only)
       tags: *a28
+      x-wire-mcp:
+        exclude: true
     get:
-      operationId: FilesController_getLocalDownload
+      operationId: get_local_file_download
       parameters:
         - name: key
           required: true
@@ -1903,11 +2184,20 @@ paths:
         "200":
           description: application/octet-stream
       security: *a27
+      summary: Serve file bytes for a presigned local-disk download URL (dev storage only)
       tags: *a28
+      x-wire-mcp:
+        exclude: true
   /v1/workspaces/{workspaceId}/ui-config:
     get:
-      operationId: UiConfigController_get
-      parameters: []
+      operationId: get_ui_config
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
       responses:
         "200":
           description: ""
@@ -1917,12 +2207,19 @@ paths:
                 $ref: "#/components/schemas/UiConfigResourceDto"
       security: &a29
         - cookie: []
+      summary: Get the caller's fully resolved UI configuration
       tags: &a30
         - UiConfig
   /v1/workspaces/{workspaceId}/ui-config/org:
     patch:
-      operationId: UiConfigController_updateOrgLayer
-      parameters: []
+      operationId: update_org_ui_config
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
       requestBody:
         required: true
         content:
@@ -1937,11 +2234,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/UiConfigResourceDto"
       security: *a29
+      summary: Update the workspace-wide UI configuration layer and locks (admin only)
       tags: *a30
   /v1/workspaces/{workspaceId}/ui-config/me:
     patch:
-      operationId: UiConfigController_updateUserLayer
-      parameters: []
+      operationId: update_my_ui_config
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workspace id (ws_...). List the caller's workspaces with list_workspaces.
       requestBody:
         required: true
         content:
@@ -1956,6 +2260,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/UiConfigResourceDto"
       security: *a29
+      summary: Update the caller's personal UI configuration layer
       tags: *a30
 info:
   title: Wire API
@@ -1978,14 +2283,14 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: evt_01jd5x0k8f3v8q2m7n4r6t9w1y
         seq:
           type: number
           example: 48213
           description: Workspace-wide replay cursor (SSE id / Last-Event-ID)
         type:
-          type: object
+          type: string
           example: message.created
         workspaceId:
           type: string
@@ -2057,7 +2362,7 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: ws_64d9dea525ae84ef6f7bd361
         orgId:
           type: string
@@ -2103,7 +2408,7 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: mem_01jd5x0k8f3v8q2m7n4r6t9w1y
         workspaceId:
           type: string
@@ -2196,7 +2501,7 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: ch_01jd5x0k8f3v8q2m7n4r6t9w1y
         workspaceId:
           type: string
@@ -2351,7 +2656,7 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: msg_01jd5x0k8f3v8q2m7n4r6t9w1y
         workspaceId:
           type: string
@@ -2458,7 +2763,7 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: agt_64d9dea525ae84ef6f7bd361
         workspaceId:
           type: string
@@ -2533,13 +2838,13 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: run_64d9dea525ae84ef6f7bd361
         workspaceId:
           type: string
           example: ws_64d9dea525ae84ef6f7bd361
         agentId:
-          type: object
+          type: string
           example: agt_64d9dea525ae84ef6f7bd361
         triggeredByMessageId:
           type: string
@@ -2601,10 +2906,10 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: step_64d9dea525ae84ef6f7bd361
         runId:
-          type: object
+          type: string
           example: run_64d9dea525ae84ef6f7bd361
         seq:
           type: number
@@ -2636,13 +2941,13 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: run_64d9dea525ae84ef6f7bd361
         workspaceId:
           type: string
           example: ws_64d9dea525ae84ef6f7bd361
         agentId:
-          type: object
+          type: string
           example: agt_64d9dea525ae84ef6f7bd361
         triggeredByMessageId:
           type: string
@@ -2724,7 +3029,7 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: rxn_64d9dea525ae84ef6f7bd361
         messageId:
           type: string
@@ -2756,7 +3061,7 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: pin_64d9dea525ae84ef6f7bd361
         channelId:
           type: string
@@ -2788,7 +3093,7 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: bkm_01jd5x0k8f3v8q2m7n4r6t9w1y
         workspaceId:
           type: string
@@ -2859,7 +3164,7 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: whe_64d9dea525ae84ef6f7bd361
         workspaceId:
           type: string
@@ -2918,7 +3223,7 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: whe_64d9dea525ae84ef6f7bd361
         workspaceId:
           type: string
@@ -2959,7 +3264,7 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: aud_64d9dea525ae84ef6f7bd361
         workspaceId:
           type: string
@@ -3007,7 +3312,7 @@ components:
       type: object
       properties:
         id:
-          type: object
+          type: string
           example: file_01jd5x0k8f3v8q2m7n4r6t9w1y
         workspaceId:
           type: string
@@ -3178,6 +3483,32 @@ components:
         - kind
         - id
         - spriteUrl
+    SlotConfigDto:
+      type: object
+      properties:
+        placement:
+          type: string
+          enum:
+            - sidebar-left
+            - sidebar-right
+            - top
+            - bottom
+            - floating
+            - hidden
+          example: sidebar-left
+        variant:
+          type: string
+          example: default
+          description: Selects among the component variants the web app registers for this slot id.
+        props:
+          type: object
+          additionalProperties: true
+          example: {}
+          description: Slot-local style overrides; intentionally loose, see @wire/ui-config's extensions.ts.
+      required:
+        - placement
+        - variant
+        - props
     ColorModePairDto:
       type: object
       properties:

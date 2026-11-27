@@ -12,6 +12,7 @@ import {
   ApiCookieAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
 import {
@@ -36,7 +37,7 @@ import {
 
 /**
  * Nested one level under /agents/:id so a run always resolves through its owning
- * agent (and that agent's existence/ACL) first — see AgentsService.getById.
+ * agent (and that agent's existence/ACL) first: see AgentsService.getById.
  */
 @ApiTags("Agents")
 @ApiCookieAuth()
@@ -49,6 +50,11 @@ export class AgentRunsController {
   ) {}
 
   @Post()
+  @ApiOperation({
+    operationId: "run_agent",
+    summary:
+      "Start a run of an agent with a prompt, optionally posting its output to a channel",
+  })
   @RequirePermission("create", "Agent")
   @ApiCreatedResponse({ type: AgentRunDto })
   async run(
@@ -66,6 +72,10 @@ export class AgentRunsController {
   }
 
   @Get()
+  @ApiOperation({
+    operationId: "list_agent_runs",
+    summary: "List past runs of an agent, newest first",
+  })
   @RequirePermission("read", "Agent")
   @ApiOkResponse({ type: AgentRunDto, isArray: true })
   async list(
@@ -90,6 +100,10 @@ export class AgentRunsController {
   }
 
   @Get(":runId")
+  @ApiOperation({
+    operationId: "get_agent_run",
+    summary: "Get one agent run including its step-by-step trace",
+  })
   @RequirePermission("read", "Agent")
   @ApiOkResponse({ type: AgentRunWithStepsDto })
   async getById(

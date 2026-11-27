@@ -8,7 +8,7 @@
     "dev": "bun --watch src/main.ts",
     "generate": "nest generate",
     "lint:wire-rules": "eslint .",
-    "openapi:export": "bun scripts/export-openapi.ts",
+    "openapi:export": "bun scripts/export-openapi.ts && biome format --write ../../internal-docs/api/openapi.yaml",
     "seed": "bun scripts/seed-dev.ts",
     "start": "bun src/main.ts",
     "typecheck": "tsc --noEmit"
@@ -26,6 +26,7 @@
     "@nestjs/websockets": "^10.4.15",
     "@wire/config": "workspace:*",
     "@wire/db": "workspace:*",
+    "@wire/observability": "workspace:*",
     "@wire/types": "workspace:*",
     "@wire/ui-config": "workspace:*",
     "ai": "^7.0.181",

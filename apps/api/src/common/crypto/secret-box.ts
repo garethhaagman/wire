@@ -12,10 +12,10 @@ const TAG_BYTES = 16;
 export class SecretBoxError extends Error {}
 
 /**
- * AES-256-GCM for secrets Wire must be able to read back (webhook signing secrets
- * — unlike passwords they can't be hashed). The key is derived from
- * BETTER_AUTH_SECRET with HKDF under a purpose label, so a database dump alone
- * doesn't reveal them. Format: `v1.<iv>.<tag>.<ciphertext>`, base64url parts.
+ * AES-256-GCM for secrets Wire must be able to read back (webhook signing secrets,
+ * unlike passwords they can't be hashed). The key is derived from APP_SECRET
+ * (via resolveAppSecret) with HKDF under a purpose label, so a database dump
+ * alone doesn't reveal them. Format: `v1.<iv>.<tag>.<ciphertext>`, base64url parts.
  */
 export class SecretBox {
   private readonly key: Buffer;

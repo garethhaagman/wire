@@ -16,6 +16,7 @@ import {
   ApiCreatedResponse,
   ApiHeader,
   ApiOkResponse,
+  ApiOperation,
   ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
@@ -52,6 +53,11 @@ export class ChannelsController {
 
   /** The public directory plus every channel and conversation the caller belongs to. */
   @Get()
+  @ApiOperation({
+    operationId: "list_channels",
+    summary:
+      "List public channels plus every channel and conversation the caller belongs to",
+  })
   @RequirePermission("read", "Channel")
   @ApiQuery({
     name: "filter[joined]",
@@ -91,6 +97,10 @@ export class ChannelsController {
   }
 
   @Get(":id")
+  @ApiOperation({
+    operationId: "get_channel",
+    summary: "Get one channel's metadata",
+  })
   @RequirePermission("read", "Channel")
   @ApiOkResponse({ type: ChannelDto })
   getById(
@@ -101,6 +111,7 @@ export class ChannelsController {
   }
 
   @Post()
+  @ApiOperation({ operationId: "create_channel", summary: "Create a channel" })
   @RequirePermission("create", "Channel")
   @ApiHeader({
     name: "Idempotency-Key",
@@ -117,6 +128,10 @@ export class ChannelsController {
   }
 
   @Patch(":id")
+  @ApiOperation({
+    operationId: "update_channel",
+    summary: "Update a channel's name, topic, or other metadata",
+  })
   @RequirePermission("update", "Channel")
   @ApiOkResponse({ type: ChannelDto })
   update(
@@ -127,8 +142,12 @@ export class ChannelsController {
     return this.channels.update(actor, id, body);
   }
 
-  /** Archiving is the channel's soft delete — admin-only, hence the "delete" permission. */
+  /** Archiving is the channel's soft delete: admin-only, hence the "delete" permission. */
   @Post(":id/archive")
+  @ApiOperation({
+    operationId: "archive_channel",
+    summary: "Archive a channel (admin only)",
+  })
   @RequirePermission("delete", "Channel")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: ChannelDto })
@@ -140,6 +159,10 @@ export class ChannelsController {
   }
 
   @Post(":id/unarchive")
+  @ApiOperation({
+    operationId: "unarchive_channel",
+    summary: "Unarchive a previously archived channel (admin only)",
+  })
   @RequirePermission("delete", "Channel")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: ChannelDto })

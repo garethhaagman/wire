@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { ValidationPipe } from "@nestjs/common";
+import { type LoggerService, ValidationPipe } from "@nestjs/common";
 import { NestFactory, Reflector } from "@nestjs/core";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
@@ -11,18 +11,34 @@ import { AUTH_INSTANCE } from "./auth/auth.module.js";
 import { ApiExceptionFilter } from "./common/filters/api-exception.filter.js";
 import { DeprecationHeadersInterceptor } from "./common/interceptors/deprecation-headers.interceptor.js";
 import { ResponseEnvelopeInterceptor } from "./common/interceptors/response-envelope.interceptor.js";
+import { declarePathParameters } from "./common/openapi/declare-path-parameters.js";
 import { validationExceptionFactory } from "./common/pipes/validation-exception-factory.js";
 
+export interface CreateAppOptions {
+  /** When set (from main.ts), Nest uses the shared pino-backed logger. */
+  logger?: LoggerService | false;
+}
+
 /**
- * Builds and configures the Nest app without listening on a port — consumed by
+ * Builds and configures the Nest app without listening on a port: consumed by
  * main.ts (which also calls app.listen()) and scripts/export-openapi.ts (which
  * only needs SwaggerModule.createDocument()). Side-effect-free on import, unlike
  * main.ts which boots a listening server at module load.
  */
-export async function createApp(): Promise<NestExpressApplication> {
+export async function createApp(
+  options: CreateAppOptions = {}
+): Promise<NestExpressApplication> {
   const env = parseApiEnv();
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+    ...(options.logger === undefined ? {} : { logger: options.logger }),
+  });
+  if (options.logger) {
+    app.useLogger(options.logger);
+  }
+  app.flushLogs();
+
   app.enableCors({ origin: env.WEB_ORIGIN, credentials: true });
 
   // Better Auth owns raw request/response for its routes; mount before Nest's JSON body
@@ -30,7 +46,7 @@ export async function createApp(): Promise<NestExpressApplication> {
   const auth = app.get<Auth>(AUTH_INSTANCE);
   app.use("/api/auth/*", toNodeHandler(auth));
 
-  // Shared API infrastructure — every endpoint gets these for free, per
+  // Shared API infrastructure: every endpoint gets these for free, per
   // internal-docs/api/README.md § 13 (build conventions into the framework).
   const reflector = app.get(Reflector);
   app.useGlobalInterceptors(
@@ -55,7 +71,9 @@ export async function createApp(): Promise<NestExpressApplication> {
       .setVersion("0.1.0")
       .addCookieAuth("better-auth.session_token")
       .build();
-    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+    const swaggerDocument = declarePathParameters(
+      SwaggerModule.createDocument(app, swaggerConfig)
+    );
     SwaggerModule.setup("docs", app, swaggerDocument);
   }
 

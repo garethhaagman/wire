@@ -3,7 +3,7 @@ import type { CreateReactionRequest, Reaction } from "@wire/types";
 import { IsString, Length } from "class-validator";
 
 export class ReactionDto implements Reaction {
-  @ApiProperty({ example: "rxn_64d9dea525ae84ef6f7bd361" })
+  @ApiProperty({ type: String, example: "rxn_64d9dea525ae84ef6f7bd361" })
   id!: Reaction["id"];
 
   @ApiProperty({ example: "msg_01jd5x0k8f3v8q2m7n4r6t9w1y" })

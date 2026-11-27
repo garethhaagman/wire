@@ -12,7 +12,7 @@ import { IsIn, IsOptional, IsString, Length, Matches } from "class-validator";
 const HANDLE_PATTERN = /^[a-z0-9-]+$/u;
 
 export class AgentDto implements Agent {
-  @ApiProperty({ example: "agt_64d9dea525ae84ef6f7bd361" })
+  @ApiProperty({ type: String, example: "agt_64d9dea525ae84ef6f7bd361" })
   id!: Agent["id"];
 
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })
@@ -69,10 +69,10 @@ export class UpdateAgentRequestDto implements UpdateAgentRequest {
 }
 
 export class AgentRunStepDto implements AgentRunStep {
-  @ApiProperty({ example: "step_64d9dea525ae84ef6f7bd361" })
+  @ApiProperty({ type: String, example: "step_64d9dea525ae84ef6f7bd361" })
   id!: AgentRunStep["id"];
 
-  @ApiProperty({ example: "run_64d9dea525ae84ef6f7bd361" })
+  @ApiProperty({ type: String, example: "run_64d9dea525ae84ef6f7bd361" })
   runId!: AgentRunStep["runId"];
 
   @ApiProperty({ example: 0 })
@@ -93,13 +93,13 @@ export class AgentRunStepDto implements AgentRunStep {
 }
 
 export class AgentRunDto implements AgentRun {
-  @ApiProperty({ example: "run_64d9dea525ae84ef6f7bd361" })
+  @ApiProperty({ type: String, example: "run_64d9dea525ae84ef6f7bd361" })
   id!: AgentRun["id"];
 
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })
   workspaceId!: string;
 
-  @ApiProperty({ example: "agt_64d9dea525ae84ef6f7bd361" })
+  @ApiProperty({ type: String, example: "agt_64d9dea525ae84ef6f7bd361" })
   agentId!: AgentRun["agentId"];
 
   @ApiProperty({

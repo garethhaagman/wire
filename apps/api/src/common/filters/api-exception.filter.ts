@@ -7,6 +7,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import { API_VERSION } from "@wire/config";
+import { SpanStatusCode, trace } from "@wire/observability";
 import type { ApiError, ApiResponse } from "@wire/types";
 import type { Response } from "express";
 import { ApiException } from "../errors/api-exception.js";
@@ -16,8 +17,8 @@ import type { RequestWithId } from "../middleware/request-id.middleware.js";
 const GENERIC_MESSAGE = "An unexpected error occurred.";
 
 /**
- * Catches every thrown error and maps it to the universal error envelope —
- * internal-docs/api/errors.md. Nothing else in the app should build an error
+ * Catches every thrown error and maps it to the universal error envelope
+ * (internal-docs/api/errors.md). Nothing else in the app should build an error
  * response body directly.
  */
 @Catch()
@@ -32,10 +33,25 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
     const { status, error } = this.resolve(exception);
 
+    const span = trace.getActiveSpan();
+    if (span) {
+      if (requestId) {
+        span.setAttribute("http.request_id", requestId);
+      }
+      span.setAttribute("http.status_code", status);
+      if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+        span.setStatus({ code: SpanStatusCode.ERROR, message: error.code });
+        span.recordException(
+          exception instanceof Error ? exception : new Error(error.message)
+        );
+      }
+    }
+
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error(
         exception instanceof Error ? exception.stack : exception
       );
+      this.logger.error(`request_id=${requestId} code=${error.code}`);
     }
 
     res.setHeader("X-API-Version", API_VERSION);
@@ -68,7 +84,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       const status: HttpStatus = exception.getStatus();
       // A 5xx HttpException that isn't one of ours may carry a message from a
-      // library or dependency — never let it reach the client.
+      // library or dependency, never let it reach the client.
       if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
         return {
           status,

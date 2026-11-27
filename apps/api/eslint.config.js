@@ -7,6 +7,7 @@ export default [
     files: ["src/**/*.controller.ts"],
     plugins: { "wire-api": wireApi },
     rules: {
+      "wire-api/require-api-operation": "error",
       "wire-api/require-api-response": "error",
       "wire-api/controller-verb-naming": "warn",
       "wire-api/require-permission": "error",
@@ -22,7 +23,9 @@ export default [
     plugins: { "wire-api": wireApi },
     rules: {
       "wire-api/no-bare-error-throw": "error",
+      "wire-api/no-console-logging": "error",
       "wire-api/no-manual-envelope": "error",
+      "wire-api/no-manual-observability": "error",
       "wire-api/no-numeric-id": "error",
     },
   },

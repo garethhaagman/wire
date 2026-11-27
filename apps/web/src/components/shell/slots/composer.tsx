@@ -26,8 +26,11 @@ function useComposerState(channelId: string | null): {
 
   function handleBodyChange(value: string): void {
     setBody(value);
+    if (!(channelId && value.trim())) {
+      return;
+    }
     const now = Date.now();
-    if (channelId && now - lastTypingSentAt.current >= TYPING_THROTTLE_MS) {
+    if (now - lastTypingSentAt.current >= TYPING_THROTTLE_MS) {
       lastTypingSentAt.current = now;
       void sendTyping(channelId);
     }
@@ -185,7 +188,7 @@ function ComposerCompactForm({
   );
 }
 
-/** A denser variant — same slot id, different variant, selectable purely via config. */
+/** A denser variant - same slot id, different variant, selectable purely via config. */
 export function ComposerCompact(_props: SlotProps): React.JSX.Element {
   const { activeChannelId } = useWorkspaceShell();
   return (

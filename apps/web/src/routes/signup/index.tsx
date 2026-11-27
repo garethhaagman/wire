@@ -16,6 +16,7 @@ export default function SignupRoute(): React.JSX.Element {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [checkEmail, setCheckEmail] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   if (session?.user) {
@@ -25,11 +26,23 @@ export default function SignupRoute(): React.JSX.Element {
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     setError(null);
+    setCheckEmail(false);
     setSubmitting(true);
-    const result = await signUp.email({ name, email, password });
+    const result = await signUp.email({
+      name,
+      email,
+      password,
+      callbackURL: `${window.location.origin}/workspaces`,
+    });
     setSubmitting(false);
     if (result.error) {
       setError(result.error.message ?? "Sign up failed");
+      return;
+    }
+    // With requireEmailVerification, Better Auth returns the user but token: null
+    // (no session until the inbox link is clicked).
+    if (!result.data?.token) {
+      setCheckEmail(true);
       return;
     }
     void navigate("/workspaces", { replace: true });
@@ -50,75 +63,87 @@ export default function SignupRoute(): React.JSX.Element {
       }
       title="Create account"
     >
-      <form
-        className="flex flex-col gap-5"
-        onSubmit={(e) => void handleSubmit(e)}
-      >
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="name">Full name</Label>
-          <Input
-            autoComplete="name"
-            autoFocus
-            id="name"
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Ada Lovelace"
-            required
-            value={name}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="email">Email address</Label>
-          <Input
-            autoComplete="email"
-            id="email"
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@company.com"
-            required
-            type="email"
-            value={email}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="password">Password</Label>
-          <PasswordInput
-            aria-describedby="password-hint"
-            autoComplete="new-password"
-            id="password"
-            minLength={MIN_PASSWORD_LENGTH}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Create a password"
-            required
-            value={password}
-          />
-          <p className="text-muted-foreground text-xs" id="password-hint">
-            At least {MIN_PASSWORD_LENGTH} characters.
-          </p>
-        </div>
-
-        {error ? (
-          <p
-            className="border-destructive/20 bg-destructive/5 text-destructive rounded-md border px-3 py-2 text-sm"
-            role="alert"
-          >
-            {error}
-          </p>
-        ) : null}
-
-        <Button
-          className="mt-1 w-full"
-          disabled={submitting}
-          size="lg"
-          type="submit"
+      {checkEmail ? (
+        <p
+          className="border-border bg-muted/40 text-foreground rounded-md border px-3 py-3 text-sm"
+          role="status"
         >
-          {submitting ? <Loader2 className="animate-spin" /> : null}
-          {submitting ? "Creating account" : "Create account"}
-        </Button>
-      </form>
+          Check your inbox for a verification link to finish creating your
+          account. You can close this tab and sign in after verifying.
+        </p>
+      ) : (
+        <form
+          className="flex flex-col gap-5"
+          onSubmit={(e) => void handleSubmit(e)}
+        >
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="name">Full name</Label>
+            <Input
+              autoComplete="name"
+              autoFocus
+              id="name"
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ada Lovelace"
+              required
+              value={name}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="email">Email address</Label>
+            <Input
+              autoComplete="email"
+              id="email"
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@company.com"
+              required
+              type="email"
+              value={email}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="password">Password</Label>
+            <PasswordInput
+              aria-describedby="password-hint"
+              autoComplete="new-password"
+              id="password"
+              minLength={MIN_PASSWORD_LENGTH}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Create a password"
+              required
+              value={password}
+            />
+            <p className="text-muted-foreground text-xs" id="password-hint">
+              At least {MIN_PASSWORD_LENGTH} characters.
+            </p>
+          </div>
 
-      <div className="mt-6 flex flex-col gap-6">
-        <AuthDivider />
-        <GoogleButton onError={setError} />
-      </div>
+          {error ? (
+            <p
+              className="border-destructive/20 bg-destructive/5 text-destructive rounded-md border px-3 py-2 text-sm"
+              role="alert"
+            >
+              {error}
+            </p>
+          ) : null}
+
+          <Button
+            className="mt-1 w-full"
+            disabled={submitting}
+            size="lg"
+            type="submit"
+          >
+            {submitting ? <Loader2 className="animate-spin" /> : null}
+            {submitting ? "Creating account" : "Create account"}
+          </Button>
+        </form>
+      )}
+
+      {checkEmail ? null : (
+        <div className="mt-6 flex flex-col gap-6">
+          <AuthDivider />
+          <GoogleButton onError={setError} />
+        </div>
+      )}
     </AuthLayout>
   );
 }

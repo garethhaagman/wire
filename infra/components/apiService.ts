@@ -3,6 +3,7 @@ import * as docker from "@pulumi/docker";
 import * as pulumi from "@pulumi/pulumi";
 
 export interface ApiServiceArgs {
+  appSecret: pulumi.Input<string>;
   authSecret: pulumi.Input<string>;
   databaseUrl: pulumi.Input<string>;
   dependsOn?: pulumi.Resource[];
@@ -38,6 +39,7 @@ export function createApiService(
         pulumi.interpolate`DATABASE_URL=${args.databaseUrl}`,
         pulumi.interpolate`REDIS_URL=${args.redisUrl}`,
         pulumi.interpolate`BETTER_AUTH_SECRET=${args.authSecret}`,
+        pulumi.interpolate`APP_SECRET=${args.appSecret}`,
         pulumi.interpolate`BETTER_AUTH_URL=http://localhost:${args.port}`,
         pulumi.interpolate`WEB_ORIGIN=${args.webOrigin}`,
       ],

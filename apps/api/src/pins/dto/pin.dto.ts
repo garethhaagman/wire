@@ -3,7 +3,7 @@ import type { CreatePinRequest, Pin } from "@wire/types";
 import { IsString } from "class-validator";
 
 export class PinDto implements Pin {
-  @ApiProperty({ example: "pin_64d9dea525ae84ef6f7bd361" })
+  @ApiProperty({ type: String, example: "pin_64d9dea525ae84ef6f7bd361" })
   id!: Pin["id"];
 
   @ApiProperty({ example: "ch_01jd5x0k8f3v8q2m7n4r6t9w1y" })

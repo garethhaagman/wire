@@ -1,5 +1,10 @@
 import { Controller, Get, Query } from "@nestjs/common";
-import { ApiCookieAuth, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCookieAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { AuditEvent } from "@wire/types";
 import { PaginatedResult } from "../common/dto/paginated-result.js";
 import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
@@ -11,7 +16,7 @@ import { AuditEventDto } from "./dto/audit-event.dto.js";
 
 /**
  * Read-only. Any authenticated workspace member may read audit events (explicit
- * product decision, not a default) — see internal-docs/api/permissions.md and
+ * product decision, not a default): see internal-docs/api/permissions.md and
  * internal-docs/api/auth-tenancy.md § Audit log. Events appear within ~500ms of
  * the request (buffered writes).
  */
@@ -22,6 +27,10 @@ export class AuditController {
   constructor(private readonly audit: AuditService) {}
 
   @Get()
+  @ApiOperation({
+    operationId: "list_audit_events",
+    summary: "List audit events for the workspace, newest first",
+  })
   @RequirePermission("read", "AuditEvent")
   @ApiOkResponse({ type: AuditEventDto, isArray: true })
   async list(

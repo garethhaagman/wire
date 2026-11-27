@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import type { AuditEvent } from "@wire/types";
 
 export class AuditEventDto implements AuditEvent {
-  @ApiProperty({ example: "aud_64d9dea525ae84ef6f7bd361" })
+  @ApiProperty({ type: String, example: "aud_64d9dea525ae84ef6f7bd361" })
   id!: AuditEvent["id"];
 
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })

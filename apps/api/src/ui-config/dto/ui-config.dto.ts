@@ -38,12 +38,12 @@ import {
  * either changes. Instead this DTO only validates shape-at-the-door (is it an
  * object, is `locks` an array) and UiConfigService re-validates the payload
  * against `uiConfigOverrideSchema`/`lockSchema` from @wire/ui-config before
- * ever merging it — that is the actual source of truth for field-level
+ * ever merging it: that is the actual source of truth for field-level
  * validation, not this class. See internal-docs/ui/config-schema.md.
  *
  * The *response* side (UiConfigDto and everything it nests, below) is not
  * under this deviation: `resolved` is always a complete, fully-merged
- * UiConfig with every field present (see schema.ts — "never fully breaks
+ * UiConfig with every field present (see schema.ts: "never fully breaks
  * render"), so it has a fixed, finite shape worth giving Swagger consumers
  * real schema + example for, unlike the open-ended partial `override`.
  */
@@ -496,7 +496,7 @@ export class UiConfigDto implements UiConfig {
   extensions!: Record<string, unknown>;
 }
 
-// Swagger-only schema shadow — see health-response.dto.ts for why this exists
+// Swagger-only schema shadow: see health-response.dto.ts for why this exists
 // alongside (not instead of) the canonical @wire/types interface.
 @ApiExtraModels(
   SystemFontSourceDto,
@@ -504,7 +504,8 @@ export class UiConfigDto implements UiConfig {
   CustomFontSourceDto,
   LucideIconPackDto,
   PhosphorIconPackDto,
-  CustomIconPackDto
+  CustomIconPackDto,
+  SlotConfigDto
 )
 export class UiConfigResourceDto implements UiConfigResource {
   @ApiProperty({ example: "ws_64d9dea525ae84ef6f7bd361" })

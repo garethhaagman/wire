@@ -3,10 +3,10 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { signIn } from "@/lib/auth-client.js";
 
-/** Google's brand mark — its colors are mandated by Google's branding guidelines, not theme tokens. */
+/** Google's brand mark - its colors are mandated by Google's branding guidelines, not theme tokens. */
 function GoogleMark(): React.JSX.Element {
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24">
+    <svg aria-hidden="true" className="size-4 shrink-0" viewBox="0 0 24 24">
       <path
         d="M23.04 12.26c0-.82-.07-1.6-.2-2.36H12v4.46h6.19a5.3 5.3 0 0 1-2.3 3.48v2.89h3.72c2.18-2 3.43-4.96 3.43-8.47Z"
         fill="#4285F4"
@@ -29,7 +29,7 @@ function GoogleMark(): React.JSX.Element {
 
 /**
  * Starts Better Auth's Google OAuth flow. The API lives on a different origin, so both
- * callback URLs must be absolute — relative ones would resolve against the API.
+ * callback URLs must be absolute - relative ones would resolve against the API.
  */
 export function GoogleButton({
   onError,
@@ -65,7 +65,11 @@ export function GoogleButton({
       type="button"
       variant="outline"
     >
-      {redirecting ? <Loader2 className="animate-spin" /> : <GoogleMark />}
+      {redirecting ? (
+        <Loader2 className="size-4 shrink-0 animate-spin" />
+      ) : (
+        <GoogleMark />
+      )}
       Continue with Google
     </Button>
   );

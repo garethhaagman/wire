@@ -18,6 +18,7 @@ import {
   ApiCookieAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
 import type { ApiEnv } from "@wire/config";
@@ -28,6 +29,7 @@ import type {
 } from "@wire/types";
 import type { Request, Response } from "express";
 import { Public } from "../auth/public.decorator.js";
+import { ExcludeFromMcp } from "../common/decorators/exclude-from-mcp.decorator.js";
 import { PaginatedResult } from "../common/dto/paginated-result.js";
 import { buildPaginationMeta } from "../common/dto/pagination-meta.js";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto.js";
@@ -46,7 +48,7 @@ import { LocalDiskAdapter } from "./storage/local-disk-adapter.js";
 
 /**
  * Signed-upload-URL flow (see files.service.ts). The `_local-upload` routes only
- * matter when LocalDiskAdapter is selected (no S3_BUCKET set) — they're the
+ * matter when LocalDiskAdapter is selected (no S3_BUCKET set): they're the
  * "signed URL" target for local disk, authorized by an HMAC token in the query
  * string rather than a session cookie, same trust model as a real presigned S3
  * URL. @Public() because the signed token IS the auth; LocalDiskAdapter itself
@@ -66,6 +68,7 @@ export class FilesController {
   }
 
   @Get("files/:id")
+  @ApiOperation({ operationId: "get_file", summary: "Get one file's metadata" })
   @WorkspaceScope({ from: "file", param: "id" })
   @RequirePermission("read", "File")
   @ApiOkResponse({ type: FileDto })
@@ -77,6 +80,11 @@ export class FilesController {
   }
 
   @Post("files/upload-requests")
+  @ApiOperation({
+    operationId: "create_file_upload",
+    summary: "Request a presigned URL to upload a file to a channel",
+  })
+  @ExcludeFromMcp()
   @WorkspaceScope({ from: "bodyChannel", field: "channelId" })
   @RequirePermission("create", "File")
   @ApiCreatedResponse({ type: CreateUploadResponseDto })
@@ -88,6 +96,11 @@ export class FilesController {
   }
 
   @Post("files/:id/confirm")
+  @ApiOperation({
+    operationId: "confirm_file_upload",
+    summary: "Confirm that a file upload to its presigned URL has finished",
+  })
+  @ExcludeFromMcp()
   @WorkspaceScope({ from: "file", param: "id" })
   @RequirePermission("create", "File")
   @ApiOkResponse({ type: FileDto })
@@ -99,6 +112,10 @@ export class FilesController {
   }
 
   @Get("files/:id/download-url")
+  @ApiOperation({
+    operationId: "get_file_download_url",
+    summary: "Get a short-lived URL to download a file",
+  })
   @WorkspaceScope({ from: "file", param: "id" })
   @RequirePermission("read", "File")
   @ApiOkResponse({ type: DownloadUrlResponseDto })
@@ -110,6 +127,10 @@ export class FilesController {
   }
 
   @Get("channels/:channelId/files")
+  @ApiOperation({
+    operationId: "list_channel_files",
+    summary: "List the files shared in a channel",
+  })
   @WorkspaceScope({ from: "channel", param: "channelId" })
   @RequirePermission("read", "File")
   @ApiOkResponse({ type: FileDto, isArray: true })
@@ -133,6 +154,12 @@ export class FilesController {
   }
 
   @Put("files/_local-upload/:key")
+  @ApiOperation({
+    operationId: "put_local_file_upload",
+    summary:
+      "Receive file bytes for a presigned local-disk upload URL (dev storage only)",
+  })
+  @ExcludeFromMcp()
   @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: { type: "null" } })
@@ -148,8 +175,14 @@ export class FilesController {
     return null;
   }
 
-  /** Streams raw bytes — bypasses the JSON envelope by necessity, same as the SSE route in events.controller.ts. */
+  /** Streams raw bytes: bypasses the JSON envelope by necessity, same as the SSE route in events.controller.ts. */
   @Get("files/_local-upload/:key")
+  @ApiOperation({
+    operationId: "get_local_file_download",
+    summary:
+      "Serve file bytes for a presigned local-disk download URL (dev storage only)",
+  })
+  @ExcludeFromMcp()
   @Public()
   @ApiOkResponse({ description: "application/octet-stream" })
   getLocalDownload(

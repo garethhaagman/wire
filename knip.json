@@ -28,10 +28,17 @@
       "project": ["src/**/*.ts"]
     },
     "apps/docs": {},
+    "apps/mcp": {
+      "entry": [],
+      "project": []
+    },
     "packages/types": {
       "project": ["src/**/*.ts"]
     },
     "packages/config": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/observability": {
       "project": ["src/**/*.ts"]
     },
     "packages/db": {
