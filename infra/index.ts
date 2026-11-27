@@ -20,13 +20,17 @@ const webPort = config.requireNumber("webPort");
 const docsPort = config.requireNumber("docsPort");
 const postgresPort = config.requireNumber("postgresPort");
 
-// Dev-only default; production stacks must set wire:postgresPassword / wire:authSecret
-// as Pulumi secrets (`pulumi config set --secret`), never commit real values here.
+// Dev-only default; production stacks must set wire:postgresPassword /
+// wire:authSecret / wire:appSecret as Pulumi secrets (`pulumi config set --secret`),
+// never commit real values here.
 const postgresPassword =
   config.getSecret("postgresPassword") ?? pulumi.secret("wire_dev_password");
 const authSecret =
   config.getSecret("authSecret") ??
   pulumi.secret("dev-only-secret-change-me-32chars-min");
+const appSecret =
+  config.getSecret("appSecret") ??
+  pulumi.secret("dev-only-app-secret-change-me-32chars");
 
 const network = createNetwork(name);
 
@@ -70,6 +74,7 @@ const api = createApiService(name, {
   redisUrl: redis.url,
   webOrigin,
   authSecret,
+  appSecret,
   dependsOn: [migrate, redis.container],
 });
 

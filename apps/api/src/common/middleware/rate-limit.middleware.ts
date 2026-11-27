@@ -27,8 +27,8 @@ return {count, redis.call('PTTL', KEYS[1])}
 /**
  * Fixed-window limiter shared across every API replica via Redis. Keyed by
  * session (hashed cookie) when present so users behind one NAT don't share a
- * budget, else by IP. Fails open: if Redis is unavailable requests are served
- * without limiting rather than taking the API down with it.
+ * budget, else by IP. Fails closed: if Redis is unavailable the request is
+ * rejected (503) so an outage cannot become an unbounded flood.
  */
 @Injectable()
 export class RateLimitMiddleware implements NestMiddleware {
@@ -57,10 +57,22 @@ export class RateLimitMiddleware implements NestMiddleware {
       warnRedisFailure(
         this.redis,
         this.logger,
-        "rate limiter unavailable, failing open",
+        "rate limiter unavailable, failing closed",
         err
       );
-      next();
+      const body: ApiResponse<null> = {
+        success: false,
+        data: null,
+        error: {
+          code: "SERVICE_UNAVAILABLE",
+          message: "Rate limiting temporarily unavailable. Retry shortly.",
+        },
+        meta: {
+          request_id: (req as RequestWithId).requestId,
+          api_version: API_VERSION,
+        },
+      };
+      res.status(HttpStatus.SERVICE_UNAVAILABLE).json(body);
       return;
     }
 

@@ -15,11 +15,12 @@ pulumi up
 
 ### Secrets
 
-Config lives in `Pulumi.dev.yaml`. Secrets (`postgresPassword`, `authSecret`) are **not** set there. Set them explicitly so they're encrypted in state:
+Config lives in `Pulumi.dev.yaml`. Secrets (`postgresPassword`, `authSecret`, `appSecret`) are **not** set there. Set them explicitly so they're encrypted in state:
 
 ```sh
 pulumi config set --secret wire:postgresPassword <value>
 pulumi config set --secret wire:authSecret <value>
+pulumi config set --secret wire:appSecret <value>
 ```
 
 Without setting them, dev-only insecure defaults are used (see `index.ts`). That's fine for a laptop, never for anything shared.

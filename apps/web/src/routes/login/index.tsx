@@ -37,9 +37,19 @@ export default function LoginRoute(): React.JSX.Element {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
-    const result = await signIn.email({ email, password });
+    const result = await signIn.email({
+      email,
+      password,
+      callbackURL: `${window.location.origin}/workspaces`,
+    });
     setSubmitting(false);
     if (result.error) {
+      if (result.error.status === 403) {
+        setError(
+          "Please verify your email before signing in. We sent a new link if this account needs one."
+        );
+        return;
+      }
       setError(result.error.message ?? "Sign in failed");
       return;
     }

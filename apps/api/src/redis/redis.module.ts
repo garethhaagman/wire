@@ -12,7 +12,7 @@ import { API_ENV } from "../config/env.provider.js";
 export const REDIS = Symbol("REDIS");
 
 /**
- * Logs a failed Redis call unless the connection is down — an outage is already
+ * Logs a failed Redis call unless the connection is down: an outage is already
  * reported once by the client's error handler, so per-call warnings would only
  * repeat it on every request.
  */
@@ -36,7 +36,7 @@ export function describeRedisError(err: Error & { code?: string }): string {
 /**
  * Shared command connection. Redis holds only ephemeral or reconstructible state
  * (rate-limit windows, idempotency records, presence, cached lookups, pub/sub
- * fan-out) — Postgres stays the system of record, so a Redis flush degrades
+ * fan-out). Postgres stays the system of record, so a Redis flush degrades
  * latency, never correctness. Pub/sub subscribers use their own duplicate()
  * connection (see RealtimeService).
  */
@@ -48,7 +48,7 @@ export function describeRedisError(err: Error & { code?: string }): string {
       useFactory: (env: ApiEnv): Redis => {
         const logger = new Logger("Redis");
         // No offline queue: while disconnected, commands reject immediately so every
-        // caller's fail-open path runs at once instead of stalling the request on
+        // caller's degrade path runs at once instead of stalling the request on
         // reconnect backoff.
         const client = new Redis(env.REDIS_URL, {
           enableOfflineQueue: false,
@@ -63,7 +63,7 @@ export function describeRedisError(err: Error & { code?: string }): string {
           }
           down = true;
           logger.warn(
-            `redis unavailable (${describeRedisError(err)}) — degrading: rate limits, idempotency and caches are bypassed until it returns`
+            `redis unavailable (${describeRedisError(err)}): rate limits reject requests; idempotency and caches are bypassed until it returns`
           );
         });
         client.on("ready", () => {

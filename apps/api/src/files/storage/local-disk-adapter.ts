@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { mkdir, open, stat } from "node:fs/promises";
 import path from "node:path";
 import { InternalServerErrorException } from "@nestjs/common";
-import type { ApiEnv } from "@wire/config";
+import { type ApiEnv, resolveAppSecret } from "@wire/config";
 import type { StorageAdapter } from "./storage-adapter.interface.js";
 
 const TOKEN_TTL_MS = 10 * 60_000;
@@ -10,10 +10,10 @@ const TOKEN_TTL_MS = 10 * 60_000;
 /**
  * Zero-config dev default: no S3_BUCKET means files land on local disk instead of
  * a real object store. There's no real "signed URL" concept for a filesystem, so
- * this signs a short-lived HMAC token (keyed off BETTER_AUTH_SECRET — no new
- * secret to manage) into the path itself; FilesController's local-upload routes
- * verify it instead of requiring a session cookie, matching how a real S3
- * presigned URL authorizes the bearer, not the cookie jar.
+ * this signs a short-lived HMAC token (keyed off APP_SECRET) into the path
+ * itself; FilesController's local-upload routes verify it instead of requiring a
+ * session cookie, matching how a real S3 presigned URL authorizes the bearer,
+ * not the cookie jar.
  */
 export class LocalDiskAdapter implements StorageAdapter {
   private readonly dir: string;
@@ -22,7 +22,7 @@ export class LocalDiskAdapter implements StorageAdapter {
 
   constructor(env: ApiEnv) {
     this.dir = path.resolve(env.LOCAL_UPLOAD_DIR ?? "./.data/uploads");
-    this.secret = env.BETTER_AUTH_SECRET;
+    this.secret = resolveAppSecret(env);
     this.baseUrl = `http://localhost:${env.PORT}`;
   }
 

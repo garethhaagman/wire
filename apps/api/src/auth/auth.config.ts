@@ -1,7 +1,12 @@
-import type { ApiEnv } from "@wire/config";
+import {
+  type ApiEnv,
+  requireEmailVerification,
+  resolveAuthCookieDomain,
+} from "@wire/config";
 import type { Pool } from "@wire/db";
 import { betterAuth } from "better-auth";
 import type { Redis } from "ioredis";
+import { selectEmailSender } from "../email/select-email-sender.js";
 
 /**
  * Better Auth owns its own schema (packages/db/migrations/0002_create_auth_tables.sql)
@@ -11,6 +16,10 @@ import type { Redis } from "ioredis";
  * Postgres; `storeSessionInDatabase` keeps Postgres the source of truth.
  */
 export function createAuth(env: ApiEnv, pool: Pool, redis?: Redis) {
+  const sendEmail = selectEmailSender(env);
+  const verifyEmail = requireEmailVerification(env);
+  const cookieDomain = resolveAuthCookieDomain(env);
+
   return betterAuth({
     database: pool,
     secret: env.BETTER_AUTH_SECRET,
@@ -18,7 +27,33 @@ export function createAuth(env: ApiEnv, pool: Pool, redis?: Redis) {
     trustedOrigins: [env.WEB_ORIGIN],
     emailAndPassword: {
       enabled: true,
+      requireEmailVerification: verifyEmail,
     },
+    ...(verifyEmail
+      ? {
+          emailVerification: {
+            sendOnSignUp: true,
+            sendOnSignIn: true,
+            autoSignInAfterVerification: true,
+            sendVerificationEmail: ({
+              user,
+              url,
+            }: {
+              user: { email: string };
+              url: string;
+            }): Promise<void> => {
+              // Fire-and-forget: awaiting would add a timing oracle on signup/signin.
+              void sendEmail({
+                to: user.email,
+                subject: "Verify your email address",
+                text: `Click the link to verify your email: ${url}`,
+                html: `<p>Click the link to verify your email:</p><p><a href="${url}">${url}</a></p>`,
+              });
+              return Promise.resolve();
+            },
+          },
+        }
+      : {}),
     socialProviders:
       env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
         ? {
@@ -67,6 +102,21 @@ export function createAuth(env: ApiEnv, pool: Pool, redis?: Redis) {
       cookieCache: {
         enabled: true,
         maxAge: 60 * 5,
+      },
+    },
+    advanced: {
+      ...(cookieDomain
+        ? {
+            crossSubDomainCookies: {
+              enabled: true,
+              domain: cookieDomain,
+            },
+          }
+        : {}),
+      defaultCookieAttributes: {
+        sameSite: "lax",
+        secure: env.NODE_ENV === "production",
+        httpOnly: true,
       },
     },
   });
