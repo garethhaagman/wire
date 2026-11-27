@@ -1,8 +1,7 @@
 {
   "mcpServers": {
     "wire": {
-      "command": "./apps/mcp/run-stdio.sh",
-      "args": []
+      "url": "http://127.0.0.1:3002/mcp"
     }
   }
 }

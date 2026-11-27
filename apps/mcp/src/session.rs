@@ -10,7 +10,7 @@ use crate::config::Credentials;
 
 const SESSION_COOKIE_SUFFIX: &str = "better-auth.session_token";
 const STARTUP_RETRY_INTERVAL: Duration = Duration::from_secs(2);
-const STARTUP_RETRY_ATTEMPTS: u32 = 90;
+const DEFAULT_STARTUP_RETRY_ATTEMPTS: u32 = 90;
 
 /// Resolves the `Cookie` header every tool call sends. The API authenticates
 /// only through Better Auth session cookies, so either reuse a provided token or
@@ -33,15 +33,18 @@ pub async fn cookie_header(api_url: &Url, credentials: &Credentials) -> Result<H
 
 /// `make dev` starts the API and this server together, so the API may not be
 /// listening yet. Connection failures are retried; a rejected sign-in is not.
+/// Stdio hosts set `WIRE_MCP_STARTUP_RETRIES` lower so Cursor/Claude don't sit
+/// through a multi-minute handshake timeout when the API is down.
 async fn sign_in_with_retry(api_url: &Url, email: &str, password: &str) -> Result<String> {
+    let attempts = startup_retry_attempts();
     let client = reqwest::Client::new();
-    for attempt in 1..=STARTUP_RETRY_ATTEMPTS {
+    for attempt in 1..=attempts {
         match sign_in(&client, api_url, email, password).await {
             Ok(cookie) => {
                 info!(email, "signed in to the Wire API");
                 return Ok(cookie);
             }
-            Err(SignInError::Unreachable(err)) if attempt < STARTUP_RETRY_ATTEMPTS => {
+            Err(SignInError::Unreachable(err)) if attempt < attempts => {
                 if attempt == 1 {
                     warn!(api_url = %api_url, error = %err, "Wire API not reachable yet, retrying");
                 }
@@ -55,6 +58,14 @@ async fn sign_in_with_retry(api_url: &Url, email: &str, password: &str) -> Resul
         }
     }
     unreachable!("the final attempt always returns")
+}
+
+fn startup_retry_attempts() -> u32 {
+    std::env::var("WIRE_MCP_STARTUP_RETRIES")
+        .ok()
+        .and_then(|value| value.parse().ok())
+        .filter(|value| *value > 0)
+        .unwrap_or(DEFAULT_STARTUP_RETRY_ATTEMPTS)
 }
 
 enum SignInError {
