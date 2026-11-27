@@ -12,6 +12,8 @@ The config only ever says **which pack**; it never bundles icon assets itself. `
 
 `apps/web`'s current direct dependency is `lucide-react`, matching `baseUiConfig`'s default (`{ kind: "lucide" }`).
 
+`useIcon()` must not throw when a provider is missing: the context defaults to a lucide fallback registry, and `main.tsx` also mounts a base `IconRegistryProvider`. Workspace `UiConfigProvider` nests the resolved pack on top. Never gate icons behind a hard require-provider check, pre-workspace routes (login, workspace picker) would crash the way `/workspaces` did when list rows first called `useIcon()`.
+
 ## Good usage
 
 ```tsx

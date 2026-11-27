@@ -8,7 +8,7 @@ import { createContext, useContext } from "react";
  * iconPackSchema), never bundled inside the config document itself. This
  * registry is the other half of that contract: it maps a pack id to an
  * actual set of icon components. Adding a new installable pack (e.g.
- * Phosphor) means adding one entry here — no schema change required, which
+ * Phosphor) means adding one entry here - no schema change required, which
  * is the point of keeping "which pack" (config) and "what the pack contains"
  * (code) separate. `custom` packs resolve to a generic <img>-based renderer
  * against the org's sprite sheet instead of a bundled component set.
@@ -106,7 +106,7 @@ export function createIconRegistry(pack: IconPack): IconRegistry {
     };
   }
 
-  // lucide and phosphor both resolve to the lucide set today — phosphor's
+  // lucide and phosphor both resolve to the lucide set today - phosphor's
   // bundled set is a follow-up registration here, not a schema change.
   return {
     // biome-ignore lint/correctness/noComponentHookFactories: createIconRegistry is called once per config change via useMemo in config-provider.tsx, not per-render
@@ -117,14 +117,15 @@ export function createIconRegistry(pack: IconPack): IconRegistry {
   };
 }
 
-const IconRegistryContext = createContext<IconRegistry | null>(null);
+// Default matches baseUiConfig's lucide pack so pre-workspace routes (and any
+// surface that forgets a provider) still render instead of crashing. Workspace
+// UiConfigProvider nests a resolved registry that overrides this.
+const fallbackRegistry = createIconRegistry({ kind: "lucide" });
+
+const IconRegistryContext = createContext<IconRegistry>(fallbackRegistry);
 
 export const IconRegistryProvider = IconRegistryContext.Provider;
 
 export function useIcon(): IconRegistry["Icon"] {
-  const registry = useContext(IconRegistryContext);
-  if (!registry) {
-    throw new Error("useIcon must be used within IconRegistryProvider");
-  }
-  return registry.Icon;
+  return useContext(IconRegistryContext).Icon;
 }

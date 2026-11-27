@@ -1,16 +1,25 @@
 @import "tailwindcss";
+@import "./theme.generated.css";
 
 /*
- * Semantic color/radius tokens are NOT hardcoded here — they're CSS custom
+ * @wire/ui ships source (not a built CSS bundle). Tailwind only scans this
+ * app by default, so without an explicit @source its Button/Input/Card
+ * class names never enter the CSS - e.g. `[&_svg]:size-4` and `h-10` go
+ * missing and icons/controls look broken. Keep this path in sync with the
+ * package's `exports` (./src).
+ */
+@source "../../../../packages/ui/src";
+
+/*
+ * Semantic color/radius tokens are NOT hardcoded here - they're CSS custom
  * properties written onto :root/.dark at runtime by ConfigProvider, from the
  * resolved UiConfig (see lib/ui-config/apply-theme.ts). theme.generated.css
  * maps Tailwind's `@theme` color tokens to those variables, so utilities like
  * `bg-primary` or `text-muted-foreground` always read the live, per-org/user
  * theme instead of a value baked in at build time. It's generated from
- * @wire/ui-config's colorRolesSchema — add color roles there, not here. See
+ * @wire/ui-config's colorRolesSchema - add color roles there, not here. See
  * internal-docs/ui/theming-and-layout.md.
  */
-@import "./theme.generated.css";
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 0.25rem);

@@ -25,7 +25,7 @@ export function MessageList({
     hasNextPage,
     isFetchingNextPage,
   } = useMessages(channelId);
-  const typingMemberIds = useTypingMembers(channelId);
+  const typingMemberIds = useTypingMembers(channelId, workspaceId);
   const { displayNameFor } = useMemberLookup(workspaceId);
 
   if (isLoading) {
